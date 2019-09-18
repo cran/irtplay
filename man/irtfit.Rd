@@ -11,11 +11,12 @@ irtfit(x, ...)
 \method{irtfit}{default}(x, score, data, group.method = c("equal.width",
   "equal.freq"), n.width = 10, loc.theta = "average",
   range.score = NULL, D = 1, alpha = 0.05, missing = NA,
-  overSR = 2, ...)
+  overSR = 2, min.collapse = 1, ...)
 
 \method{irtfit}{est_item}(x, group.method = c("equal.width",
   "equal.freq"), n.width = 10, loc.theta = "average",
-  range.score = NULL, alpha = 0.05, missing = NA, overSR = 2, ...)
+  range.score = NULL, alpha = 0.05, missing = NA, overSR = 2,
+  min.collapse = 1, ...)
 }
 \arguments{
 \item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...) or an object of class \code{\link{est_item}}
@@ -29,7 +30,7 @@ See below for details.}
 \item{data}{A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
 the examinees and items, respectively.}
 
-\item{group.method}{A character string indicating how to group examinees along the ability scale for computing the \eqn{\chi^{2}} fit statistic.
+\item{group.method}{A character string indicating how to group examinees along the ability scale for computing the \eqn{\chi^{2}} and \eqn{G^{2}} fit statistics.
 Available methods are "equal.width" for grouping examinees by dividing the ability scale into intervals of equal width and "equal.freq"
 for grouping examinees by dividing the ability scale into intervals with equal frequencies of examinees. However, "equal.freq" does not
 always guarantee exactly the same frequency of examinees for all groups. Default is "equal.width". To divide the ability scale, the range
@@ -51,21 +52,30 @@ selection of grouping method in the argument \code{group.method} has nothing to 
 \item{D}{A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
 Default is 1.}
 
-\item{alpha}{A numeric value to specify significance \eqn{\alpha}-level of the hypothesis test for the \eqn{\chi^{2}} fit statistic. Default is .05.}
+\item{alpha}{A numeric value to specify significance \eqn{\alpha}-level of the hypothesis test for the \eqn{\chi^{2}} and \eqn{G^{2}} fit statistics.
+Default is .05.}
 
 \item{missing}{A value indicating missing values in the response data set. Default is NA.}
 
 \item{overSR}{A numeric value to specify a criterion to find ability groups (or intervals) which have standardized residuals
 greater than the specified value. Default is 2.}
+
+\item{min.collapse}{An integer value to indicate the minimum frequency of cells to be collapsed when computing the \eqn{\chi^{2}} and \eqn{G^{2}}
+fit statistics. Neighboring interval groups will be collapsed to avoid expected interval frequencies less than the specified minimum cell frequency.
+Default is 1.}
 }
 \value{
 This function returns an object of class \code{\link{irtfit}}. Within this object, several internal objects are contained such as:
-\item{fit_stat}{A data.frame containing the results of three IRT fit statistics (i.e., \eqn{\chi^{2}}, infit, outfit statistics) across
-all evaluated items. In the data.frame, the columns indicate item's ID, \eqn{\chi^{2}} statistic, degree of freedom, critical value, p-value,
-outfit statistic, infit statistic, the number of examinees used to compute the three statistics, and the proportion of ability groups (or intervals)
-that have standardized residuals greater than a specified criterion in the argument \code{overSR}, respectively.}
-\item{contingency}{A list of contingency tables used to compute the \eqn{\chi^{2}} fit statistics for all items. The contingency tables are used
-to draw a raw and standardized residual plots (Hambleton et al., 1991) in the function of \code{\link{plot.irtfit}}.}
+\item{fit_stat}{A data.frame containing the results of three IRT fit statistics (i.e., \eqn{\chi^{2}} and \eqn{G^{2}}, infit, outfit statistics) across
+all evaluated items. In the data.frame, the columns indicate item's ID, \eqn{\chi^{2}} fit statistic, \eqn{G^{2}} fit statistic, degrees of freedom for the \eqn{\chi^{2}},
+degrees of freedom for the \eqn{G^{2}}, critical value for the \eqn{\chi^{2}}, critical value for the \eqn{G^{2}}, p-value for the \eqn{\chi^{2}},
+p-value for the \eqn{G^{2}}, outfit statistic, infit statistic, the number of examinees used to compute the five fit statistics, and the proportion of
+ability groups (or intervals), before collapsing the cells, that have standardized residuals greater than the specified criterion in the argument \code{overSR},
+respectively.}
+\item{contingency.fitstat}{A list of contingency tables used to compute the \eqn{\chi^{2}} and \eqn{G^{2}} fit statistics for all items.
+Note that the collapsing cell strategy is implemented to these contingency tables.}
+\item{contingency.plot}{A list of contingency tables used to draw a raw and standardized residual plots (Hambleton et al., 1991) in the function of
+\code{\link{plot.irtfit}}. Note that the collapsing cell strategy is \emph{not} implemented to these contingency tables.}
 \item{individual.info}{A list of data.frames including individual residual and variance values. Those information are used to compute
 infit and outfit statistics.}
 \item{item_df}{The item meta data specified in the argument \code{x}.}
@@ -73,9 +83,10 @@ infit and outfit statistics.}
 }
 \description{
 This function computes traditional IRT item fit statistics (i.e., \eqn{\chi^{2}} fit statistic (e.g., Bock, 1960; Yen, 1981),
-and infit and outfit statistics (Ames et al., 2015)) and returns contingency tables to compute the \eqn{\chi^{2}} fit statistics. Note that caution
-is needed in interpreting the infit and outfit statistics for non-Rasch models. The saved object of this function, especially the object of
-contingency tables, is used in the function of \code{\link{plot.irtfit}} to draw a raw and standardized residual plots (Hambleton et al., 1991).
+loglikelihood ratio \eqn{\chi^{2}} fit statistic (\eqn{G^{2}}; McKinley & Mills, 1985), and infit and outfit statistics (Ames et al., 2015)) and returns
+contingency tables to compute the \eqn{\chi^{2}} and \eqn{G^{2}} fit statistics. Note that caution is needed in interpreting the infit and
+outfit statistics for non-Rasch models. The saved object of this function, especially the object of contingency tables,
+is used in the function of \code{\link{plot.irtfit}} to draw a raw and standardized residual plots (Hambleton et al., 1991).
 }
 \details{
 A specific form of a data.frame should be used for the argument \code{x}. The first column should have item IDs,
@@ -115,18 +126,22 @@ For more details about the parameterization of the (generalized) partial credit 
 the page of \code{\link{irtplay-package}} for more details about the IRT models. An easier way to create a data.frame for
 the argument \code{x} is by using the function \code{\link{shape_df}}.
 
-To calculate the \eqn{\chi^{2}} fit statistic, two methods are used in the argument \code{group.method} to divide the ability scale
+To calculate the \eqn{\chi^{2}} and \eqn{G^{2}} fit statistics, two methods are used in the argument \code{group.method} to divide the ability scale
 into several groups. If \code{group.method = "equal.width"}, the examinees are grouped based on equal length of intervals.
 If \code{group.method = "equal.freq"}, the examinees are grouped so that all groups have equal frequencies. However, the grouping method
 of "equal.freq" does guarantee that every group has the exactly same frequency of examinees. This is because the examinees are divided by
 the same size of quantile.
 
-When dividing the ability scale into intervals to compute the \eqn{\chi^{2}} fit statistic, the intervals should be wide enough not to include
+When dividing the ability scale into intervals to compute the \eqn{\chi^{2}} and \eqn{G^{2}} fit statistics, the intervals should be wide enough not to include
 too small number of examinees. On the other hand, the interval should be narrow enough to include homogeneous examinees in terms of ability
 (Hambleton et al, 1991). Thus, if you want to divide the ability scale into other than ten groups, you need to specify the number of groups
 in the argument \code{n.width}. Yen (1981) fixed the number of groups to 10, whereas Bock (1960) allowed for any number of groups.
 
-Note that if "DRM" is specified for an item in the item meta data set, the item is considered as "3PLM" to compute degree of freedom of
+Regarding degrees of freedom (\emph{df}), the \eqn{\chi^{2}} is assumed to be distributed approximately as a chi-square with \emph{df} equal to
+the number of groups less the number of the IRT model parameters whereas the \eqn{G^{2}} is assumed to be distributed approximately as a chi-square
+with \emph{df} equal to the number of groups (Ames et al., 2015)
+
+Note that if "DRM" is specified for an item in the item meta data set, the item is considered as "3PLM" to compute degrees of freedom of
 the \eqn{\chi^{2}} fit statistic.
 }
 \section{Methods (by class)}{
@@ -161,7 +176,7 @@ fit1 <- irtfit(x=x, score=score, data=data, group.method="equal.width",
 fit1$fit_stat
 
 # contingency tables
-fit1$contingency
+fit1$contingency.fitstat
 }
 
 ## example 2
@@ -186,7 +201,7 @@ fit2 <- irtfit(x=x, score=score, data=data, group.method="equal.freq",
 fit2$fit_stat
 
 # contingency tables
-fit2$contingency
+fit2$contingency.fitstat
 
 # residual plots for the first item (dichotomous item)
 plot(x=fit2, item.loc=1, type = "both", ci.method = "wald", show.table=TRUE, ylim.sr.adjust=TRUE)
@@ -202,6 +217,9 @@ Ames, A. J., & Penfield, R. D. (2015). An NCME Instructional Module on Item-Fit 
 Bock, R.D. (1960), \emph{Methods and applications of optimal scaling}. Chapel Hill, NC: L.L. Thurstone Psychometric Laboratory.
 
 Hambleton, R. K., Swaminathan, H., & Rogers, H. J. (1991).\emph{Fundamentals of item response theory}. Newbury Park, CA: Sage.
+
+McKinley, R., & Mills, C. (1985). A comparison of several goodness-of-fit statistics.
+\emph{Applied Psychological Measurement, 9}, 49-57.
 
 Yen, W. M. (1981). Using simulation results to choose a latent trait model. \emph{Applied Psychological Measurement, 5}, 245-262.
 }

@@ -26,7 +26,8 @@ Available options are "wald" for Wald method, "cp" for Clopper-Pearson interval,
 "wilson.cr" for Wilson score interval with continuity correction. Default is "wald". See below for details.}
 
 \item{show.table}{A logical value. If TRUE, a contingency table containing the information used to draw the residual
-plots for the studied item is returned. Default is TRUE.}
+plots for the studied item is returned. This contingency table is the same as one contained in the internal object of \code{contingency.plot}
+in the object of class \code{\link{irtfit}}. Default is TRUE.}
 
 \item{layout.col}{An integer value indicating the number of columns in the panel when a polytomous item is used.
 Default is 2.}
@@ -73,7 +74,8 @@ for dichotomous items the residual plots are drawn only for the score category o
 All of the plots are drawn using the ggplot2 package.
 
 Once the results of the IRT model fit analysis are obtained from the function \code{\link{irtfit}},
-an object of class \code{\link{irtfit}} can be used to draw the IRT raw residual and standardized residual plots.
+an object of class \code{\link{irtfit}} can be used to draw the IRT raw residual and standardized residual plots. Especially, the information
+contained in an internal object of \code{contingency.plot} are mainly used to draw the residual plots.
 
 Because the residual plots are drawn for an item at a time, you have to indicate which item will be evaluated. For this,
 you should specify an integer value, which is the location of the studied item, in the argument \code{item.loc}.

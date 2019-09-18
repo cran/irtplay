@@ -139,7 +139,7 @@
 #'
 est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, fix.g=FALSE,
                      a.val.1pl=1, a.val.gpcm=1, g.val=.2, use.aprior=FALSE, use.gprior=TRUE,
-                     aprior=list(dist="lnorm", params=c(1, 0.5)), gprior=list(dist="beta", params=c(5, 17)),
+                     aprior=list(dist="lnorm", params=c(0, 0.5)), gprior=list(dist="beta", params=c(5, 17)),
                      missing=NA, use.startval=FALSE, control=list(eval.max=500, iter.max=500)) {
 
   # match.call
@@ -196,7 +196,11 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   }
 
   # transform a data set to data.frame
-  data <- data.frame(data)
+  if(nrow(data) == 1L) {
+    data <- list(data)
+  } else {
+    data <- data.frame(data)
+  }
 
   # group parameter estimates
   group.par <- c(mu=mean(score), sigma=stats::sd(score))
@@ -318,7 +322,7 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   }
 
   # all other items
-  if(length(loc_else) > 1) {
+  if(length(loc_else) >= 1) {
     for(i in 1:length(loc_else)) {
 
       # prepare information to estimate item parameters
@@ -516,7 +520,6 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
 }
 
 
-
 # This function estimates item parameters and the corresponding standard errors for an item
 # This function is an internal function used in the 'est_item' function.
 estimation <- function(f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "GRM", "GPCM"), cats, D=1,
@@ -628,6 +631,16 @@ estimation <- function(f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "GRM", "
                              hessian=TRUE,
                              type="item")
 
+      # initial estimation to find better starting values
+      item_par <- stats::nlminb(item_par, objective=loglike_drm, f_i=f_i, r_i=r_i, theta=theta, model=model, D=D,
+                                fix.a=fix.a.1pl, fix.g=fix.g, a.val=a.val.1pl, g.val=g.val, n.1PLM=NULL,
+                                aprior=aprior, gprior=gprior,
+                                use.aprior=use.aprior, use.gprior=use.gprior,
+                                FUN.grad=FUN.gh, FUN.hess=FUN.gh,
+                                gradient=grad_item_drm,
+                                # hessian=hess_item_drm,
+                                control=list(eval.max=50, iter.max=10, trace=0), lower=lower, upper=upper)$par
+
       # estimate the item parameters
       est <- tryCatch({stats::nlminb(item_par, objective=loglike_drm, f_i=f_i, r_i=r_i, theta=theta, model=model, D=D,
                                      fix.a=fix.a.1pl, fix.g=fix.g, a.val=a.val.1pl, g.val=g.val, n.1PLM=NULL,
@@ -665,6 +678,15 @@ estimation <- function(f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "GRM", "
                              hessian=TRUE,
                              type="item")
 
+      # initial estimation to find better starting values
+      item_par <- stats::nlminb(item_par, objective=loglike_plm, r_i=r_i, theta=theta, pmodel=model, D=D,
+                                fix.a=fix.a.gpcm, a.val=a.val.gpcm,
+                                aprior=aprior, use.aprior=use.aprior,
+                                FUN.grad=FUN.gh, FUN.hess=FUN.gh,
+                                gradient=grad_item_plm,
+                                # hessian=hess_item_plm,
+                                control=list(eval.max=50, iter.max=10, trace=0), lower=lower, upper=upper)$par
+
       # estimate the item parameters
       est <- tryCatch({stats::nlminb(item_par, objective=loglike_plm, r_i=r_i, theta=theta, pmodel=model, D=D,
                                      fix.a=fix.a.gpcm, a.val=a.val.gpcm,
@@ -700,4 +722,3 @@ estimation <- function(f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "GRM", "
   rst
 
 }
-

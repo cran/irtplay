@@ -319,11 +319,21 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
 
     # estimate an abiltiy and SE
     if(method == "MLE") {
-      est.theta <- stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
-                                 norm.prior=norm.prior, logL=TRUE,
-                                 FUN.grad=FUN.grad, FUN.hess=FUN.hess,
-                                 gradient=grad_score, hessian=hess_score,
-                                 lower=range[1], upper=range[2])$par
+      est.mle <- stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
+                               norm.prior=norm.prior, logL=TRUE,
+                               FUN.grad=FUN.grad, FUN.hess=FUN.hess,
+                               gradient=grad_score, hessian=hess_score,
+                               lower=range[1], upper=range[2])
+      if(est.mle$convergence == 0L) {
+        est.theta <- est.mle$par
+      } else {
+        # this is to estimate an ability in a brute force way
+        # when convergence is failed
+        brute_theta <- seq(range[1], range[2], 0.001)
+        brute_ll <- ll_brute(theta=brute_theta, meta=meta, freq.cat=freq.cat, method=method, D=D, norm.prior=norm.prior)
+        est.theta <- brute_theta[which.min(brute_ll)]
+      }
+
       if(se) {
         if(est.theta %in% range) {
           se.theta <- 99.9999
@@ -338,11 +348,21 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
       }
     }
     if(method == "MAP") {
-      est.theta <- stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
-                                 norm.prior=norm.prior, logL=TRUE,
-                                 FUN.grad=FUN.grad, FUN.hess=FUN.hess,
-                                 gradient=grad_score, hessian=hess_score,
-                                 lower=range[1], upper=range[2])$par
+      est.map <- stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
+                               norm.prior=norm.prior, logL=TRUE,
+                               FUN.grad=FUN.grad, FUN.hess=FUN.hess,
+                               gradient=grad_score, hessian=hess_score,
+                               lower=range[1], upper=range[2])
+      if(est.map$convergence == 0L) {
+        est.theta <- est.map$par
+      } else {
+        # this is to estimate an ability in a brute force way
+        # when convergence is failed
+        brute_theta <- seq(range[1], range[2], 0.001)
+        brute_ll <- ll_brute(theta=brute_theta, meta=meta, freq.cat=freq.cat, method=method, D=D, norm.prior=norm.prior)
+        est.theta <- brute_theta[which.min(brute_ll)]
+      }
+
       if(se) {
         hess <- hess_score(theta=est.theta, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
                            norm.prior=norm.prior, logL=TRUE,
@@ -390,3 +410,4 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
   rst
 
 }
+

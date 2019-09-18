@@ -2,12 +2,12 @@ Package: irtplay
 Type: Package
 Title: Evaluation of Model-Data Fit in Item Response Theory (IRT) and
         Useful Functions Related to IRT
-Version: 1.0.0
+Version: 1.1.0
 Description: Examine the IRT model-data fit on item-level 
     in different ways as well as provide useful functions related to unidimensional 
     item response theory (IRT). In terms of assessing the IRT model-data fit, one of 
     distinguished features of this package is that it gives not only well-known item 
-    fit statistics (e.g., chi-square, infit and oufit statistics 
+    fit statistics (e.g., chi-square (X2), likelihood ratio chi-square (G2), infit and oufit statistics 
     (Ames & Penfield (2015) <doi:10.1111/emip.12067>)) but also graphical 
     displays to look at residuals between between the observed data and model-based 
     predictions (Hambleton, Swaminathan, & Rogers (1991, ISBN:9780803936478)). 
@@ -35,9 +35,9 @@ Authors@R: c(person("Hwanggyu", "Lim", email="hglim83@gmail.com", role=c("aut", 
 RoxygenNote: 6.1.1
 Suggests: mirt
 NeedsCompilation: no
-Packaged: 2019-08-23 20:29:30 UTC; kijja
+Packaged: 2019-09-16 01:00:39 UTC; kijja
 Author: Hwanggyu Lim [aut, cre],
   Craig S. Wells [ctb]
 Maintainer: Hwanggyu Lim <hglim83@gmail.com>
 Repository: CRAN
-Date/Publication: 2019-08-24 14:20:03 UTC
+Date/Publication: 2019-09-18 14:00:02 UTC

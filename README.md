@@ -7,23 +7,23 @@ The goal of `irtplay` is to examine the IRT model-data fit on item-level
 in different ways as well as provide useful functions related to
 unidimensional item response theory (IRT). In terms of assessing the IRT
 model-data fit, one of distinguished features of this package is that it
-gives not only item fit statistics (e.g., \(\chi^{2}\) fit statistic
-(e.g., Bock, 1960; Yen, 1981), infit and outfit statistics (Ames et al.,
-2015), and \(S-X^{2}\) (Orlando & Thissen, 2000, 2003)) but also
-graphical displays to look at residuals between between the observed
-data and model-based predictions (Hambleton, Swaminathan, & Rogers,
-1991). More evaluation methods will be included in the future updated
-version. In addition to the evaluation of IRT model-data fit, there are
-several useful functions such as estimating proficiency parameters,
-calibrating item parameters given the fixed effects (aka. ability
-values), computing asymptotic variance-covariance matrices of item
-parameter estimates, importing item and/or ability parameters from
-popular IRT software, generating simulated data, computing the
-conditional distribution of observed scores using the Lord-Wingersky
-recursion formula, computing item and test information functions,
-computing item and test characteristic curve functions, and plotting
-item and test characteristic curves and item and test information
-functions.
+gives not only item fit statistics (e.g., chi-square fit statistic (X2;
+e.g., Bock, 1960; Yen, 1981), likelihood ratio chi-square fit statistic
+(G2; McKinley & Mills, 1985), infit and outfit statistics (Ames et al.,
+2015), and S-X2 (Orlando & Thissen, 2000, 2003)) but also graphical
+displays to look at residuals between between the observed data and
+model-based predictions (Hambleton, Swaminathan, & Rogers, 1991). More
+evaluation methods will be included in the future updated version. In
+addition to the evaluation of IRT model-data fit, there are several
+useful functions such as estimating proficiency parameters, calibrating
+item parameters given the fixed effects (aka. ability values), computing
+asymptotic variance-covariance matrices of item parameter estimates,
+importing item and/or ability parameters from popular IRT software,
+generating simulated data, computing the conditional distribution of
+observed scores using the Lord-Wingersky recursion formula, computing
+item and test information functions, computing item and test
+characteristic curve functions, and plotting item and test
+characteristic curves and item and test information functions.
 
 ## Installation
 
@@ -44,8 +44,8 @@ model-data fit on item-level can be implemented with three main steps:
 
 1.  Prepare a data set for the IRT item fit analysis (i.e., item meta
     data, ability estimates, and response data).
-2.  Obtain the IRT fit statistics such as the \(\chi^{2}\), infit, and
-    outfit statistics using the `irtfit` function.
+2.  Obtain the IRT fit statistics such as the X2, G2, infit, and outfit
+    statistics using the `irtfit` function.
 3.  Based on the results of IRT model fit analysis (i.e., an object of
     class `irtfit`) obtained in step 2, draw the IRT residual plots
     (i.e., raw residual and standardized residual plots) using `plot`
@@ -79,17 +79,17 @@ a data set. To run the `irtfit` function, it requires three data sets:
 ## 2\. Computing the IRT model-data fit statistics
 
 The `irtfit` function computes the traditional IRT item fit statistics
-such as \(\chi^{2}\), infit, and outfit statistics. To calculate
-the\(\chi^{2}\) statistic, two methods are available to divide the
-ability scale into several groups. The two methods are “equal.width” for
-dividing the scale by an equal length of the interval and “equal.freq”
-for dividing the scale by an equal frequency of examinees. Also, you
-need to specify the location of ability point at each group (or
-interval) where the expected probabilities of score categories are
-calculated from the IRT models. Available locations are “average” for
-computing the expected probability at the average point of examinees’
-ability estimates in each group and “middle” for computing the expected
-probability at the midpoint of each group.
+such as X2, G2, infit, and outfit statistics. To calculate the X2 and G2
+statistics, two methods are available to divide the ability scale into
+several groups. The two methods are “equal.width” for dividing the scale
+by an equal length of the interval and “equal.freq” for dividing the
+scale by an equal frequency of examinees. Also, you need to specify the
+location of ability point at each group (or interval) where the expected
+probabilities of score categories are calculated from the IRT models.
+Available locations are “average” for computing the expected probability
+at the average point of examinees’ ability estimates in each group and
+“middle” for computing the expected probability at the midpoint of
+each group.
 
 To use the `irtfit` function, you need to insert the item meta data in
 the argument `x`, the ability estimates in the argument `score`, and the
@@ -101,7 +101,7 @@ include missing values, you must indicate the missing value in argument
 
 Once the `irtfit` function has been implemented, you’ll get the fit
 statistic results and the contingency tables for every item used to
-calculate the \(\chi^{2}\) fit statistic.
+calculate the X2 and G2 fit statistics.
 
 ## 3\. Drawing the IRT residual plots
 
@@ -216,73 +216,59 @@ fit1 <- irtfit(x=x, score=score, data=data, group.method="equal.width",
 
 # what kinds of internal objects does the results have?
 names(fit1)
-#> [1] "fit_stat"        "contingency"     "item_df"         "individual.info"
-#> [5] "ancillary"       "call"
+#> [1] "fit_stat"            "contingency.fitstat" "contingency.plot"   
+#> [4] "item_df"             "individual.info"     "ancillary"          
+#> [7] "call"
 
 # show the results of the fit statistics
 fit1$fit_stat[1:10, ]
-#>     id   chisq df crit.value p.value outfit infit     N overSR.prop
-#> 1   V2  78.322  9      16.92       0  1.018 1.016  2018       0.364
-#> 2   V3 187.106  9      16.92       0  1.124 1.090 11041       0.636
-#> 3   V5 152.111  9      16.92       0  1.133 1.111  5181       0.727
-#> 4   V6 179.557  9      16.92       0  1.056 1.045 13599       0.545
-#> 5   V7 185.438  9      16.92       0  1.078 1.059 18293       0.455
-#> 6   V8 209.666  9      16.92       0  1.098 1.075 16163       0.636
-#> 7  V10 267.444  9      16.92       0  1.097 1.073 19702       0.727
-#> 8  V11 151.158  9      16.92       0  1.129 1.083 13885       0.455
-#> 9  V12 139.295  9      16.92       0  1.065 1.051 12118       0.636
-#> 10 V13 128.422  9      16.92       0  1.075 1.059 10719       0.545
+#>     id      X2      G2 df.X2 df.G2 crit.value.X2 crit.value.G2 p.value.X2
+#> 1   V2  75.070  75.209     8    10         15.51         18.31          0
+#> 2   V3 186.880 168.082     8    10         15.51         18.31          0
+#> 3   V5 151.329 139.213     8    10         15.51         18.31          0
+#> 4   V6 178.409 157.911     8    10         15.51         18.31          0
+#> 5   V7 185.438 170.360     9    11         16.92         19.68          0
+#> 6   V8 209.653 193.001     8    10         15.51         18.31          0
+#> 7  V10 267.444 239.563     9    11         16.92         19.68          0
+#> 8  V11 148.896 133.209     7     9         14.07         16.92          0
+#> 9  V12 139.295 125.647     9    11         16.92         19.68          0
+#> 10 V13 128.422 117.439     9    11         16.92         19.68          0
+#>    p.value.G2 outfit infit     N overSR.prop
+#> 1           0  1.018 1.016  2018       0.364
+#> 2           0  1.124 1.090 11041       0.636
+#> 3           0  1.133 1.111  5181       0.727
+#> 4           0  1.056 1.045 13599       0.545
+#> 5           0  1.078 1.059 18293       0.455
+#> 6           0  1.098 1.075 16163       0.636
+#> 7           0  1.097 1.073 19702       0.727
+#> 8           0  1.129 1.083 13885       0.455
+#> 9           0  1.065 1.051 12118       0.636
+#> 10          0  1.075 1.059 10719       0.545
 
 # show the contingency tables for the first item (dichotomous)
-fit1$contingency[[1]]
-#>                               theta   N freq.0 freq.1 obs.prop.0
-#> [-0.1218815,0.08512996] -0.02529272   3      3      0  1.0000000
-#> (0.08512996,0.2921415]   0.18431014   5      2      3  0.4000000
-#> (0.2921415,0.499153]     0.39488272  14      8      6  0.5714286
-#> (0.499153,0.7061645]     0.60618911  60     34     26  0.5666667
-#> (0.7061645,0.913176]     0.83531169 185     99     86  0.5351351
-#> (0.913176,1.120187]      1.04723712 240    115    125  0.4791667
-#> (1.120187,1.327199]      1.25232143 349    145    204  0.4154728
-#> (1.327199,1.53421]       1.47877397 325    114    211  0.3507692
-#> (1.53421,1.741222]       1.63898436 246     82    164  0.3333333
-#> (1.741222,1.948233]      1.78810197 377    139    238  0.3687003
-#> (1.948233,2.155245]      2.11166019 214     78    136  0.3644860
-#>                         obs.prop.1 exp.prob.0 exp.prob.1 raw_resid.0
-#> [-0.1218815,0.08512996]  0.0000000  0.7841844  0.2158156  0.21581559
-#> (0.08512996,0.2921415]   0.6000000  0.7499556  0.2500444 -0.34995561
-#> (0.2921415,0.499153]     0.4285714  0.7121079  0.2878921 -0.14067932
-#> (0.499153,0.7061645]     0.4333333  0.6708959  0.3291041 -0.10422928
-#> (0.7061645,0.913176]     0.4648649  0.6230537  0.3769463 -0.08791853
-#> (0.913176,1.120187]      0.5208333  0.5765337  0.4234663 -0.09736699
-#> (1.120187,1.327199]      0.5845272  0.5301760  0.4698240 -0.11470327
-#> (1.327199,1.53421]       0.6492308  0.4784096  0.5215904 -0.12764036
-#> (1.53421,1.741222]       0.6666667  0.4419993  0.5580007 -0.10866594
-#> (1.741222,1.948233]      0.6312997  0.4086532  0.5913468 -0.03995295
-#> (1.948233,2.155245]      0.6355140  0.3394647  0.6605353  0.02502128
-#>                         raw_resid.1       se.0       se.1 std_resid.0
-#> [-0.1218815,0.08512996] -0.21581559 0.23751437 0.23751437   0.9086423
-#> (0.08512996,0.2921415]   0.34995561 0.19366063 0.19366063  -1.8070560
-#> (0.2921415,0.499153]     0.14067932 0.12101070 0.12101070  -1.1625362
-#> (0.499153,0.7061645]     0.10422928 0.06066226 0.06066226  -1.7181899
-#> (0.7061645,0.913176]     0.08791853 0.03563007 0.03563007  -2.4675377
-#> (0.913176,1.120187]      0.09736699 0.03189453 0.03189453  -3.0527806
-#> (1.120187,1.327199]      0.11470327 0.02671560 0.02671560  -4.2934941
-#> (1.327199,1.53421]       0.12764036 0.02770914 0.02770914  -4.6064351
-#> (1.53421,1.741222]       0.10866594 0.03166362 0.03166362  -3.4318859
-#> (1.741222,1.948233]      0.03995295 0.02531791 0.02531791  -1.5780508
-#> (1.948233,2.155245]     -0.02502128 0.03236968 0.03236968   0.7729850
-#>                         std_resid.1
-#> [-0.1218815,0.08512996]  -0.9086423
-#> (0.08512996,0.2921415]    1.8070560
-#> (0.2921415,0.499153]      1.1625362
-#> (0.499153,0.7061645]      1.7181899
-#> (0.7061645,0.913176]      2.4675377
-#> (0.913176,1.120187]       3.0527806
-#> (1.120187,1.327199]       4.2934941
-#> (1.327199,1.53421]        4.6064351
-#> (1.53421,1.741222]        3.4318859
-#> (1.741222,1.948233]       1.5780508
-#> (1.948233,2.155245]      -0.7729850
+fit1$contingency.fitstat[[1]]
+#>      N freq.0 freq.1 obs.prop.0 obs.prop.1 exp.prob.0 exp.prob.1
+#> 1    8      5      3  0.6250000  0.3750000  0.7627914  0.2372086
+#> 2   14      8      6  0.5714286  0.4285714  0.7121079  0.2878921
+#> 3   60     34     26  0.5666667  0.4333333  0.6708959  0.3291041
+#> 4  185     99     86  0.5351351  0.4648649  0.6230537  0.3769463
+#> 5  240    115    125  0.4791667  0.5208333  0.5765337  0.4234663
+#> 6  349    145    204  0.4154728  0.5845272  0.5301760  0.4698240
+#> 7  325    114    211  0.3507692  0.6492308  0.4784096  0.5215904
+#> 8  246     82    164  0.3333333  0.6666667  0.4419993  0.5580007
+#> 9  377    139    238  0.3687003  0.6312997  0.4086532  0.5913468
+#> 10 214     78    136  0.3644860  0.6355140  0.3394647  0.6605353
+#>    raw_resid.0 raw_resid.1
+#> 1  -0.13779141  0.13779141
+#> 2  -0.14067932  0.14067932
+#> 3  -0.10422928  0.10422928
+#> 4  -0.08791853  0.08791853
+#> 5  -0.09736699  0.09736699
+#> 6  -0.11470327  0.11470327
+#> 7  -0.12764036  0.12764036
+#> 8  -0.10866594  0.10866594
+#> 9  -0.03995295  0.03995295
+#> 10  0.02502128 -0.02502128
 
 
 # (2) the use of "equal.freq"  
@@ -292,68 +278,55 @@ fit2 <- irtfit(x=x, score=score, data=data, group.method="equal.freq",
 
 # show the results of the fit statistics
 fit2$fit_stat[1:10, ]
-#>     id   chisq df crit.value p.value outfit infit     N overSR.prop
-#> 1   V2  77.967  9      16.92       0  1.018 1.016  2018       0.727
-#> 2   V3 202.035  9      16.92       0  1.124 1.090 11041       0.636
-#> 3   V5 146.383  9      16.92       0  1.133 1.111  5181       0.727
-#> 4   V6 140.038  9      16.92       0  1.056 1.045 13599       0.545
-#> 5   V7 188.814  9      16.92       0  1.078 1.059 18293       0.455
-#> 6   V8 211.279  9      16.92       0  1.098 1.075 16163       0.545
-#> 7  V10 259.669  9      16.92       0  1.097 1.073 19702       0.636
-#> 8  V11 166.427  9      16.92       0  1.129 1.083 13885       0.636
-#> 9  V12 145.789  9      16.92       0  1.065 1.051 12118       0.364
-#> 10 V13 141.283  9      16.92       0  1.075 1.059 10719       0.636
+#>     id      X2      G2 df.X2 df.G2 crit.value.X2 crit.value.G2 p.value.X2
+#> 1   V2  77.967  78.144     9    11         16.92         19.68          0
+#> 2   V3 202.035 181.832     9    11         16.92         19.68          0
+#> 3   V5 146.383 135.908     9    11         16.92         19.68          0
+#> 4   V6 140.038 133.287     9    11         16.92         19.68          0
+#> 5   V7 188.814 177.526     9    11         16.92         19.68          0
+#> 6   V8 211.279 196.328     9    11         16.92         19.68          0
+#> 7  V10 259.669 239.292     9    11         16.92         19.68          0
+#> 8  V11 166.427 150.419     9    11         16.92         19.68          0
+#> 9  V12 145.789 134.690     9    11         16.92         19.68          0
+#> 10 V13 141.283 132.270     9    11         16.92         19.68          0
+#>    p.value.G2 outfit infit     N overSR.prop
+#> 1           0  1.018 1.016  2018       0.727
+#> 2           0  1.124 1.090 11041       0.636
+#> 3           0  1.133 1.111  5181       0.727
+#> 4           0  1.056 1.045 13599       0.545
+#> 5           0  1.078 1.059 18293       0.455
+#> 6           0  1.098 1.075 16163       0.545
+#> 7           0  1.097 1.073 19702       0.636
+#> 8           0  1.129 1.083 13885       0.636
+#> 9           0  1.065 1.051 12118       0.364
+#> 10          0  1.075 1.059 10719       0.636
 
 # show the contingency table for the fourth item (polytomous)
-fit2$contingency[[4]]
-#>                               theta    N freq.0 freq.1 obs.prop.0
-#> [-2.175778,-1.607328]   -1.84990398 1241    967    274  0.7792103
-#> (-1.607328,-1.312479]   -1.42117968 1243    879    364  0.7071601
-#> (-1.312479,-1.090118]   -1.17979904 1243    784    459  0.6307321
-#> (-1.090118,-0.8999632]  -0.97959430 1219    747    472  0.6127974
-#> (-0.8999632,-0.7788243] -0.82093760 1236    705    531  0.5703883
-#> (-0.7788243,-0.6579365] -0.70186988 1243    677    566  0.5446500
-#> (-0.6579365,-0.5208036] -0.57659373 1270    662    608  0.5212598
-#> (-0.5208036,-0.357093]  -0.42255973 1230    616    614  0.5008130
-#> (-0.357093,-0.1727341]  -0.25467892 1207    553    654  0.4581607
-#> (-0.1727341,0.08253468] -0.05923891 1233    494    739  0.4006488
-#> (0.08253468,1.661899]    0.30797093 1234    465    769  0.3768233
-#>                         obs.prop.1 exp.prob.0 exp.prob.1  raw_resid.0
-#> [-2.175778,-1.607328]    0.2207897  0.8038510  0.1961490 -0.024640641
-#> (-1.607328,-1.312479]    0.2928399  0.7161793  0.2838207 -0.009019180
-#> (-1.312479,-1.090118]    0.3692679  0.6575849  0.3424151 -0.026852795
-#> (-1.090118,-0.8999632]   0.3872026  0.6049393  0.3950607  0.007858099
-#> (-0.8999632,-0.7788243]  0.4296117  0.5613454  0.4386546  0.009042942
-#> (-0.7788243,-0.6579365]  0.4553500  0.5279560  0.4720440  0.016694048
-#> (-0.6579365,-0.5208036]  0.4787402  0.4925592  0.5074408  0.028700633
-#> (-0.5208036,-0.357093]   0.4991870  0.4491759  0.5508241  0.051637085
-#> (-0.357093,-0.1727341]   0.5418393  0.4027790  0.5972210  0.055381721
-#> (-0.1727341,0.08253468]  0.5993512  0.3509261  0.6490739  0.049722759
-#> (0.08253468,1.661899]    0.6231767  0.2630181  0.7369819  0.113805214
-#>                          raw_resid.1       se.0       se.1 std_resid.0
-#> [-2.175778,-1.607328]    0.024640641 0.01127184 0.01127184  -2.1860346
-#> (-1.607328,-1.312479]    0.009019180 0.01278784 0.01278784  -0.7052932
-#> (-1.312479,-1.090118]    0.026852795 0.01345912 0.01345912  -1.9951369
-#> (-1.090118,-0.8999632]  -0.007858099 0.01400187 0.01400187   0.5612179
-#> (-0.8999632,-0.7788243] -0.009042942 0.01411456 0.01411456   0.6406820
-#> (-0.7788243,-0.6579365] -0.016694048 0.01415972 0.01415972   1.1789818
-#> (-0.6579365,-0.5208036] -0.028700633 0.01402878 0.01402878   2.0458389
-#> (-0.5208036,-0.357093]  -0.051637085 0.01418281 0.01418281   3.6408231
-#> (-0.357093,-0.1727341]  -0.055381721 0.01411716 0.01411716   3.9230075
-#> (-0.1727341,0.08253468] -0.049722759 0.01359169 0.01359169   3.6583214
-#> (0.08253468,1.661899]   -0.113805214 0.01253325 0.01253325   9.0802645
-#>                         std_resid.1
-#> [-2.175778,-1.607328]     2.1860346
-#> (-1.607328,-1.312479]     0.7052932
-#> (-1.312479,-1.090118]     1.9951369
-#> (-1.090118,-0.8999632]   -0.5612179
-#> (-0.8999632,-0.7788243]  -0.6406820
-#> (-0.7788243,-0.6579365]  -1.1789818
-#> (-0.6579365,-0.5208036]  -2.0458389
-#> (-0.5208036,-0.357093]   -3.6408231
-#> (-0.357093,-0.1727341]   -3.9230075
-#> (-0.1727341,0.08253468]  -3.6583214
-#> (0.08253468,1.661899]    -9.0802645
+fit2$contingency.fitstat[[4]]
+#>       N freq.0 freq.1 obs.prop.0 obs.prop.1 exp.prob.0 exp.prob.1
+#> 1  1241    967    274  0.7792103  0.2207897  0.8038510  0.1961490
+#> 2  1243    879    364  0.7071601  0.2928399  0.7161793  0.2838207
+#> 3  1243    784    459  0.6307321  0.3692679  0.6575849  0.3424151
+#> 4  1219    747    472  0.6127974  0.3872026  0.6049393  0.3950607
+#> 5  1236    705    531  0.5703883  0.4296117  0.5613454  0.4386546
+#> 6  1243    677    566  0.5446500  0.4553500  0.5279560  0.4720440
+#> 7  1270    662    608  0.5212598  0.4787402  0.4925592  0.5074408
+#> 8  1230    616    614  0.5008130  0.4991870  0.4491759  0.5508241
+#> 9  1207    553    654  0.4581607  0.5418393  0.4027790  0.5972210
+#> 10 1233    494    739  0.4006488  0.5993512  0.3509261  0.6490739
+#> 11 1234    465    769  0.3768233  0.6231767  0.2630181  0.7369819
+#>     raw_resid.0  raw_resid.1
+#> 1  -0.024640641  0.024640641
+#> 2  -0.009019180  0.009019180
+#> 3  -0.026852795  0.026852795
+#> 4   0.007858099 -0.007858099
+#> 5   0.009042942 -0.009042942
+#> 6   0.016694048 -0.016694048
+#> 7   0.028700633 -0.028700633
+#> 8   0.051637085 -0.051637085
+#> 9   0.055381721 -0.055381721
+#> 10  0.049722759 -0.049722759
+#> 11  0.113805214 -0.113805214
 
 
 ##----------------------------------------------------------------------------

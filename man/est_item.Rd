@@ -7,7 +7,7 @@
 est_item(x = NULL, data, score, D = 1, model = NULL, cats = NULL,
   fix.a.1pl = FALSE, fix.a.gpcm = FALSE, fix.g = FALSE,
   a.val.1pl = 1, a.val.gpcm = 1, g.val = 0.2, use.aprior = FALSE,
-  use.gprior = TRUE, aprior = list(dist = "lnorm", params = c(1, 0.5)),
+  use.gprior = TRUE, aprior = list(dist = "lnorm", params = c(0, 0.5)),
   gprior = list(dist = "beta", params = c(5, 17)), missing = NA,
   use.startval = FALSE, control = list(eval.max = 500, iter.max = 500))
 }

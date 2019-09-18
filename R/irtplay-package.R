@@ -5,10 +5,10 @@
 #' Examine the IRT model-data fit on item-level in different ways as well as provide
 #' useful functions related to unidimensional item response theory (IRT). In terms of assessing the IRT model-data fit,
 #' one of distinguished features of this package is that it gives not only item fit statistics (e.g., \eqn{\chi^{2}}
-#' fit statistic (e.g., Bock, 1960; Yen, 1981), infit and outfit statistics (Ames et al., 2015), and \eqn{S-X^{2}}
-#' (Orlando & Thissen, 2000, 2003)) but also graphical displays to look at residuals between between the observed
-#' data and model-based predictions (Hambleton, Swaminathan, & Rogers, 1991). More evaluation methods will be included
-#' in the future updated version.
+#' fit statistic (e.g., Bock, 1960; Yen, 1981), likelihood ratio \eqn{\chi^{2}} fit statistic (\eqn{G^{2}}; McKinley & Mills, 1985),
+#' infit and outfit statistics (Ames et al., 2015), and \eqn{S-X^{2}} (Orlando & Thissen, 2000, 2003))
+#' but also graphical displays to look at residuals between between the observed data and model-based predictions
+#' (Hambleton, Swaminathan, & Rogers, 1991). More evaluation methods will be included in the future updated version.
 #' In addition to the evaluation of IRT model-data fit, there are several useful functions such as estimating proficiency
 #' parameters, , calibrating item parameters given the fixed effects (aka. ability values), computing asymptotic
 #' variance-covariance matrices of item parameter estimates, importing item and/or ability parameters from popular IRT software,
@@ -16,8 +16,8 @@
 #' computing item and test information functions, computing item and test characteristic curve functions, and plotting item and test
 #' characteristic curves and item and test information functions.
 #'
-#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.0.0\cr Date: \tab
-#' 2019-08-22\cr Depends: \tab R (>= 3.4)\cr License: \tab GPL (>= 2)\cr }
+#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.1.0\cr Date: \tab
+#' 2019-09-15\cr Depends: \tab R (>= 3.4)\cr License: \tab GPL (>= 2)\cr }
 #'
 #' @details
 #' One way to assess goodness of IRT model-data fit is through an item fit analysis by examining the traditional item fit statistics
@@ -26,7 +26,7 @@
 #'
 #' \enumerate{
 #'   \item Prepare a data set for the IRT item fit analysis (i.e., item meta data, ability estimates, and response data).
-#'   \item Obtain the IRT fit statistics such as \eqn{\chi^{2}}, infit, and outfit statistics using the function \code{\link{irtfit}}.
+#'   \item Obtain the IRT fit statistics such as \eqn{\chi^{2}}, \eqn{G^{2}}, infit, and outfit statistics using the function \code{\link{irtfit}}.
 #'   \item Based on the results of IRT model fit analysis (i.e., an object of class \code{\link{irtfit}}) obtained in step 2,
 #' draw the IRT residual plots (i.e., raw residual and standardized residual plots) using the function \code{\link{plot.irtfit}}.
 #' }
@@ -51,8 +51,8 @@
 #'  }
 #'
 #'   \item{2. Computing the IRT model-data fit statistics}{
-#'   The function \code{\link{irtfit}} computes the traditional IRT item fit statistics such as \eqn{\chi^{2}}, infit, and outfit statistics.
-#'   To calculate the \eqn{\chi^{2}} statistic, two methods are available to divide the ability scale into several groups. The two methods are "equal.width"
+#'   The function \code{\link{irtfit}} computes the traditional IRT item fit statistics such as \eqn{\chi^{2}}, \eqn{G^{2}}, infit, and outfit statistics.
+#'   To calculate the \eqn{\chi^{2}} and \eqn{G^{2}} statistics, two methods are available to divide the ability scale into several groups. The two methods are "equal.width"
 #'   for dividing the scale by an equal length of the interval and "equal.freq" for dividing the scale by an equal frequency of examinees. Also, you need to
 #'   specify the location of ability point at each group (or interval) where the expected probabilities of score categories are calculated from the IRT models.
 #'   Available locations are "average" for computing the expected probability at the average point of examinees' ability estimates in each group and "middle" for
@@ -63,7 +63,7 @@
 #'   in the argument \code{n.width}. In addition, if the response data include missing values, you must indicate the missing value in argument \code{missing}.
 #'
 #'   Once the function \code{\link{irtfit}} has been implemented, you'll get the fit statistic results and the contingency tables for every item used
-#'   to calculate the \eqn{\chi^{2}} fit statistic.
+#'   to calculate the \eqn{\chi^{2}} and \eqn{G^{2}} fit statistics.
 #'  }
 #'
 #'   \item{3. Drawing the IRT residual plots}{
@@ -117,7 +117,7 @@
 #' fit1$fit_stat[1:10, ]
 #'
 #' # show the contingency tables for the first item (dichotomous item)
-#' fit1$contingency[[1]]
+#' fit1$contingency.fitstat[[1]]
 #'
 #' # (2) the use of "equal.freq"
 #' fit2 <- irtfit(x=x, score=score, data=data, group.method="equal.freq",
@@ -128,7 +128,7 @@
 #' fit2$fit_stat[1:10, ]
 #'
 #' # show the contingency table for the fourth item (polytomous item)
-#' fit2$contingency[[4]]
+#' fit2$contingency.fitstat[[4]]
 #'
 #' ##---------------------------------------------------------------
 #' ## Step 3: Draw the IRT residual plots
@@ -236,6 +236,9 @@
 #'
 #' Lord, F. & Wingersky, M. (1984). Comparison of IRT true score and equipercentile observed score equatings.
 #' \emph{Applied Psychological Measurement, 8}(4), 453-461.
+#'
+#' McKinley, R., & Mills, C. (1985). A comparison of several goodness-of-fit statistics.
+#' \emph{Applied Psychological Measurement, 9}, 49-57.
 #'
 #' Muraki, E. & Bock, R. D. (2003). PARSCALE 4: IRT item analysis and test scoring for rating
 #' scale data [Computer Program]. Chicago, IL: Scientific Software International. URL http://www.ssicentral.com
