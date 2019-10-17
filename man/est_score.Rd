@@ -5,8 +5,9 @@
 \title{Estimate examinees' ability (proficiency) parameters}
 \usage{
 est_score(x, data, D = 1, method = "MLE", range = c(-4, 4),
-  norm.prior = c(0, 1), nquad = 41, weights = NULL, se = TRUE,
-  missing = NA, ncore = 1, ...)
+  norm.prior = c(0, 1), nquad = 41, weights = NULL, fence.a = 3,
+  fence.b = NULL, se = TRUE, constant = 0.1, constraint = FALSE,
+  range.tcc = c(-7, 7), missing = NA, ncore = 1, ...)
 }
 \arguments{
 \item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
@@ -19,26 +20,50 @@ the examinees and items, respectively.}
 \item{D}{A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
 Default is 1.}
 
-\item{method}{A character string indicating a scoring method. Available methods are "MLE" for
-the maximum likelihood estimation, "MAP" for the maximum a posteriori estimation, "EAP" for the expected a posteriori estimation,
-and "EAP.SUM" for the expected a posteriori summed scoring. Default method is "MLE".}
+\item{method}{A character string indicating a scoring method. Available methods are "MLE" for the maximum likelihood estimation,
+"MLEF" for the maximum likelihood estimation with fences, "MAP" for the maximum a posteriori estimation,
+"EAP" for the expected a posteriori estimation, "EAP.SUM" for the expected a posteriori summed scoring, and "INV.TCC" for the inverse TCC socring.
+Default method is "MLE".}
 
 \item{range}{A numeric vector of two components to restrict the range of ability scale for the MLE. Default is c(-4, 4).}
 
 \item{norm.prior}{A numeric vector of two components specifying a mean and standard deviation of the normal prior distribution.
 These two parameters are used to obtain the gaussian quadrature points and the corresponding weights from the normal distribution. Default is
-c(0,1). Ignored if \code{method} is "MLE".}
+c(0,1). Ignored if \code{method} is "MLE", "MLEF", or "INV.TCC".}
 
 \item{nquad}{An integer value specifying the number of gaussian quadrature points from the normal prior distribution. Default is 41.
-Ignored if \code{method} is "MLE" or "MAP".}
+Ignored if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".}
 
 \item{weights}{A two-column matrix or data.frame containing the theta values (in the first column) and the weights (in the second column)
 for the prior distribution. The weights and theta values can be easily obtained using the function \code{\link{gen.weight}}.
 If NULL and \code{method} is "EAP" or "EAP.SUM", default values are used (see the arguments of \code{norm.prior} and \code{nquad}). Ignored
-if \code{method} is "MLE" or "MAP".}
+if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".}
 
-\item{se}{A logical value. If TRUE, the standard errors of ability estimates are computed. However, if \code{method} is "EAP.SUM", the standard
+\item{fence.a}{A numeric value specifying the item slope parameter (i.e., \emph{a}-parameter) for the two imaginary items in MLEF. See below for details.
+Default is 3.0.}
+
+\item{fence.b}{A numeric vector of two components specifying the lower and upper fences of item difficulty parameters (i.e., \emph{b}-parameters)
+for the two imaginary items, respectively, in MLEF. When \code{fence.b = NULL}, the lower and upper fences of item difficulty parameters were
+automatically set. See below for details. Default is NULL.}
+
+\item{se}{A logical value. If TRUE, the standard errors of ability estimates are computed. However, if \code{method} is "EAP.SUM" or "INV.TCC", the standard
 errors are always returned.}
+
+\item{constant}{A numeric value used to adjust zero and perfect raw sum scores, or the raw sum score equal to the sum of item guessing parameters,
+if necessary, to find estimable solutions for those raw sum scores when \code{method = "INV.TCC"}. The zero raw score is forced to become the score of "zero raw score + constant"
+and the perfect raw score is forced to become the score of "perfect raw score - constant". If the 3PLM items are included in the item meta data,
+the raw sum score equal to the sum of item guessing parameters is forced to become the score of "the raw sum score + constant". Default is .1.}
+
+\item{constraint}{A logical value indicating whether the ability estimates will be restricted within a specific ability range
+specified in the argument \code{range.tcc} when \code{method = "INV.TCC"}. If \code{constraint = TRUE}, all ability estimates less than the first value in the vector specified in
+the argument \code{range.tcc} are transformed to the first value and all ability estimates greather than the second value in the vector specified in
+the argument \code{range.tcc} are transformed to the second value. Also, when \code{constraint = TRUE} and the 3PLM items are contained
+in the item meta data, linear interpolation method is used to find the ability estimates for the raw sum scores less than the sum of item guessing
+parameters. When \code{constraint = FALSE} and the 3PLM items are contained in the item meta data, linear extrapolation method is used to find
+the ability estimates for the raw sum scores less than the sum of item guessing parameters. See below for details. Default is FALSE.}
+
+\item{range.tcc}{A numeric vector of two components to be used as the lower and upper bounds of ability estimates when \code{method = "INV.TCC"} and
+\code{constraint = TRUE}. Default is c(-7, 7).}
 
 \item{missing}{A value indicating missing values in the response data set. Default is NA. See below for details.}
 
@@ -47,25 +72,48 @@ errors are always returned.}
 \item{...}{additional arguments to pass to \code{parallel::makeCluster}.}
 }
 \value{
-A list including a vector of the ability estimates and a vector of the standard errors of ability estimates. When "EAP.SUM" is used,
-raw sum scores of examinees and a table with the possible raw sum scores and corresponding ability estimates are returned as well.
+A list including a vector of the ability estimates and a vector of the standard errors of ability estimates. When \code{method} is
+"EAP.SUM" or "INV.TCC", raw sum scores of examinees and a table with the possible raw sum scores and corresponding ability estimates are returned as well.
 }
 \description{
 This function estimates examinees' latent ability parameters. Available scoring methods are maximum likelihood estimation (MLE),
-maximum a posteriori estimation (MAP; Hambleton et al., 1991), expected a posteriori estimation (EAP; Bock & Mislevy, 1982),
-and EAP summed scoring (Thissen et al., 1995; Thissen & Orlando, 2001).
+maximum likelihood estimation with fences (MLEF; Han, 2016), maximum a posteriori estimation (MAP; Hambleton et al., 1991),
+expected a posteriori estimation (EAP; Bock & Mislevy, 1982), EAP summed scoring (Thissen et al., 1995; Thissen & Orlando, 2001),
+and inverse test characteristic curve (TCC) scoring (e.g., Kolen & Brennan, 2004; Kolen & Tong, 2010; Stocking, 1996).
 }
 \details{
 For MAP scoring method, only the normal prior distribution is available for the population distribution.
 
 When there are missing data in the response data set, the missing value must be specified in \code{missing}. The missing data are taken into account
-when either of MLE, MAP, and EAP is used. However, there must be no missing data in the response data set when "EAP.SUM" is used.
-One of possible ways to use "EAP.SUM" method when missing values exist is to remove rows with any missing values.
+when either of MLE, MLEF, MAP, and EAP is used. However, there must be no missing data in the response data set when "EAP.SUM" or "INV.TCC" is used.
+One of possible ways to use "EAP.SUM" or "INV.TCC" method when missing values exist is to remove rows with any missing values.
 
-To speed up the ability estimation for MLE, MAP, and EAP methods, this function applies a parallel process using multiple logical CPU cores.
+In the maximum likelihood estimation with fences (MLEF; Han, 2016), two 2PLM imaginary items are necessary. The first imaginary item serves as the lower
+fence and its difficulty parameter (i.e., \emph{b}-parameters) should be lower than any difficulty parameter values in the test form. Likewise, the second
+imaginary item serves as the upper fence and its difficulty parameter should be greater than any difficulty parameter values in the test form. Also, the two
+imaginary items should have a very high item slope parameter (i.e., \emph{a}-parameter) value. See Han (2016) for more details.
+
+When \code{fence.b = NULL} in MLEF, the function automatically sets the lower and upper fences of item difficulty parameters using two steps. More specifically,
+in the first step, the lower fence of the item difficulty parameter is set to the greatest integer value less than the minimum of item difficulty parameters
+in the item meta data and the upper fence of the item difficulty parameter is set to the smallest integer value greater than the maximum of item difficulty
+parameters in the item meta data. Then, in the second step, if the lower fence set in the first step is greater than -3.5, the lower fence is constrained to -3.5
+and if the upper fence set in the first step is less than 3.5, the upper fence is constrained to 3.5. Otherwise, the fence values of item difficulty parameters
+set in the first step are used.
+
+When "INV.TCC" method is used employing the IRT 3-parameter logistic model (3PLM) in a test, ability estimates for the raw sum scores less than the sum of item
+guessing parameters are not attainable. In this case, either of linear interpolation and linear extrapolation can be applied. Note that
+if \code{constraint = TRUE}, linear interpolation method is used. Otherwise, linear extrapolation method is used. Let \eqn{\theta_{min}} and
+\eqn{\theta_{max}} be the minimum and maximum ability estimates and \eqn{\theta_{X}} be the ability estimate for the smallest raw score, X, greater than or equal
+to the sum of item guessing parameters. When linear interpolation method is used, a linear line is constructed between two points of (x=\eqn{\theta_{min}}, y=0) and
+(x=\eqn{\theta_{X}}, y=X). Because \code{constraint = TRUE}, \eqn{\theta_{min}} is the first value in the argument \code{range.tcc}.
+When linear extrapolation method is used, a linear line is constructed using two points of (x=\eqn{\theta_{X}}, y=X) and
+(x=\eqn{\theta_{max}}, y=maximum raw score). Then, ability estimates for the raw sum scores between zero and the smallest raw score greater than or equal
+to the sum of item guessing parameters are found using the constructed linear line.
+
+To speed up the ability estimation for MLE, MLEF, MAP, and EAP methods, this function applies a parallel process using multiple logical CPU cores.
 You can set the number of logical CPU cores by specifying a positive integer value in the argument \code{ncore}. Default value is 1.
 
-Note that the standard errors of ability estimates are computed using observed information functions.
+Note that the standard errors of ability estimates are computed using observed information functions for MLE, MLEF, and MAP methods.
 }
 \examples{
 ## the use of a "-prm.txt" file obtained from a flexMIRT
@@ -85,11 +133,21 @@ data <- simdat(x, theta, D=1)
 # estimate the abilities using MLE
 est_score(x, data, D=1, method="MLE", range=c(-4, 4), se=TRUE, ncore=2)
 
+# estimate the abilities using MLEF with default fences of item difficulty parameters
+est_score(x, data, D=1, method="MLEF", fence.a=3.0, fence.b=NULL, se=TRUE, ncore=2)
+
+# estimate the abilities using MLEF with different fences of item difficulty parameters
+est_score(x, data, D=1, method="MLEF", fence.a=3.0, fence.b=c(-5, 5), se=TRUE, ncore=2)
+
 # estimate the abilities using MAP
 est_score(x, data, D=1, method="MAP", norm.prior=c(0, 1), nquad=30, se=TRUE, ncore=2)
 
 # estimate the abilities using EAP summed scoring
 est_score(x, data, D=1, method="EAP.SUM", norm.prior=c(0, 1), nquad=30)
+
+# estimate the abilities using inverse TCC scoring
+est_score(x, data, D=1, method="INV.TCC", constant=0.1, constraint=FALSE, range.tcc=c(-7, 7))
+
 }
 
 }
@@ -97,6 +155,18 @@ est_score(x, data, D=1, method="EAP.SUM", norm.prior=c(0, 1), nquad=30)
 Bock, R. D., & Mislevy, R. J. (1982). Adaptive EAP estimation of ability in a microcomputer environment. \emph{Psychometrika, 35}, 179-198.
 
 Hambleton, R. K., Swaminathan, H., & Rogers, H. J. (1991).\emph{Fundamentals of item response theory}. Newbury Park, CA: Sage.
+
+Han, K. T. (2016). Maximum likelihood score estimation method with fences for short-length tests and computerized adaptive tests.
+\emph{Applied psychological measurement, 40}(4), 289-301.
+
+Kolen, M. J. & Brennan, R. L. (2004). \emph{Test Equating, Scaling, and Linking} (2nd ed.). New York:
+Springer
+
+Kolen, M. J. & Tong, Y. (2010). Psychometric properties of IRT proficiency estimates.
+\emph{Educational Measurement: Issues and Practice, 29}(3), 8-14.
+
+Stocking, M. L. (1996). An alternative method for scoring adaptive tests.
+\emph{Journal of Educational and Behavioral Statistics, 21}(4), 365-389.
 
 Thissen, D. & Orlando, M. (2001). Item response theory for items scored in two categories. In D. Thissen & H. Wainer (Eds.),
 \emph{Test scoring} (pp.73-140). Mahwah, NJ: Lawrence Erlbaum.

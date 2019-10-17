@@ -186,7 +186,7 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   # consider DRM as 3PLM
   if("DRM" %in% model) {
     model[model == "DRM"] <- "3PLM"
-    memo <- "All 'DRM' items were considered as '3PLM' items in during the item parameter estimation."
+    memo <- "All 'DRM' items were considered as '3PLM' items during the item parameter estimation."
     warning(memo, call.=TRUE)
   }
 
@@ -716,8 +716,17 @@ estimation <- function(f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "GRM", "
 
   }
 
+  # check if the hessian matrix can be inversed
+  se <- suppressWarnings(tryCatch({sqrt(diag(solve(hess, tol=1e-200)))}, error = function(e) {NULL}))
+  if(is.null(se)) {
+    se <- rep(99999, length(diag(hess)))
+  }
+  if(any(is.nan(se))) {
+    se[is.nan(se)] <- 99999
+  }
+
   # return results
-  rst <- list(pars=est$par, se=sqrt(diag(solve(hess))), convergence=est$convergence, objective=est$objective)
+  rst <- list(pars=est$par, se=se, convergence=est$convergence, objective=est$objective)
 
   rst
 

@@ -66,6 +66,9 @@ write.flexmirt <- function(x, file=NULL, norm.pop=c(0, 1), rePrm=TRUE) {
       a <- param[i, 1]
       if(!rePrm) {
         c <- - a * param[i, 2]
+        if(param[i, 3] == 0L) {
+          param[i, 3] <- 1e-100
+        }
         logitg <- log(param[i, 3] / (1 - param[i, 3]))
       } else {
         c <- param[i, 2]

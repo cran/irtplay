@@ -1,5 +1,5 @@
 # This function analytically computes a gradient vector for scoring
-grad_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL), method=c("MLE", "MAP"),
+grad_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL), method=c("MLE", "MAP", "MLEF"),
                        D=1, norm.prior=c(0, 1), logL=TRUE,
                        FUN.grad=list(drm=NULL, plm=NULL, prior=NULL),
                        FUN.hess=list(drm=NULL, plm=NULL, prior=NULL)) {
@@ -68,6 +68,7 @@ grad_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_pl
   grad
 
 }
+
 
 # This function analytically computes a gradient vector of dichotomous item parameters
 grad_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "DRM"), D=1,

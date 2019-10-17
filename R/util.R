@@ -80,3 +80,11 @@ print.est_item <- function(x, digits = max(2L, getOption("digits") - 5L), ...) {
 }
 
 
+# a function to calculate a mean and variance at each theta point
+cal_moment <- function(node, weight) {
+  mu <- sum(node * weight)
+  sigma2 <- sum(node^2 * weight) - mu^2
+  rst <- c(mu=mu, sigma2=sigma2)
+  rst
+}
+

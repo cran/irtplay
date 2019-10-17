@@ -2,7 +2,7 @@ Package: irtplay
 Type: Package
 Title: Evaluation of Model-Data Fit in Item Response Theory (IRT) and
         Useful Functions Related to IRT
-Version: 1.1.0
+Version: 1.2.0
 Description: Examine the IRT model-data fit on item-level 
     in different ways as well as provide useful functions related to unidimensional 
     item response theory (IRT). In terms of assessing the IRT model-data fit, one of 
@@ -20,9 +20,9 @@ Description: Examine the IRT model-data fit on item-level
     ability parameters from popular IRT software, generating simulated data, computing 
     the conditional distribution of observed scores using the Lord-Wingersky recursion 
     formula (Lord & Wingersky (1984) <doi:10.1207/s15324818ame1002_1>), 
-    computing item and test information functions, computing item and test 
-    characteristic curve functions, and plotting item and test characteristic curves 
-    and item and test information functions.
+    computing the loglikelihood of individual items, computing item and test 
+    information functions, computing item and test characteristic curve functions, 
+    and plotting item and test characteristic curves and item and test information functions.
 Depends: R (>= 3.4)
 License: GPL (>= 2)
 Encoding: UTF-8
@@ -35,9 +35,9 @@ Authors@R: c(person("Hwanggyu", "Lim", email="hglim83@gmail.com", role=c("aut", 
 RoxygenNote: 6.1.1
 Suggests: mirt
 NeedsCompilation: no
-Packaged: 2019-09-16 01:00:39 UTC; kijja
+Packaged: 2019-10-17 01:46:20 UTC; kijja
 Author: Hwanggyu Lim [aut, cre],
   Craig S. Wells [ctb]
 Maintainer: Hwanggyu Lim <hglim83@gmail.com>
 Repository: CRAN
-Date/Publication: 2019-09-18 14:00:02 UTC
+Date/Publication: 2019-10-17 05:00:02 UTC

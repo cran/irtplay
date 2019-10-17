@@ -13,11 +13,11 @@
 #' parameters, , calibrating item parameters given the fixed effects (aka. ability values), computing asymptotic
 #' variance-covariance matrices of item parameter estimates, importing item and/or ability parameters from popular IRT software,
 #' generating simulated data, computing the conditional distribution of observed scores using the Lord-Wingersky recursion formula,
-#' computing item and test information functions, computing item and test characteristic curve functions, and plotting item and test
-#' characteristic curves and item and test information functions.
+#' computing the loglikelihood of individual items, computing item and test information functions, computing item and
+#' test characteristic curve functions, and plotting item and test characteristic curves and item and test information functions.
 #'
-#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.1.0\cr Date: \tab
-#' 2019-09-15\cr Depends: \tab R (>= 3.4)\cr License: \tab GPL (>= 2)\cr }
+#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.2.0\cr Date: \tab
+#' 2019-10-16\cr Depends: \tab R (>= 3.4)\cr License: \tab GPL (>= 2)\cr }
 #'
 #' @details
 #' One way to assess goodness of IRT model-data fit is through an item fit analysis by examining the traditional item fit statistics
@@ -223,11 +223,17 @@
 #' Hambleton, R. K., & Swaminathan, H., & Rogers, H. J. (1991) \emph{Fundamentals of item response theory}.
 #' Newbury Park, CA: Sage.
 #'
+#' Han, K. T. (2016). Maximum likelihood score estimation method with fences for short-length tests and computerized adaptive tests.
+#' \emph{Applied psychological measurement, 40}(4), 289-301.
+#'
 #' Kang, T., & Chen, T. T. (2008). Performance of the generalized S-X2 item fit index for polytomous IRT models.
 #' \emph{Journal of Educational Measurement, 45}(4), 391-406.
 #'
 #' Kolen, M. J. & Brennan, R. L. (2004) \emph{Test Equating, Scaling, and Linking} (2nd ed.). New York:
 #' Springer.
+#'
+#' Kolen, M. J. & Tong, Y. (2010). Psychometric properties of IRT proficiency estimates.
+#' \emph{Educational Measurement: Issues and Practice, 29}(3), 8-14.
 #'
 #' Laplace, P. S. (1820).\emph{Theorie analytique des probabilites} (in French). Courcier.
 #'
@@ -255,6 +261,9 @@
 #' Pritikin, J. (2018). \emph{rpf: Response Probability Functions}. R package version 0.59.
 #' https://CRAN.R-project.org/package=rpf.
 #'
+#' Stocking, M. L. (1996). An alternative method for scoring adaptive tests.
+#' \emph{Journal of Educational and Behavioral Statistics, 21}(4), 365-389.
+#'
 #' Thissen, D., Pommerich, M., Billeaud, K., & Williams, V. S. (1995). Item Response Theory
 #' for Scores on Tests Including Polytomous Items with Ordered Responses. \emph{Applied Psychological
 #' Measurement, 19}(1), 39-49.
@@ -264,6 +273,9 @@
 #'
 #' Weeks, J. P. (2010). plink: An R Package for Linking Mixed-Format Tests Using IRT-Based Methods.
 #' \emph{Journal of Statistical Software, 35}(12), 1-33. URL http://www.jstatsoft.org/v35/i12/.
+#'
+#' Wells, C. S., & Bolt, D. M. (2008). Investigation of a nonparametric procedure for assessing goodness-of-fit in
+#' item response theory. \emph{Applied Measurement in Education, 21}(1), 22-40.
 #'
 #' Wilson, E. B. (1927). Probable inference, the law of succession, and statistical inference.
 #' \emph{Journal of the American Statistical Association, 22}(158), 209-212.

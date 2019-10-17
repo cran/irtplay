@@ -1,5 +1,5 @@
 # This function analytically computes a hessian matrix for scoring
-hess_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL), method=c("MLE", "MAP"),
+hess_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL), method=c("MLE", "MAP", "MLEF"),
                        D=1, norm.prior=c(0, 1), logL=TRUE,
                        FUN.grad=list(drm=NULL, plm=NULL, prior=NULL),
                        FUN.hess=list(drm=NULL, plm=NULL, prior=NULL)) {
@@ -69,7 +69,6 @@ hess_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_pl
   hess
 
 }
-
 
 
 # This function analytically computes a hessian matrix of dichotomous item parameters
@@ -345,7 +344,7 @@ hess_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
   }
 
   # check if the hess is invertable
-  tmp <- tryCatch({solve(hess)}, error = function(e) {NULL})
+  tmp <- suppressWarnings(tryCatch({solve(hess, tol=1e-200)}, error = function(e) {NULL}))
   if(is.null(tmp)) {
     item_par <- item_par + 0.05
     hess <- hess_item_drm(item_par=item_par, f_i=f_i, r_i=r_i, theta=theta, model=model, D=D,
@@ -474,7 +473,7 @@ hess_item_plm <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=
   }
 
   # check if the hess is invertable
-  tmp <- tryCatch({solve(hess)}, error = function(e) {NULL})
+  tmp <- suppressWarnings(tryCatch({solve(hess, tol=1e-200)}, error = function(e) {NULL}))
   if(is.null(tmp)) {
     item_par <- item_par + 0.05
     hess <- hess_item_plm(item_par=item_par, r_i=r_i, theta=theta, pmodel=pmodel, D=D, fix.a=fix.a, a.val=a.val,

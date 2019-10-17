@@ -1,3 +1,190 @@
+#' Loglikelihood of Items
+#'
+#' @description This function computes the loglikelihood of individual items given the item parameters, ability values, and response data.
+#'
+#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
+#' See \code{\link{irtfit}}, \code{\link{test.info}} or \code{\link{simdat}} for more details about the item meta data.
+#' This data.frame can be easily obtained using the function \code{\link{shape_df}}. If \code{prob = NULL}, this data.frame is
+#' used in the recursion formula. See below for details.
+#' @param data A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
+#' the examinees and items, respectively.
+#' @param score A vector of examinees' ability estimates. Length of the vector must be the same as the number of rows in the
+#' response data set.
+#' @param D A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
+#' Default is 1.
+#' @param use.aprior A logical value. If TRUE, a prior distribution for the slope parameters is used when computing the loglikelihood values
+#' across all items. Default is FALSE.
+#' @param use.gprior A logical value. If TRUE, a prior distribution for the guessing parameters is used when computing the loglikelihood values
+#' across all 3PLM items. Default is TRUE.
+#' @param aprior A list containing the information of the prior distribution for item slope parameters. Three probability distributions
+#' of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
+#' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
+#' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
+#' distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
+#' in the first argument. In terms of the two parameters of the three distributions, see \code{\link[stats]{dbeta}}, \code{\link[stats]{dlnorm}},
+#' and \code{\link[stats]{dnorm}} for more details.
+#' @param gprior A list containing the information of the prior distribution for item guessing parameters. Three probability distributions
+#' of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
+#' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
+#' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
+#' distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
+#' in the first argument. In terms of the two parameters of the three distributions, see \code{\link[stats]{dbeta}}, \code{\link[stats]{dlnorm}},
+#' and \code{\link[stats]{dnorm}} for more details.
+#' @param missing A value indicating missing values in the response data set. Default is NA.
+#'
+#' @return A vector of loglikelihood values
+#'
+#'
+#' @examples
+#' ## import the "-prm.txt" output file from flexMIRT
+#' flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
+#'
+#' # select the first two dichotomous items and last polytomous item
+#' x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df[c(1:2, 55), ]
+#'
+#' # generate examinees' abilities from N(0, 1)
+#' set.seed(10)
+#' score <- rnorm(1000, mean=0, sd=1)
+#'
+#' # simulate the response data
+#' data <- simdat(x=x, theta=score, D=1)
+#'
+#' # compute the loglikelihood values (no priors are used)
+#' llike_item(x, data, score, D=1, use.aprior=FALSE, use.gprior=FALSE)
+#'
+#' @import purrr
+#' @import dplyr
+#'
+#' @export
+llike_item <- function(x, data, score, D=1, use.aprior=FALSE, use.gprior=FALSE,
+                       aprior=list(dist="lnorm", params=c(0, 0.5)), gprior=list(dist="beta", params=c(5, 17)),
+                       missing=NA) {
+
+  ##-------------------------------------------------------------------------------------------------------
+  ## 1. preperation of data
+  # extract information about the number of score cetegories and models
+  cats <- x[, 2]
+  model <-
+    as.character(x[, 3]) %>%
+    toupper()
+
+  # check wheter included data are correct
+  if(nrow(x) != ncol(data)) stop("The number of items included in 'x' and 'data' must be the same.", call.=FALSE)
+
+  # consider DRM as 3PLM
+  if("DRM" %in% model) {
+    model[model == "DRM"] <- "3PLM"
+    memo <- "All 'DRM' items were considered as '3PLM' items."
+    warning(memo, call.=TRUE)
+  }
+
+  # recode missing values
+  if(!is.na(missing)) {
+    data[data == missing] <- NA
+  }
+
+  # transform a data set to data.frame
+  if(nrow(data) == 1L) {
+    data <- list(data)
+  } else {
+    data <- data.frame(data)
+  }
+
+  # transform scores to a vector form
+  if(is.matrix(score) | is.data.frame(score)) {
+    score <- as.numeric(data.matrix(score))
+  }
+
+  # copy scores
+  score2 <- score
+
+  # factorize the response values
+  resp <- purrr::map2(.x=data, .y=cats, .f=function(k, m) factor(k, levels=(seq_len(m) - 1)))
+
+  # calculate the score categories for each examinee
+  freq.cat <- purrr::map(.x=resp, .f=function(k) stats::xtabs(~ score + k, addNA = FALSE))
+
+  # delete 'resp' object
+  rm(resp, envir=environment(), inherits = FALSE)
+
+  # extract theta (score) values for each item
+  score <- purrr::map(.x=freq.cat,
+                      .f=function(k) attributes(k)$dimnames$score %>%
+                        as.numeric())
+
+  # transform the score category data.frame to a matrix
+  freq.cat <- purrr::map(.x=freq.cat,
+                         .f=function(k) data.matrix(k) %>%
+                           unname())
+
+  ##---------------------------------------------------------------
+  ## 2. compute loglikelihood
+  ##---------------------------------------------------------------
+  # create empty vectors to contain results
+  llike <- rep(NA, nrow(x))
+
+  # listrize the item meta data to use the starting values
+  meta <- metalist2(x)
+
+  # compute the loglikelihood (or likelihood)
+  for(i in 1:nrow(x)) {
+
+    # prepare information to estimate item parameters
+    mod <- model[i]
+    theta <- score[[i]]
+    score.cat <- cats[i]
+
+    # in case of a dichotomous item
+    if(score.cat == 2) {
+      # response data
+      f_i <-
+        freq.cat[[i]] %>%
+        rowSums()
+      r_i <- freq.cat[[i]][, 2]
+
+      # item parameters
+      pos_item <- which(meta$drm$loc == i)
+      a.val <- meta$drm$a[pos_item]
+      b.val <- meta$drm$b[pos_item]
+      g.val <- meta$drm$g[pos_item]
+      item_par <- c(a.val, b.val, g.val)
+
+      # negative loglikelihood
+      llike[i] <- loglike_drm(item_par=item_par, f_i=f_i, r_i=r_i, theta=theta, model=mod, D=D,
+                              fix.a=FALSE, fix.g=FALSE, aprior=aprior, gprior=gprior,
+                              use.aprior=use.aprior,
+                              use.gprior=use.gprior)
+    }
+
+    # in case of a polytomous item
+    if(score.cat > 2) {
+      # response data
+      r_i <- freq.cat[[i]]
+
+      # check the starting values
+      pos_item <- which(meta$plm$loc == i)
+      a.val <- meta$plm$a[pos_item]
+      d.val <- meta$plm$d[[pos_item]]
+      item_par <- c(a.val, d.val)
+
+      # negative loglikelihood
+      llike[i] <- loglike_plm(item_par=item_par, r_i=r_i, theta=theta, pmodel=mod, D=D, fix.a=FALSE,
+                              aprior=aprior, use.aprior=use.aprior)
+    }
+
+  }
+
+  ##---------------------------------------------------------------
+  # loglikelihood values
+  llike <- -llike
+  names(llike) <- x[, 1]
+
+  # return results
+  llike
+
+}
+
+
 # Negetive Loglikelihood of GPCM and GRM items
 # @description This function computes the negative loglikelihood of an item with the
 # polytomous IRT model

@@ -88,8 +88,8 @@
 #' in the argument \code{n.width}. Yen (1981) fixed the number of groups to 10, whereas Bock (1960) allowed for any number of groups.
 #'
 #' Regarding degrees of freedom (\emph{df}), the \eqn{\chi^{2}} is assumed to be distributed approximately as a chi-square with \emph{df} equal to
-#' the number of groups less the number of the IRT model parameters whereas the \eqn{G^{2}} is assumed to be distributed approximately as a chi-square
-#' with \emph{df} equal to the number of groups (Ames et al., 2015)
+#' the number of groups less the number of the IRT model parameters (Ames et al., 2015) whereas the \eqn{G^{2}} is assumed to be distributed approximately
+#' as a chi-square with \emph{df} equal to the number of groups (Ames et al., 2015; Muraki & Bock, 2003)
 #'
 #' Note that if "DRM" is specified for an item in the item meta data set, the item is considered as "3PLM" to compute degrees of freedom of
 #' the \eqn{\chi^{2}} fit statistic.
@@ -124,6 +124,12 @@
 #'
 #' McKinley, R., & Mills, C. (1985). A comparison of several goodness-of-fit statistics.
 #' \emph{Applied Psychological Measurement, 9}, 49-57.
+#'
+#' Muraki, E. & Bock, R. D. (2003). PARSCALE 4: IRT item analysis and test scoring for rating
+#' scale data [Computer Program]. Chicago, IL: Scientific Software International. URL http://www.ssicentral.com
+#'
+#' Wells, C. S., & Bolt, D. M. (2008). Investigation of a nonparametric procedure for assessing goodness-of-fit in
+#' item response theory. \emph{Applied Measurement in Education, 21}(1), 22-40.
 #'
 #' Yen, W. M. (1981). Using simulation results to choose a latent trait model. \emph{Applied Psychological Measurement, 5}, 245-262.
 #'

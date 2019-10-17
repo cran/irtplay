@@ -1,7 +1,7 @@
 # This function computes a negative log likelihood or likelihood value
 # This function is used for scoring
 #' @import dplyr
-loglike_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL), method=c("MLE", "MAP"),
+loglike_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL), method=c("MLE", "MAP", "MLEF"),
                           D=1, norm.prior=c(0, 1), logL=TRUE,
                           FUN.grad=list(drm=NULL, plm=NULL, prior=NULL),
                           FUN.hess=list(drm=NULL, plm=NULL, prior=NULL)) {
@@ -60,6 +60,7 @@ loglike_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat
     # return a negative loglikelihood value
     switch(method,
            MLE = -logL,
+           MLEF = -logL,
            MAP = -(logL + stats::dnorm(theta, mean=norm.prior[1], sd=norm.prior[2], log=TRUE))
     )
 
@@ -81,7 +82,7 @@ loglike_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat
 #' @import dplyr
 #' @import purrr
 ll_brute <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL),
-                     method=c("MLE", "MAP"), D=1, norm.prior=c(0, 1)) {
+                     method=c("MLE", "MAP", "MLEF"), D=1, norm.prior=c(0, 1)) {
 
 
   method <- match.arg(method)
@@ -135,7 +136,9 @@ ll_brute <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=
   # return a negative loglikelihood value
   switch(method,
          MLE = -logL,
+         MLEF = -logL,
          MAP = -(logL + stats::dnorm(theta, mean=norm.prior[1], sd=norm.prior[2], log=TRUE))
   )
 
 }
+
