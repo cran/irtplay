@@ -2,11 +2,11 @@
 #'
 #' @description This function performs the fixed effects (or fixed ability) item parameter calibration where
 #' the individual ability values are provided to be used in calibrating item parameters. This is the maximum
-#' likelihood estimation of the item parameters when the ability values are known (Baker & Kim, 2004). Also,
-#' this could be considered as a special type of the joint maximum likelihood estimation where only one cycle of
+#' likelihood estimation of the item parameters when the ability values are known (Baker & Kim, 2004; Ban et al., 2001; Stocking, 1988).
+#' Also, this could be considered as a special type of the joint maximum likelihood estimation where only one cycle of
 #' parameter estimation is implemented given the ability values (Birnbaum, 1968). This method of item parameter calibration is
-#' potentially useful in field-testing items to put the item parameter estimates on the same scale of operational
-#' item parameter estimates (Cai, 2017).
+#' potentially useful in pretest items to put the item parameter estimates on the same scale of operational
+#' item parameter estimates (Cai, 2017; Stocking, 1988).
 #'
 #' @param x A data.frame containing the item meta data. This meta data is necessary to obtain the information of
 #' each item (i.e., number of score categories and IRT model) to be calibrated. You can easily create an empty
@@ -77,6 +77,8 @@
 #' \item{score}{A vector of the examinees' ability values used as the fixed effects.}
 #' \item{scale.D}{A scaling factor in IRT models.}
 #' \item{convergence}{A string indicating the convergence status of the item parameter estimation.}
+#' \item{deleted.item}{The items which have no item response data. Those items are excluded from the item parameter estimation.}
+#' \item{n.response}{An integer vector indicating the number of item responses for each item used to estimate the item parameters.}
 #'
 #' @author Hwanggyu Lim \email{hglim83@@gmail.com}
 #'
@@ -86,11 +88,16 @@
 #' @references
 #' Baker, F. B., & Kim, S. H. (2004). \emph{Item response theory: Parameter estimation techniques.} CRC Press.
 #'
+#' Ban, J. C., Hanson, B. A., Wang, T., Yi, Q., & Harris, D., J. (2001) A comparative study of on-line pretest item calibration/scaling methods
+#' in computerized adaptive testing. \emph{Journal of Educational Measurement, 38}(3), 191-212.
+#'
 #' Birnbaum, A. (1968). Some latent trait models and their use in inferring an examinee's ability. In F. M. Lord & M. R. Novick (Eds.),
 #' \emph{Statistical theories of mental test scores} (pp. 397-479). Reading, MA: Addison-Wesley.
 #'
 #' Cai, L. (2017). flexMIRT 3.5 Flexible multilevel multidimensional item analysis and test scoring [Computer software].
 #' Chapel Hill, NC: Vector Psychometric Group.
+#'
+#' Stocking, M. L. (1988). \emph{Scale drift in on-line calibration} (Research Rep. 88-28). Princeton, NJ: ETS.
 #'
 #' @examples
 #' ## import the "-prm.txt" output file from flexMIRT
@@ -180,7 +187,7 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   }
 
 
-  # check wheter included data are correct
+  # check whether included data are correct
   if(nrow(x) != ncol(data)) stop("The number of items included in 'x' and 'data' must be the same.", call.=FALSE)
 
   # consider DRM as 3PLM
@@ -202,6 +209,27 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
     data <- data.frame(data)
   }
 
+  # check the number of item responses across all items
+  n.resp <- colSums(!is.na(data))
+
+  # check the items which have all missing responses
+  loc_allmiss <- which(n.resp == 0L)
+
+  # delete items which have all missing responses from the item meta data set
+  if(length(loc_allmiss) > 0L) {
+    loc_nomiss <- which(n.resp > 0L)
+    x_pre <- x
+    x <- x[-loc_allmiss, ]
+    model <- x[, 3]
+    cats <- x[, 2]
+    data <- data[, loc_nomiss]
+    memo2 <- paste0(paste0("item ", loc_allmiss, collapse = ", "),
+                    " is/are excluded in the item parameter estimation because the item(s) has/have no item response data.")
+    warning(memo2, call.=TRUE)
+  } else {
+    loc_allmiss <- NULL
+  }
+
   # group parameter estimates
   group.par <- c(mu=mean(score), sigma=stats::sd(score))
 
@@ -213,7 +241,7 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   # copy scores
   score2 <- score
 
-  # find the location of 1PLM items in which the slope parameters should be constrained to be equal
+  # find the location of 1PLM items in which slope parameters should be constrained to be equal
   # also, find the location of other items
   if("1PLM" %in% model & !fix.a.1pl) {
     loc_1p_const <- which(model == "1PLM")
@@ -486,7 +514,27 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
     dplyr::arrange(.data$loc) %>%
     dplyr::select(-.data$loc)
 
+  # arrange the estimated item parameters and standard errors
+  # when there is any item which have all missing response data
+  if(length(loc_allmiss) > 0L) {
+    tmp <-
+      x_pre[, -c(1:3)] %>%
+      dplyr::mutate_all(.funs=function(x) NA) %>%
+      purrr::map(.x=1:nrow(x_pre), .f=function(i, .data) as.numeric(.data[i, ]))
+    par_tmp <- se_tmp <- tmp
+    par_tmp[loc_nomiss] <-
+      par_df %>%
+      purrr::map(.x=1:nrow(par_df), .f=function(i, .data) as.numeric(.data[i, ]))
+    se_tmp[loc_nomiss] <-
+      se_df %>%
+      purrr::map(.x=1:nrow(se_df), .f=function(i, .data) as.numeric(.data[i, ]))
+    par_df <- data.frame(bind.fill(par_tmp, type="rbind"))
+    se_df <- data.frame(bind.fill(se_tmp, type="rbind"))
+  }
+
   # create a full data.frame for the item parameter estimates
+  if(length(loc_allmiss) > 0L) x <- x_pre
+
   full_par_df <- data.frame(x[, 1:3], par_df)
   full_par_df$id <- as.character(full_par_df$id)
   colnames(full_par_df) <- c("id", "cats", "model", paste0("par.", 1:ncol(par_df)))
@@ -509,7 +557,8 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   ##---------------------------------------------------------------
   # return results
   rst <- structure(list(estimates=full_all_df, par.est=full_par_df, se.est=full_se_df, loglikelihood=llike, group.par=group.par,
-                        data=data, score=score2, scale.D=D, convergence=note),
+                        data=data, score=score2, scale.D=D, convergence=note, deleted.item=as.numeric(loc_allmiss),
+                        n.response=as.numeric(n.resp)),
                    class="est_item")
   rst$call <- cl
 
@@ -520,7 +569,6 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
 }
 
 
-# This function estimates item parameters and the corresponding standard errors for an item
 # This function is an internal function used in the 'est_item' function.
 estimation <- function(f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "GRM", "GPCM"), cats, D=1,
                        fix.a.1pl=TRUE, fix.a.gpcm=FALSE, fix.g=FALSE, a.val.1pl=1, a.val.gpcm=1, g.val=.2, n.1PLM=NULL,
@@ -632,14 +680,25 @@ estimation <- function(f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "GRM", "
                              type="item")
 
       # initial estimation to find better starting values
-      item_par <- stats::nlminb(item_par, objective=loglike_drm, f_i=f_i, r_i=r_i, theta=theta, model=model, D=D,
-                                fix.a=fix.a.1pl, fix.g=fix.g, a.val=a.val.1pl, g.val=g.val, n.1PLM=NULL,
-                                aprior=aprior, gprior=gprior,
-                                use.aprior=use.aprior, use.gprior=use.gprior,
-                                FUN.grad=FUN.gh, FUN.hess=FUN.gh,
-                                gradient=grad_item_drm,
-                                # hessian=hess_item_drm,
-                                control=list(eval.max=50, iter.max=10, trace=0), lower=lower, upper=upper)$par
+      tmp_est <- vector('list', 3)
+      tmp_est[[1]] <- stats::nlminb(item_par, objective=loglike_drm, f_i=f_i, r_i=r_i, theta=theta, model=model, D=D,
+                                    fix.a=fix.a.1pl, fix.g=fix.g, a.val=a.val.1pl, g.val=g.val, n.1PLM=NULL,
+                                    aprior=aprior, gprior=gprior,
+                                    use.aprior=use.aprior, use.gprior=use.gprior,
+                                    FUN.grad=FUN.gh, FUN.hess=FUN.gh,
+                                    gradient=grad_item_drm,
+                                    # hessian=hess_item_drm,
+                                    control=list(eval.max=50, iter.max=30, trace=0, step.min=1), lower=lower, upper=upper)
+      tmp_est[[2]] <- stats::nlminb(item_par, objective=loglike_drm, f_i=f_i, r_i=r_i, theta=theta, model=model, D=D,
+                                    fix.a=fix.a.1pl, fix.g=fix.g, a.val=a.val.1pl, g.val=g.val, n.1PLM=NULL,
+                                    aprior=aprior, gprior=gprior,
+                                    use.aprior=use.aprior, use.gprior=use.gprior,
+                                    FUN.grad=FUN.gh, FUN.hess=FUN.gh,
+                                    gradient=grad_item_drm,
+                                    # hessian=hess_item_drm,
+                                    control=list(eval.max=50, iter.max=30, trace=0, step.min=2), lower=lower, upper=upper)
+      tmp_num <- which.min(c(tmp_est[[1]]$objective, tmp_est[[2]]$objective))
+      item_par <- tmp_est[[tmp_num]]$par
 
       # estimate the item parameters
       est <- tryCatch({stats::nlminb(item_par, objective=loglike_drm, f_i=f_i, r_i=r_i, theta=theta, model=model, D=D,
@@ -679,13 +738,23 @@ estimation <- function(f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "GRM", "
                              type="item")
 
       # initial estimation to find better starting values
-      item_par <- stats::nlminb(item_par, objective=loglike_plm, r_i=r_i, theta=theta, pmodel=model, D=D,
-                                fix.a=fix.a.gpcm, a.val=a.val.gpcm,
-                                aprior=aprior, use.aprior=use.aprior,
-                                FUN.grad=FUN.gh, FUN.hess=FUN.gh,
-                                gradient=grad_item_plm,
-                                # hessian=hess_item_plm,
-                                control=list(eval.max=50, iter.max=10, trace=0), lower=lower, upper=upper)$par
+      tmp_est <- vector('list', 3)
+      tmp_est[[1]] <- stats::nlminb(item_par, objective=loglike_plm, r_i=r_i, theta=theta, pmodel=model, D=D,
+                                    fix.a=fix.a.gpcm, a.val=a.val.gpcm,
+                                    aprior=aprior, use.aprior=use.aprior,
+                                    FUN.grad=FUN.gh, FUN.hess=FUN.gh,
+                                    gradient=grad_item_plm,
+                                    # hessian=hess_item_plm,
+                                    control=list(eval.max=50, iter.max=30, step.min=1, trace=0), lower=lower, upper=upper)
+      tmp_est[[2]] <- stats::nlminb(item_par, objective=loglike_plm, r_i=r_i, theta=theta, pmodel=model, D=D,
+                                    fix.a=fix.a.gpcm, a.val=a.val.gpcm,
+                                    aprior=aprior, use.aprior=use.aprior,
+                                    FUN.grad=FUN.gh, FUN.hess=FUN.gh,
+                                    gradient=grad_item_plm,
+                                    # hessian=hess_item_plm,
+                                    control=list(eval.max=50, iter.max=30, step.min=2, trace=0), lower=lower, upper=upper)
+      tmp_num <- which.min(c(tmp_est[[1]]$objective, tmp_est[[2]]$objective))
+      item_par <- tmp_est[[tmp_num]]$par
 
       # estimate the item parameters
       est <- tryCatch({stats::nlminb(item_par, objective=loglike_plm, r_i=r_i, theta=theta, pmodel=model, D=D,
@@ -724,6 +793,7 @@ estimation <- function(f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "GRM", "
   if(any(is.nan(se))) {
     se[is.nan(se)] <- 99999
   }
+  se <- ifelse(se > 99999, 99999, se)
 
   # return results
   rst <- list(pars=est$par, se=se, convergence=est$convergence, objective=est$objective)
@@ -731,3 +801,4 @@ estimation <- function(f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "GRM", "
   rst
 
 }
+

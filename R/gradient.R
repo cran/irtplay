@@ -22,7 +22,7 @@ grad_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_pl
     n.1 <- freq.cat$freq.cat_drm[, 2]
     n.2 <- freq.cat$freq.cat_drm[, 1]
     rst <- eq_grad_drm(par.1=par.1, par.2=par.2, par.3=par.3, n.1=n.1, n.2=n.2, theta=theta, D=D)
-    grad <- sum(c(grad, attributes(rst)$gradient))
+    grad <- sum(c(grad, attributes(rst)$gradient), na.rm=TRUE)
   }
 
   # when there are polytomous items
@@ -45,7 +45,7 @@ grad_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_pl
       # implement the equation function
       params_fun <- eq_grad_plm[[i]]
       rst <- do.call("params_fun", args.list, envir=environment())
-      grad <- sum(c(grad, attributes(rst)$gradient[1]))
+      grad <- sum(c(grad, attributes(rst)$gradient[1]), na.rm=TRUE)
 
     }
 
@@ -60,7 +60,7 @@ grad_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_pl
 
     # implement the equation
     rst.prior <- eq_grad_prior(theta)
-    grad <- sum(c(grad, attributes(rst.prior)$gradient[1]))
+    grad <- sum(c(grad, attributes(rst.prior)$gradient[1]), na.rm=TRUE)
 
   }
 

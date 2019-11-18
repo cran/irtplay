@@ -22,7 +22,7 @@ hess_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_pl
     n.1 <- freq.cat$freq.cat_drm[, 2]
     n.2 <- freq.cat$freq.cat_drm[, 1]
     rst <- eq_hess_drm(par.1=par.1, par.2=par.2, par.3=par.3, n.1=n.1, n.2=n.2, theta=theta, D=D)
-    hess <- sum(c(hess, attributes(rst)$hessian))
+    hess <- sum(c(hess, attributes(rst)$hessian), na.rm=TRUE)
   }
 
   # when there are polytomous items
@@ -45,7 +45,7 @@ hess_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_pl
       # implement the equation function
       params_fun <- eq_hess_plm[[i]]
       rst <- do.call("params_fun", args.list, envir=environment())
-      hess <- sum(c(hess, attributes(rst)$hessian[, , 1]))
+      hess <- sum(c(hess, attributes(rst)$hessian[, , 1]), na.rm=TRUE)
 
     }
 
@@ -60,7 +60,7 @@ hess_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_pl
 
     # implement the equation
     rst.prior <- eq_hess_prior(theta)
-    hess <- sum(c(hess, attributes(rst.prior)$hessian[, , 1]))
+    hess <- sum(c(hess, attributes(rst.prior)$hessian[, , 1]), na.rm=TRUE)
 
   }
 

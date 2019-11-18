@@ -1,6 +1,30 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+# irtplay\_1.3.0 (2019-11-17)
+
+o Included the function ‘llike\_score’ to compute the loglikelihood
+function of ability for an examinee.
+
+o Updated the function ‘est\_item’ to find better starting values for
+item parameter calibration.
+
+o Updated the function ‘est\_item’ to exclude items that contains no
+item response data during the item parameter estimation.
+
+o Updated the function ‘est\_item’ to count the number of item responses
+for each item used to estimate the item parameters.
+
+o Updated the function ‘est\_score’ to find better starting values when
+MLE is used.
+
+o Updated the function ‘est\_score’ to address NaNs of gradient values
+and NaNs of hessian values when MLE, MLEF, or MAP is used.
+
+o Fixed a problem of the function ‘est\_score’, which returned an error
+message when a vector of an examinee’s response data was used in the
+argument of ‘x’.
+
 # irtplay\_1.2.0 (2019-10-16)
 
 o Fixed a problem of the function ‘est\_score’, which returned an error

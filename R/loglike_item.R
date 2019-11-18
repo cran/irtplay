@@ -34,6 +34,7 @@
 #'
 #' @return A vector of loglikelihood values
 #'
+#' @author Hwanggyu Lim \email{hglim83@@gmail.com}
 #'
 #' @examples
 #' ## import the "-prm.txt" output file from flexMIRT
@@ -44,7 +45,7 @@
 #'
 #' # generate examinees' abilities from N(0, 1)
 #' set.seed(10)
-#' score <- rnorm(1000, mean=0, sd=1)
+#' score <- rnorm(10, mean=0, sd=1)
 #'
 #' # simulate the response data
 #' data <- simdat(x=x, theta=score, D=1)

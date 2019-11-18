@@ -247,7 +247,7 @@ irtfit.default <- function(x, score, data, group.method=c("equal.width", "equal.
 
     # warning message
     memo <- paste0(paste0("item ", del_item, collapse = ", "),
-                   " is/are deleted in the analysis. Because the item(s) has/have frequency of zero or one for the item response data.")
+                   " is/are excluded in the analysis. Because the item(s) has/have frequency of zero or one for the item response data.")
     warning(memo, call.=TRUE)
   }
 

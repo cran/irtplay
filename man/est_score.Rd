@@ -14,8 +14,8 @@ est_score(x, data, D = 1, method = "MLE", range = c(-4, 4),
 See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data.
 This data.frame can be easily obtained using the function \code{\link{shape_df}}.}
 
-\item{data}{A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
-the examinees and items, respectively.}
+\item{data}{A matrix or vector containing examinees' response data for the items in the argument \code{x}. When a matrix is used, a row and column indicate
+the examinees and items, respectively. When a vector is used, it should contains the item response data for an examinee.}
 
 \item{D}{A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
 Default is 1.}

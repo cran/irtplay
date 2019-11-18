@@ -8,8 +8,8 @@
 #' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
 #' See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data.
 #' This data.frame can be easily obtained using the function \code{\link{shape_df}}.
-#' @param data A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
-#' the examinees and items, respectively.
+#' @param data A matrix or vector containing examinees' response data for the items in the argument \code{x}. When a matrix is used, a row and column indicate
+#' the examinees and items, respectively. When a vector is used, it should contains the item response data for an examinee.
 #' @param D A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
 #' Default is 1.
 #' @param method A character string indicating a scoring method. Available methods are "MLE" for the maximum likelihood estimation,
@@ -158,7 +158,7 @@ est_score <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), norm.pri
 
   # check if the data set is a vector of an examinee
   if(is.vector(data)) {
-    data <- cbind(data)
+    data <- rbind(data)
   }
 
   # scoring of MLE, MAP, and EAP
@@ -241,8 +241,10 @@ est_score <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), norm.pri
       eq_hess_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
                                     hessian=TRUE, type="ability")$pprior_fun
     } else {
-      eq_grad_prior <- NULL
-      eq_hess_prior <- NULL
+      eq_grad_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
+                                    hessian=FALSE, type="ability")$pprior_fun
+      eq_hess_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
+                                    hessian=TRUE, type="ability")$pprior_fun
     }
 
     # create lists of the equations
@@ -326,15 +328,13 @@ est_score <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), norm.pri
   }
 
   if(method == "INV.TCC") {
-      rst <- inv_tcc(x, data, D=D, constant=constant, constraint=constraint, range.tcc=range.tcc)
+    rst <- inv_tcc(x, data, D=D, constant=constant, constraint=constraint, range.tcc=range.tcc)
   }
 
   # return results
   rst
 
 }
-
-
 
 # This function computes an abiltiy estimate for each examinee
 est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4), norm.prior = c(0, 1),
@@ -420,14 +420,37 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
     if(!sum(resp, na.rm=TRUE) %in% c(0, total.nc)) {
       startval <- log(sum(resp, na.rm=TRUE) / (total.nc - sum(resp, na.rm=TRUE)))
     }
+    # if(method == "MLE") {
+    #   startval_tmp <- c(seq(from=range[1], to=range[2], length.out=50), startval)
+    #   ll_tmp <- ll_brute(theta=startval_tmp, meta=meta, freq.cat=freq.cat, method="MLE", D=D, norm.prior=norm.prior)
+    #   startval <- startval_tmp[which.min(ll_tmp)]
+    # }
 
     # estimate an abiltiy and SE
     if(method %in% c("MLE", "MLEF")) {
-      est.mle <- stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
-                               norm.prior=norm.prior, logL=TRUE,
-                               FUN.grad=FUN.grad, FUN.hess=FUN.hess,
-                               gradient=grad_score, hessian=hess_score,
-                               lower=range[1], upper=range[2])
+
+      # find a better starting value for MLE using a brute force method
+      if(method == "MLE") {
+        startval_tmp <- c(seq(from=range[1], to=range[2], length.out=100))
+        ll_tmp <- ll_brute(theta=startval_tmp, meta=meta, freq.cat=freq.cat, method="MLE", D=D)
+        startval_tmp1 <- startval_tmp[utils::tail(which(sign(ll_tmp[-100] - ll_tmp[-1]) >= 1), 1) + 1]
+        startval <- ifelse(length(startval_tmp1) > 0L, startval_tmp1, startval)
+      }
+
+      # estimation
+      est.mle <-
+        suppressWarnings(tryCatch({stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
+                                                 norm.prior=norm.prior, logL=TRUE,
+                                                 FUN.grad=FUN.grad, FUN.hess=FUN.hess,
+                                                 gradient=grad_score, hessian=hess_score,
+                                                 lower=range[1], upper=range[2])}, error = function(e) {NULL}))
+      # when the estimation returns an error message
+      if(is.null(est.mle)) {
+        est.mle <- stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
+                                 norm.prior=norm.prior, logL=TRUE,
+                                 FUN.grad=FUN.grad, FUN.hess=FUN.hess,
+                                 lower=range[1], upper=range[2])
+      }
       if(est.mle$convergence == 0L) {
         est.theta <- est.mle$par
       } else {
@@ -452,11 +475,19 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
       }
     }
     if(method == "MAP") {
-      est.map <- stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
-                               norm.prior=norm.prior, logL=TRUE,
-                               FUN.grad=FUN.grad, FUN.hess=FUN.hess,
-                               gradient=grad_score, hessian=hess_score,
-                               lower=range[1], upper=range[2])
+      est.map <-
+        suppressWarnings(tryCatch({stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
+                                                 norm.prior=norm.prior, logL=TRUE,
+                                                 FUN.grad=FUN.grad, FUN.hess=FUN.hess,
+                                                 gradient=grad_score, hessian=hess_score,
+                                                 lower=range[1], upper=range[2])}, error = function(e) {NULL}))
+      # when the estimation returns an error message
+      if(is.null(est.map)) {
+        est.map <- stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
+                                 norm.prior=norm.prior, logL=TRUE,
+                                 FUN.grad=FUN.grad, FUN.hess=FUN.hess,
+                                 lower=range[1], upper=range[2])
+      }
       if(est.map$convergence == 0L) {
         est.theta <- est.map$par
       } else {

@@ -17,11 +17,11 @@ In addition to the evaluation of IRT model-data fit, there are several useful fu
 parameters, , calibrating item parameters given the fixed effects (aka. ability values), computing asymptotic
 variance-covariance matrices of item parameter estimates, importing item and/or ability parameters from popular IRT software,
 generating simulated data, computing the conditional distribution of observed scores using the Lord-Wingersky recursion formula,
-computing the loglikelihood of individual items, computing item and test information functions, computing item and
-test characteristic curve functions, and plotting item and test characteristic curves and item and test information functions.
+computing the loglikelihood of individual items, computing the loglikelihood of abilities, computing item and test information functions,
+computing item and test characteristic curve functions, and plotting item and test characteristic curves and item and test information functions.
 
-\tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.2.0\cr Date: \tab
-2019-10-16\cr Depends: \tab R (>= 3.4)\cr License: \tab GPL (>= 2)\cr }
+\tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.3.0\cr Date: \tab
+2019-11-17\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
 }
 \details{
 One way to assess goodness of IRT model-data fit is through an item fit analysis by examining the traditional item fit statistics
@@ -210,6 +210,9 @@ Ames, A. J., & Penfield, R. D. (2015). An NCME Instructional Module on Item-Fit 
 
 Baker, F. B., & Kim, S. H. (2004). \emph{Item response theory: Parameter estimation techniques.} CRC Press.
 
+Ban, J. C., Hanson, B. A., Wang, T., Yi, Q., & Harris, D., J. (2001) A comparative study of on-line pretest item calibration/scaling methods
+in computerized adaptive testing. \emph{Journal of Educational Measurement, 38}(3), 191-212.
+
 Birnbaum, A. (1968). Some latent trait models and their use in inferring an examinee's ability. In F. M. Lord & M. R. Novick (Eds.),
 \emph{Statistical theories of mental test scores} (pp. 397-479). Reading, MA: Addison-Wesley.
 
@@ -269,6 +272,8 @@ https://CRAN.R-project.org/package=rpf.
 
 Stocking, M. L. (1996). An alternative method for scoring adaptive tests.
 \emph{Journal of Educational and Behavioral Statistics, 21}(4), 365-389.
+
+Stocking, M. L. (1988). \emph{Scale drift in on-line calibration} (Research Rep. 88-28). Princeton, NJ: ETS.
 
 Thissen, D., Pommerich, M., Billeaud, K., & Williams, V. S. (1995). Item Response Theory
 for Scores on Tests Including Polytomous Items with Ordered Responses. \emph{Applied Psychological

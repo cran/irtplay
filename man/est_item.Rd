@@ -95,15 +95,17 @@ observed information functions.}
 \item{score}{A vector of the examinees' ability values used as the fixed effects.}
 \item{scale.D}{A scaling factor in IRT models.}
 \item{convergence}{A string indicating the convergence status of the item parameter estimation.}
+\item{deleted.item}{The items which have no item response data. Those items are excluded from the item parameter estimation.}
+\item{n.response}{An integer vector indicating the number of item responses for each item used to estimate the item parameters.}
 }
 \description{
 This function performs the fixed effects (or fixed ability) item parameter calibration where
 the individual ability values are provided to be used in calibrating item parameters. This is the maximum
-likelihood estimation of the item parameters when the ability values are known (Baker & Kim, 2004). Also,
-this could be considered as a special type of the joint maximum likelihood estimation where only one cycle of
+likelihood estimation of the item parameters when the ability values are known (Baker & Kim, 2004; Ban et al., 2001; Stocking, 1988).
+Also, this could be considered as a special type of the joint maximum likelihood estimation where only one cycle of
 parameter estimation is implemented given the ability values (Birnbaum, 1968). This method of item parameter calibration is
-potentially useful in field-testing items to put the item parameter estimates on the same scale of operational
-item parameter estimates (Cai, 2017).
+potentially useful in pretest items to put the item parameter estimates on the same scale of operational
+item parameter estimates (Cai, 2017; Stocking, 1988).
 }
 \details{
 In most cases, the function \code{\link{est_item}} will return successfully converged item parameter estimates using
@@ -155,11 +157,16 @@ mod3
 \references{
 Baker, F. B., & Kim, S. H. (2004). \emph{Item response theory: Parameter estimation techniques.} CRC Press.
 
+Ban, J. C., Hanson, B. A., Wang, T., Yi, Q., & Harris, D., J. (2001) A comparative study of on-line pretest item calibration/scaling methods
+in computerized adaptive testing. \emph{Journal of Educational Measurement, 38}(3), 191-212.
+
 Birnbaum, A. (1968). Some latent trait models and their use in inferring an examinee's ability. In F. M. Lord & M. R. Novick (Eds.),
 \emph{Statistical theories of mental test scores} (pp. 397-479). Reading, MA: Addison-Wesley.
 
 Cai, L. (2017). flexMIRT 3.5 Flexible multilevel multidimensional item analysis and test scoring [Computer software].
 Chapel Hill, NC: Vector Psychometric Group.
+
+Stocking, M. L. (1988). \emph{Scale drift in on-line calibration} (Research Rep. 88-28). Princeton, NJ: ETS.
 }
 \seealso{
 \code{\link{irtfit}}, \code{\link{test.info}}, \code{\link{simdat}}, \code{\link{shape_df}}, \code{\link{sx2_fit}},
