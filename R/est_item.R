@@ -1,12 +1,13 @@
 #' Fixed effect item parameter calibration
 #'
-#' @description This function performs the fixed effects (or fixed ability) item parameter calibration where
-#' the individual ability values are provided to be used in calibrating item parameters. This is the maximum
-#' likelihood estimation of the item parameters when the ability values are known (Baker & Kim, 2004; Ban et al., 2001; Stocking, 1988).
-#' Also, this could be considered as a special type of the joint maximum likelihood estimation where only one cycle of
-#' parameter estimation is implemented given the ability values (Birnbaum, 1968). This method of item parameter calibration is
-#' potentially useful in pretest items to put the item parameter estimates on the same scale of operational
-#' item parameter estimates (Cai, 2017; Stocking, 1988).
+#' @description This function performs the fixed effects (or fixed ability) item parameter calibration, called
+#' Method A (Stocking, 1988), which is the maximum likelihood estimation of item parameters given the ability
+#' estimates (Baker & Kim, 2004; Ban, Hanson, Wang, Yi, & Harris, 2001; Stocking, 1988). Also, this could be considered as a special
+#' type of the joint maximum likelihood estimation where only one cycle of parameter estimation is implemented
+#' given the ability estimates (Birnbaum, 1968). Method A is one of potentially useful online item calibration methods
+#' for computerized adaptive testing (CAT) to put the parameter estimates of pretest items on the same scale of
+#' operational item parameter estimates and recalibrate the operational items to evaluate the parameter drifts
+#' of the operational items (Chen & Wang; Stocking, 1988).
 #'
 #' @param x A data.frame containing the item meta data. This meta data is necessary to obtain the information of
 #' each item (i.e., number of score categories and IRT model) to be calibrated. You can easily create an empty
@@ -94,8 +95,8 @@
 #' Birnbaum, A. (1968). Some latent trait models and their use in inferring an examinee's ability. In F. M. Lord & M. R. Novick (Eds.),
 #' \emph{Statistical theories of mental test scores} (pp. 397-479). Reading, MA: Addison-Wesley.
 #'
-#' Cai, L. (2017). flexMIRT 3.5 Flexible multilevel multidimensional item analysis and test scoring [Computer software].
-#' Chapel Hill, NC: Vector Psychometric Group.
+#' Chen, P., & Wang, C. (2016). A new online calibration method for multidimensional computerized adaptive testing.
+#' \emph{Psychometrika, 81}(3), 674-701.
 #'
 #' Stocking, M. L. (1988). \emph{Scale drift in on-line calibration} (Research Rep. 88-28). Princeton, NJ: ETS.
 #'
@@ -164,7 +165,15 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   # extract information about the number of score cetegories and models
   cat("Parsing input...", '\n')
   if(!is.null(x)) {
+    # give column names
+    x <- data.frame(x)
+    colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
     cats <- x[, 2]
+
+    # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
+    if(ncol(x[, -c(1, 2, 3)]) == 2) {
+      x <- data.frame(x, par.3=NA)
+    }
     model <-
       as.character(x[, 3]) %>%
       toupper()

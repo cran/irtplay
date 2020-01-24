@@ -99,13 +99,14 @@ observed information functions.}
 \item{n.response}{An integer vector indicating the number of item responses for each item used to estimate the item parameters.}
 }
 \description{
-This function performs the fixed effects (or fixed ability) item parameter calibration where
-the individual ability values are provided to be used in calibrating item parameters. This is the maximum
-likelihood estimation of the item parameters when the ability values are known (Baker & Kim, 2004; Ban et al., 2001; Stocking, 1988).
-Also, this could be considered as a special type of the joint maximum likelihood estimation where only one cycle of
-parameter estimation is implemented given the ability values (Birnbaum, 1968). This method of item parameter calibration is
-potentially useful in pretest items to put the item parameter estimates on the same scale of operational
-item parameter estimates (Cai, 2017; Stocking, 1988).
+This function performs the fixed effects (or fixed ability) item parameter calibration, called
+Method A (Stocking, 1988), which is the maximum likelihood estimation of item parameters given the ability
+estimates (Baker & Kim, 2004; Ban, Hanson, Wang, Yi, & Harris, 2001; Stocking, 1988). Also, this could be considered as a special
+type of the joint maximum likelihood estimation where only one cycle of parameter estimation is implemented
+given the ability estimates (Birnbaum, 1968). Method A is one of potentially useful online item calibration methods
+for computerized adaptive testing (CAT) to put the parameter estimates of pretest items on the same scale of
+operational item parameter estimates and recalibrate the operational items to evaluate the parameter drifts
+of the operational items (Chen & Wang; Stocking, 1988).
 }
 \details{
 In most cases, the function \code{\link{est_item}} will return successfully converged item parameter estimates using
@@ -163,8 +164,8 @@ in computerized adaptive testing. \emph{Journal of Educational Measurement, 38}(
 Birnbaum, A. (1968). Some latent trait models and their use in inferring an examinee's ability. In F. M. Lord & M. R. Novick (Eds.),
 \emph{Statistical theories of mental test scores} (pp. 397-479). Reading, MA: Addison-Wesley.
 
-Cai, L. (2017). flexMIRT 3.5 Flexible multilevel multidimensional item analysis and test scoring [Computer software].
-Chapel Hill, NC: Vector Psychometric Group.
+Chen, P., & Wang, C. (2016). A new online calibration method for multidimensional computerized adaptive testing.
+\emph{Psychometrika, 81}(3), 674-701.
 
 Stocking, M. L. (1988). \emph{Scale drift in on-line calibration} (Research Rep. 88-28). Princeton, NJ: ETS.
 }

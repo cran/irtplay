@@ -457,3 +457,55 @@ trace3 <- function(meta, theta, D = 1, type=c("icc", "tcc")) {
 
 }
 
+# This function compuest item characteristic functions
+# This function is used in item parameter estimation
+#' @import purrr
+trace4 <- function(meta, theta, D = 1) {
+
+  # make the empty list and data.frame to contain probabilities
+  icc_list <- vector('list', sum(length(meta$drm$a), length(meta$plm$a)))
+
+  # when there are dichotomous items
+  if(!is.null(meta$drm)) {
+
+    # compute the probabilities of answerting correclty on items
+    ps <- drm(theta=theta, a=meta$drm$a, b=meta$drm$b, g=meta$drm$g, D=D)
+    qs <- 1 - ps
+    if(length(theta) == 1L) {
+      prob <- purrr::map(.x=1:length(meta$drm$a), .f=function(i) c(qs[i], ps[i]))
+    } else {
+      if(length(meta$drm$a) == 1L) {
+        prob <- purrr::map(.x=1:length(meta$drm$a), .f=function(i) unname(cbind(qs, ps)))
+      } else {
+        prob <- purrr::map(.x=1:length(meta$drm$a), .f=function(i) cbind(qs[, i], ps[, i]))
+      }
+    }
+
+    # fill the empty list
+    icc_list[meta$drm$loc] <- prob
+  }
+
+  # when there are polytomous items
+  if(!is.null(meta$plm)) {
+
+    # extract polytomous model info
+    model <- meta$plm$model
+
+    # make a list of arguments
+    args <- list(meta$plm$a, meta$plm$d, model)
+
+    # compute the category probabilities of items
+    prob.plm <- purrr::pmap(.l=args, .f=plm, theta=theta, D=D)
+    # if(length(theta) == 1L) {
+    #   prob.plm <- purrr::map(.x=prob.plm, .f=rbind)
+    # }
+
+    # fill the empty list and data.frame
+    icc_list[meta$plm$loc] <- prob.plm
+  }
+
+  # return results
+  rr <- list(trace=icc_list, theta=theta)
+  rr
+
+}

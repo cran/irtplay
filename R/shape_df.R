@@ -166,3 +166,94 @@ shape_df <- function(par.dc=list(a=NULL, b=NULL, g=NULL), par.py=list(a=NULL, d=
   full_df
 
 }
+
+
+# This function creates an item meta data containing the starting values
+startval_df <- function(cats, model) {
+
+  model <- toupper(model)
+
+  # create an item meta data containing starting values
+  any.dc <- any(cats == 2)
+  any.py <- any(cats > 2)
+
+  which.drm <- which(cats == 2)
+  which.plm <- which(cats > 2)
+
+  if(any.dc) {
+    par.dc <- list(a=rep(1, length(which.drm)), b=rep(0, length(which.drm)), g=rep(NA, length(which.drm)))
+    par.dc$g[model[which.drm] == "3PLM" | model[which.drm] == "DRM"] <- 0.2
+  } else {
+    par.dc <- list(a=NULL, b=NULL, g=NULL)
+  }
+
+  x[i, 4:(3 + x$cats[i])] <- c(1, seq(-1.0, 1.0, length.out=(x$cats[i]-1)))
+
+  if(any.py) {
+    par.py <- list(a=rep(1, length(which.plm)), d=vector('list', length(which.plm)))
+    for(i in 1:length(which.plm)) {
+      par.py$d[[i]] <- seq(-1.0, 1.0, length.out=(cats[which.plm[i]] - 1))
+    }
+  } else {
+    par.py <- list(a=NULL, d=NULL)
+  }
+
+  nitem <- length(par.dc$b) + length(par.py$d)
+  max.cat <- max(cats)
+  item.id <- paste0("V", 1:nitem)
+  if(length(cats) == 1) cats <- rep(cats, nitem)
+  if(length(model) == 1) model <- rep(model, nitem)
+
+  if(!all(model %in% c("1PLM", "2PLM", "3PLM", "DRM", "GRM", "GPCM"))) {
+    stop("At least one model is not one of '1PLM', '2PLM', '3PLM', 'DRM', 'GRM', and 'GPCM'.", call.=FALSE)
+  }
+
+  any.dc <- any(cats == 2)
+  any.py <- any(cats > 2)
+
+  if(!any.py) {
+    prm_mat <- array(NA, c(nitem, 3))
+  } else{
+    prm_mat <- array(NA, c(nitem, max.cat))
+  }
+
+  # if there are dichotomous items
+  if(any.dc) {
+    if(is.null(par.dc[[3]])) par.dc[[3]] <- 0
+    prm_mat[cats == 2, 1] <- par.dc[[1]]
+    prm_mat[cats == 2, 2] <- par.dc[[2]]
+    prm_mat[cats == 2, 3] <- par.dc[[3]]
+  }
+
+  # if there are polytomous items
+  if(any.py) {
+    row.py <- which(cats > 2)
+    prm_mat[row.py, 1] <- par.py[[1]]
+    for(i in 1:length(row.py)) {
+      prm_mat[row.py[i], 2:(length(par.py[[2]][[i]])+1)] <- par.py[[2]][[i]]
+    }
+  }
+
+  # change item guessing parameters into NA when 1PLMs or 2PLMs are specified in 'model' argument
+  prm_mat[, 3][model %in% c('1PLM', '2PLM')] <- NA
+
+  if(!any.py) {
+    colnames(prm_mat) <- paste0("par.", 1:3)
+  } else {
+    colnames(prm_mat) <- paste0("par.", 1:max.cat)
+  }
+
+  full_df <- data.frame(id=item.id, cats=cats, model=model, prm_mat, stringsAsFactors = FALSE)
+
+  # last check
+  if(any(full_df[full_df$cats == 2, 3] %in% c("GRM", "GPCM"))) {
+    stop("Dichotomous items must have models among '1PLM', '2PLM', '3PLM', and 'DRM'.", call.=FALSE)
+  }
+  if(any(full_df[full_df$cats > 2, 3] %in% c("1PLM", "2PLM", "3PLM", "DRM"))) {
+    stop("Polytomous items must have models among 'GRM' and 'GPCM'.", call.=FALSE)
+  }
+
+
+  full_df
+
+}

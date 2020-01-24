@@ -1,25 +1,81 @@
-#' irtplay: Evaluation of model-data fit in Item Response Theory (IRT) and
-#' useful functions related to IRT
+#' irtplay: Online Item Calibration, Scoring, and Evaluation of Model-Data Fit
+#' in Item Response Theory (IRT) and Useful Functions Related to IRT Models
 #'
 #' @description
-#' Examine the IRT model-data fit on item-level in different ways as well as provide
-#' useful functions related to unidimensional item response theory (IRT). In terms of assessing the IRT model-data fit,
-#' one of distinguished features of this package is that it gives not only item fit statistics (e.g., \eqn{\chi^{2}}
+#' Calibrate online item parameters (i.e., pretest and operational items), estimate examinees abilities, and
+#' examine the IRT model-data fit on item-level in different ways as well as provide useful functions related to unidimensional
+#' item response theory (IRT) models. For the online calibration, Stocking's Method A (Ban, Hanson, Wang, Yi, & Harris, 2001; stocking, 1988) is provided.
+#' More methods of online calibration (e.g., fixed item parameter calibration) will be included in the future updated version.
+#' For the ability estimation, several popular scoring methods (e.g., MLE, EAP, and MAP) are implemented. In terms of assessing
+#' the IRT model-data fit, one of distinguished features of this package is that it gives not only item fit statistics (e.g., \eqn{\chi^{2}}
 #' fit statistic (e.g., Bock, 1960; Yen, 1981), likelihood ratio \eqn{\chi^{2}} fit statistic (\eqn{G^{2}}; McKinley & Mills, 1985),
 #' infit and outfit statistics (Ames et al., 2015), and \eqn{S-X^{2}} (Orlando & Thissen, 2000, 2003))
 #' but also graphical displays to look at residuals between between the observed data and model-based predictions
-#' (Hambleton, Swaminathan, & Rogers, 1991). More evaluation methods will be included in the future updated version.
-#' In addition to the evaluation of IRT model-data fit, there are several useful functions such as estimating proficiency
-#' parameters, , calibrating item parameters given the fixed effects (aka. ability values), computing asymptotic
+#' (Hambleton, Swaminathan, & Rogers, 1991). In addition, there are many useful functions such as computing asymptotic
 #' variance-covariance matrices of item parameter estimates, importing item and/or ability parameters from popular IRT software,
 #' generating simulated data, computing the conditional distribution of observed scores using the Lord-Wingersky recursion formula,
 #' computing the loglikelihood of individual items, computing the loglikelihood of abilities, computing item and test information functions,
 #' computing item and test characteristic curve functions, and plotting item and test characteristic curves and item and test information functions.
 #'
-#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.3.0\cr Date: \tab
-#' 2019-11-17\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
+#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.4.0\cr Date: \tab
+#' 2020-01-23\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
 #'
 #' @details
+#' Following four sections describe a) how to implement the online item calibration using Method A, b) the process of evaluating the IRT model-data fit,
+#' c) two examples for the online calibration and evaluating the IRT model-data fit, and d) IRT Models used in \pkg{irtplay} package.
+#'
+#' @section Online item calibration with Method A (Stocking, 1988):
+#' In computerized adaptive testing (CAT), Method A is the relatively simplest and most straightforward online calibration method,
+#' which is the maximum likelihood estimation of the item parameters given the proficiency estimates. In CAT, Method A can be used
+#' to put the parameter estimates of pretest items on the same scale of operational item parameter estimates and recalibrate
+#' the operational items to evaluate the parameter drifts of the operational items (Chen & Wang, 2016; Stocking, 1988).
+#' Also, Method A is known to result in accurate, unbiased item parameters calibration when items are randomly rather than
+#' adaptively administered to examinees, which occurs most commonly with pretest items (Ban, Hanson, Wang, Yi, & Harris, 2001; Chen & Wang, 2016).
+#' Using \pkg{irtplay} package, Method A is implemented to calibrate the items with two main steps:
+#'
+#' \enumerate{
+#'   \item Prepare a data set for the calibration of item parameters (i.e., item response data and ability estimates).
+#'   \item Implement Method A to estimate the item parameters using the \code{\link{est_item}} function.
+#' }
+#'
+#' \describe{
+#'   \item{1. Preparing a data set}{
+#'   To run the \code{\link{est_item}} function, it requires two data sets:
+#'
+#'     \enumerate{
+#'       \item Examinees' ability (or proficiency) estimates. It should be in the format of a numeric vector.
+#'       \item response data set for the items. It should be in the format of matrix where a row and column indicate
+#'     the examinees and the items, respectively. The order of the examinees in the response data set must be exactly the same as that of the examinees' ability estimates.
+#'     }
+#'   }
+#'
+#'   \item{2. Estimating the item parameters}{
+#'   The \code{\link{est_item}} function estimates the item parameters given the proficiency estimates. To estimate the item parameters,
+#'   you need to provide the response data in the argument \code{data} and the ability estimates in the argument \code{score}.
+#'
+#'   Also, you should provide a string vector of the IRT models in the argument \code{model} to indicate what IRT model is used to calibrate each item.
+#'   Available IRT models are "1PLM", "2PLM", "3PLM", and "DRM" for dichotomous items, and "GRM" and "GPCM" for polytomous items. "GRM" and "GPCM" represent
+#'   the graded response model and (generalized) partial credit model, respectively. Note that "DRM" is considered as "3PLM" in this function. If a single
+#'   character of the IRT model is specified, that model will be recycled across all items.
+#'
+#'   The \code{\link{est_item}} function requires a vector of the number of score categories for the items in the argument \code{cats}. For example, a dichotomous item has
+#'   two score categories. If a single numeric value is specified, that value will be recycled across all items. If NULL and all items are binary items
+#'   (i.e., dichotomous items), it assumes that all items have two score categories.
+#'
+#'   If necessary, you need to specify whether prior distributions of item slope and guessing parameters (only for the IRT 3PL model) are used in the arguments of
+#'   \code{use.aprior} and \code{use.gprior}, respectively. If you decide to use the prior distributions, you should specify what distributions will be used for the prior
+#'   distributions in the arguments of \code{aprior} and \code{gprior}, respectively. Currently three probability distributions of Beta, Log-normal, and Normal
+#'   distributions are available.
+#'
+#'   In addition, if the response data include missing values, you must indicate the missing value in argument `missing`.
+#'
+#'   Once the \code{\link{est_item}} function has been implemented, you'll get a list of several internal objects such as the item parameter estimates,
+#'   standard error of the parameter estimates.
+#'   }
+#' }
+#'
+#'
+#' @section The process of evaluating the IRT model-data fit:
 #' One way to assess goodness of IRT model-data fit is through an item fit analysis by examining the traditional item fit statistics
 #' and looking at the discrepancy between the observed data and model-based predictions. Using \pkg{irtplay} package, the traditional approach
 #' of evaluating the IRT model-data fit on item-level can be implemented with three main steps:
@@ -79,14 +135,68 @@
 #'  }
 #' }
 #'
-#' @section Example code for the three main steps:
 #'
-#' The example code below shows how to prepare the data sets and how to conduct the IRT model-data fit analysis:\preformatted{
+#' @section Two examples of code:
+#'
+#' The example code below shows how to implement the online calibration and how to evalute the IRT model-data fit:\preformatted{
 #' ##---------------------------------------------------------------
 #' # Attach the packages
 #' library(irtplay)
 #'
-#' ##---------------------------------------------------------------
+#' ##----------------------------------------------------------------------------
+#' # 1. The example code below shows how to prepare the data sets and how to estimate
+#' #    the item parameters using Method A:
+#' ##----------------------------------------------------------------------------
+#'
+#' ## Step 1: prepare a data set
+#' ## In this example, we generated examinees' true proficiency parameters and simulated
+#' ## the item response data using the function "simdat". Because, the true
+#' ## proficiency parameters are not known in reality, however, the true proficiencies
+#' ## would be replaced with the proficiency estimates for the calibration.
+#'
+#' # import the "-prm.txt" output file from flexMIRT
+#' flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
+#'
+#' # select the item meta data
+#' x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
+#'
+#' # modify the item meta data so that some items follow 1PLM, 2PLM and GPCM
+#' x[c(1:3, 5), 3] <- "1PLM"
+#' x[c(1:3, 5), 4] <- 1
+#' x[c(1:3, 5), 6] <- 0
+#' x[c(4, 8:12), 3] <- "2PLM"
+#' x[c(4, 8:12), 6] <- 0
+#' x[54:55, 3] <- "GPCM"
+#'
+#' # generate examinees' abilities from N(0, 1)
+#' set.seed(23)
+#' score <- rnorm(500, mean=0, sd=1)
+#'
+#' # simulate the response data
+#' data <- simdat(x=x, theta=score, D=1)
+#'
+#' ## Step 2: Estimate the item parameters
+#' # 1) item parameter estimation: constrain the slope parameters of the 1PLM to be equal
+#' mod1 <- est_item(x, data, score, D=1, fix.a.1pl=FALSE, use.gprior=TRUE,
+#'                  gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE)
+#' print(mod1)
+#'
+#' # 2) item parameter estimation: fix the slope parameters of the 1PLM to 1
+#' mod2 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, a.val.1pl=1, use.gprior=TRUE,
+#'                  gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE)
+#' print(mod2)
+#'
+#' # 3) item parameter estimation: fix the guessing parameters of the 3PLM to 0.2
+#' mod3 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, fix.g=TRUE, a.val.1pl=1, g.val=.2,
+#'                  use.startval=FALSE)
+#' print(mod3)
+#'
+#'
+#' ##----------------------------------------------------------------------------
+#' # 2. The example code below shows how to prepare the data sets and how to conduct
+#' #    the IRT model-data fit analysis:
+#' ##----------------------------------------------------------------------------
+#'
 #' ## Step 1: prepare a data set for IRT
 #' ## In this example, we use the simulated mixed-item format of CAT Data
 #' ## But, only items that have examinees' responses more than 1,000 are assessed.
@@ -103,7 +213,6 @@
 #' # (3) response data
 #' data <- simCAT_MX$res.dat[, over1000]
 #'
-#' ##---------------------------------------------------------------
 #' ## Step 2: Compute the IRT mode-data fit statistics
 #' # (1) the use of "equal.width"
 #' fit1 <- irtfit(x=x, score=score, data=data, group.method="equal.width",
@@ -130,7 +239,6 @@
 #' # show the contingency table for the fourth item (polytomous item)
 #' fit2$contingency.fitstat[[4]]
 #'
-#' ##---------------------------------------------------------------
 #' ## Step 3: Draw the IRT residual plots
 #' # 1. for the dichotomous item
 #' # (1) both raw and standardized residual plots using the object "fit1"
@@ -158,6 +266,7 @@
 #' plot(x=fit1, item.loc=113, type = "sr", ci.method = "wald",
 #'      layout.col=4, ylim.sr.adjust=TRUE)
 #' }
+#'
 #'
 #' @section IRT Models:
 #'
@@ -219,6 +328,9 @@
 #'
 #' Chalmers, R. P. (2012). mirt: A multidimensional item response theory package for the R environment.
 #' \emph{Journal of Statistical Software, 48}(6), 1-29.
+#'
+#' Chen, P., & Wang, C. (2016). A new online calibration method for multidimensional computerized adaptive testing.
+#' \emph{Psychometrika, 81}(3), 674-701.
 #'
 #' Clopper, C. J., & Pearson, E. S. (1934). The use of confidence or fiducial limits illustrated in the case of the binomial.
 #' \emph{Biometrika, 26}(4), 404-413.

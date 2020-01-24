@@ -195,7 +195,7 @@ est_score <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), norm.pri
       }
 
       # add two more response columns for the two fence items
-      data <- data.frame(data, f.lower=rep(0, nstd), f.upper=rep(1, nstd))
+      data <- data.frame(data, f.lower=rep(1, nstd), f.upper=rep(0, nstd))
 
       # create a new item meta data for the two fence items
       x.fence <- shape_df(par.dc=list(a=rep(fence.a, 2), b=fence.b, g=0),
@@ -430,12 +430,10 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
     if(method %in% c("MLE", "MLEF")) {
 
       # find a better starting value for MLE using a brute force method
-      if(method == "MLE") {
-        startval_tmp <- c(seq(from=range[1], to=range[2], length.out=100))
-        ll_tmp <- ll_brute(theta=startval_tmp, meta=meta, freq.cat=freq.cat, method="MLE", D=D)
-        startval_tmp1 <- startval_tmp[utils::tail(which(sign(ll_tmp[-100] - ll_tmp[-1]) >= 1), 1) + 1]
-        startval <- ifelse(length(startval_tmp1) > 0L, startval_tmp1, startval)
-      }
+      startval_tmp <- c(seq(from=range[1], to=range[2], length.out=100))
+      ll_tmp <- ll_brute(theta=startval_tmp, meta=meta, freq.cat=freq.cat, method="MLE", D=D)
+      startval_tmp1 <- startval_tmp[utils::tail(which(sign(ll_tmp[-100] - ll_tmp[-1]) >= 1), 1) + 1]
+      startval <- ifelse(length(startval_tmp1) > 0L, startval_tmp1, startval)
 
       # estimation
       est.mle <-
@@ -468,6 +466,12 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
           hess <- hess_score(theta=est.theta, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
                              norm.prior=norm.prior, logL=TRUE,
                              FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+          # to prevent the case when the hessian has a negative value
+          if(hess < 0L) {
+            hess <- stats::optimHess(par=est.theta, fn=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
+                                     norm.prior=norm.prior, logL=TRUE,
+                                     FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+          }
           se.theta <- as.numeric(sqrt(1 / hess))
         }
       } else {
@@ -502,6 +506,12 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
         hess <- hess_score(theta=est.theta, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
                            norm.prior=norm.prior, logL=TRUE,
                            FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+        # to prevent the case when the hessian has a negative value
+        if(hess < 0L) {
+          hess <- stats::optimHess(par=est.theta, fn=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
+                                   norm.prior=norm.prior, logL=TRUE,
+                                   FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+        }
         se.theta <- as.numeric(sqrt(1 / hess))
       } else {
         se.theta <- NULL

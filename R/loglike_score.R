@@ -98,7 +98,7 @@ llike_score <- function(x, data, theta, D = 1, method = "MLE", norm.prior = c(0,
     }
 
     # add two more response columns for the two fence items
-    data <- data.frame(data, f.lower=rep(0, nstd), f.upper=rep(1, nstd))
+    data <- data.frame(data, f.lower=rep(1, nstd), f.upper=rep(0, nstd))
 
     # create a new item meta data for the two fence items
     x.fence <- shape_df(par.dc=list(a=rep(fence.a, 2), b=fence.b, g=0),

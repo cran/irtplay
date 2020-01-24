@@ -1,6 +1,19 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+# irtplay\_1.4.0 (2020-01-23)
+
+o Fixed a non-convergence problem of the maximum likelihood estimation
+with fences (MLEF) in the function of ‘est\_score’.
+
+o Updated the description and introduction of the package.
+
+o Updated the documentation to explain how to implement the function
+“est\_item” in more detail.
+
+o Updated the README.md file to explain how to implement the function
+“est\_item” in more detail.
+
 # irtplay\_1.3.0 (2019-11-17)
 
 o Included the function ‘llike\_score’ to compute the loglikelihood
