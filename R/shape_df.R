@@ -187,8 +187,6 @@ startval_df <- function(cats, model) {
     par.dc <- list(a=NULL, b=NULL, g=NULL)
   }
 
-  x[i, 4:(3 + x$cats[i])] <- c(1, seq(-1.0, 1.0, length.out=(x$cats[i]-1)))
-
   if(any.py) {
     par.py <- list(a=rep(1, length(which.plm)), d=vector('list', length(which.plm)))
     for(i in 1:length(which.plm)) {

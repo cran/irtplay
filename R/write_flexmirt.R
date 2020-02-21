@@ -1,7 +1,7 @@
 #' Write a "-prm.txt" file for flexMIRT
 #'
-#' @description This function writes an output file of "-prm.txt" for flexMIRT. The current version of this function can be used
-#' only for the unidimensional IRT models.
+#' @description This function writes an output file of "-prm.txt" for flexMIRT (Cai, 2017). The current version of this function
+#' can be used only for the unidimensional IRT models.
 #'
 #' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
 #' See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data.
@@ -19,7 +19,7 @@
 #' @author Hwanggyu Lim \email{hglim83@@gmail.com}
 #'
 #' @references
-#' Cai, L. (2015). flexMIRT 3.0 Flexible multilevel multidimensional item analysis and test scoring [Computer software].
+#' Cai, L. (2017). flexMIRT 3.5 Flexible multilevel multidimensional item analysis and test scoring [Computer software].
 #' Chapel Hill, NC: Vector Psychometric Group.
 #'
 #' @export

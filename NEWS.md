@@ -1,6 +1,18 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+# irtplay\_1.4.1 (2020-02-21)
+
+o Included the function ‘run\_flexmirt’ to implement flexMIRT software
+(Cai, 2017) through R.
+
+o Applied a prior distribution to the slope parameters of the IRT 1PL
+model when the slope parameters are constrained to be equal in the
+function of ‘est\_item’.
+
+o Fixed a problem of using staring values to estimate item parameters in
+the function of ‘est\_item’.
+
 # irtplay\_1.4.0 (2020-01-23)
 
 o Fixed a non-convergence problem of the maximum likelihood estimation

@@ -18,16 +18,16 @@ fit statistics (e.g., chi-square fit statistic (X2; e.g., Bock, 1960;
 Yen, 1981), likelihood ratio chi-square fit statistic (G2; McKinley &
 Mills, 1985), infit and outfit statistics (Ames et al., 2015), and S-X2
 (Orlando & Thissen, 2000, 2003)) but also graphical displays to look at
-residuals between between the observed data and model-based predictions
+residuals between the observed data and model-based predictions
 (Hambleton, Swaminathan, & Rogers, 1991). In addition, there are many
 useful functions such as computing asymptotic variance-covariance
 matrices of item parameter estimates, importing item and/or ability
-parameters from popular IRT software, generating simulated data,
-computing the conditional distribution of observed scores using the
-Lord-Wingersky recursion formula, computing item and test information
-functions, computing item and test characteristic curve functions, and
-plotting item and test characteristic curves and item and test
-information functions.
+parameters from popular IRT software, running flexMIRT (Cai, 2017)
+through R, generating simulated data, computing the conditional
+distribution of observed scores using the Lord-Wingersky recursion
+formula, computing item and test information functions, computing item
+and test characteristic curve functions, and plotting item and test
+characteristic curves and item and test information functions.
 
 ## Installation
 

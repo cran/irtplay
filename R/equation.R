@@ -34,7 +34,8 @@ equation_drm <- function(model=c("1PLM", "2PLM", "3PLM", "DRM"), fix.a=FALSE, fi
                          use.gprior=TRUE,
                          use.pprior=FALSE,
                          hessian=FALSE,
-                         type=c("item", "ability")) {
+                         type=c("item", "ability"),
+                         negative=TRUE) {
 
 
   if((model %in% c("2PLM", "3PLM", "DRM")) & fix.a) {
@@ -137,7 +138,12 @@ equation_drm <- function(model=c("1PLM", "2PLM", "3PLM", "DRM"), fix.a=FALSE, fi
   }
 
   # negative loglikelihood
-  equation <- paste0("-(", equation, ")")
+  if(negative) {
+    equation <- paste0("-(", equation, ")")
+  } else {
+    equation <- paste0("(", equation, ")")
+  }
+
 
   ##----------------------------------------------------------------------------
   # create a function for loglikelihood, gradient, hessian
@@ -186,7 +192,8 @@ equation_plm <- function(cats, pmodel=c("GRM", "GPCM"), fix.a=FALSE, a.val=1,
                          use.aprior=FALSE,
                          use.pprior=FALSE,
                          hessian=FALSE,
-                         type=c("item", "ability")) {
+                         type=c("item", "ability"),
+                         negative=TRUE) {
 
   if(pmodel == "GRM" & fix.a) {
     stop("The slope parameter can't be fixed for GRM.", call.=FALSE)
@@ -334,7 +341,11 @@ equation_plm <- function(cats, pmodel=c("GRM", "GPCM"), fix.a=FALSE, a.val=1,
   }
 
   # negative loglikelihood
-  equation <- paste0("-(", equation, ")")
+  if(negative) {
+    equation <- paste0("-(", equation, ")")
+  } else {
+    equation <- paste0("(", equation, ")")
+  }
 
   ##----------------------------------------------------------------------------
   # create a function for loglikelihood, gradient, hessian

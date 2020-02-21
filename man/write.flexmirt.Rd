@@ -25,8 +25,8 @@ should be included in the item meta data.}
 A "-prm.txt" file.
 }
 \description{
-This function writes an output file of "-prm.txt" for flexMIRT. The current version of this function can be used
-only for the unidimensional IRT models.
+This function writes an output file of "-prm.txt" for flexMIRT (Cai, 2017). The current version of this function
+can be used only for the unidimensional IRT models.
 }
 \examples{
 ## use the simulated CAT data
@@ -41,7 +41,7 @@ write.flexmirt(x, file=temp_prm, norm.pop=c(0, 1), rePrm=FALSE)
 
 }
 \references{
-Cai, L. (2015). flexMIRT 3.0 Flexible multilevel multidimensional item analysis and test scoring [Computer software].
+Cai, L. (2017). flexMIRT 3.5 Flexible multilevel multidimensional item analysis and test scoring [Computer software].
 Chapel Hill, NC: Vector Psychometric Group.
 }
 \author{

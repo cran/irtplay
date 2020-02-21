@@ -303,6 +303,13 @@ loglike_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM
       purrr::pmap_dbl(argus, .f=llike_drm, g=0, D=D) %>%
       sum()
 
+    # when the slope parameter prior is used
+    if(use.aprior) {
+      aprior_call <- paste0("stats::d", aprior$dist, "(", item_par[1], ", ", aprior$params[1], ", ", aprior$params[2], ", log=TRUE)")
+      ln.aprior <- eval(expr=parse(text=aprior_call), envir=environment())
+      llike <- llike + ln.aprior
+    }
+
   }
 
   # (2) 1PLM: the slope parameters are fixed to be a specified value
@@ -316,7 +323,7 @@ loglike_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM
   # (3) 2PLM
   if(model == "2PLM") {
 
-    # sume of loglikelihood
+    # sum of loglikelihood
     llike <- llike_drm(a=item_par[1], b=item_par[2], g=0, f_i=f_i, r_i=r_i, theta=theta, D=D)
 
     # when the slope parameter prior is used
@@ -331,7 +338,7 @@ loglike_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM
   # (4) 3PLM
   if(!fix.g & model == "3PLM") {
 
-    # sume of loglikelihood
+    # sum of loglikelihood
     llike <- llike_drm(a=item_par[1], b=item_par[2], g=item_par[3], f_i=f_i, r_i=r_i, theta=theta, D=D)
 
     # when the slope parameter prior is used
@@ -353,7 +360,7 @@ loglike_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM
   # (5) 3PLM: the guessing parameters are fixed to be specified value
   if(fix.g & model == "3PLM") {
 
-    # sume of loglikelihood
+    # sum of loglikelihood
     llike <- llike_drm(a=item_par[1], b=item_par[2], g=g.val, f_i=f_i, r_i=r_i, theta=theta, D=D)
 
     # when the slope parameter prior is used
@@ -372,7 +379,7 @@ loglike_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM
 }
 
 
-# compute a sume of the loglikelihood value for each dichotomous item
+# compute a sum of the loglikelihood value for each dichotomous item
 llike_drm <- function(a, b, g, f_i, r_i, theta, D=1) {
 
   # compute loglikelihood
@@ -388,9 +395,9 @@ llike_drm <- function(a, b, g, f_i, r_i, theta, D=1) {
   log_q <- ifelse(is.infinite(log_q), log(1e-20), log_q)
 
   # log-likelihood
-  L <- r_i * log_p +  (f_i - r_i) * log_q
+  L <- r_i * log_p + (f_i - r_i) * log_q
 
-  # sume of loglikelihood
+  # sum of loglikelihood
   llike <- sum(L)
 
   # return
