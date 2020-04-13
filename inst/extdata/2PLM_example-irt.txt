@@ -46,7 +46,7 @@ E-step computations:      0.13
 M-step computations:      0.00
 Standard error computations:      0.15
 Goodness-of-fit statistics:      0.00
-Total:       0.29
+Total:       0.28
 
 Output Files
 Text results and control parameters: 2PLM_example-irt.txt
@@ -124,4 +124,4 @@ Full-information fit statistics of the fitted model:
 Limited-information fit statistics of the fitted model:
   The M2 statistics were not requested.
 
-Wed Feb 19 14:08:00 2020
+Sat Apr 11 15:13:46 2020

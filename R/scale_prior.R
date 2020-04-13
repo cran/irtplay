@@ -2,8 +2,9 @@
 scale_prior <- function(prior_freq, prior_dense, quadpt, scale.par=c(0, 1), Quadrature) {
 
   # mean and sd of the updated prior distribution
-  mu <- sum(prior_dense * quadpt)
-  sigma <- sqrt(sum(prior_dense * quadpt^2) - mu^2)
+  moments <- cal_moment(node=quadpt, weight=prior_dense)
+  mu <- moments[1]
+  sigma <- sqrt(moments[2])
 
   # standardize the updated prior distribution by adjusting the original quadrature points
   quadpt_star <- (quadpt - mu) / sigma
@@ -24,7 +25,7 @@ scale_prior <- function(prior_freq, prior_dense, quadpt, scale.par=c(0, 1), Quad
   # (a) extrapolate the frequencies of the original quad points less than or equal to the first new quad point
   quad_tmp1 <- quadpt[quadpt <= qstar_0]
   if(length(quad_tmp1) > 0) {
-    freq_1 <- ((prior_freq[2] / prior_freq[1])^((qstar_0 - quad_tmp1) / delta)) * prior_freq[1]
+    freq_1 <- ((prior_freq[1] / prior_freq[2])^((qstar_0 - quad_tmp1) / delta)) * prior_freq[1]
   } else {
     freq_1 <- NULL
   }

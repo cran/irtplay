@@ -11,4 +11,6 @@
 #' data set including a sparse response data set of 10,000 examinees for the items in the item pool.
 #' The third internal object is the examinee's ability estimates for 10,000 examinees.
 #'
+#' @author Hwanggyu Lim \email{hglim83@@gmail.com}
+#'
 "simCAT_DC"

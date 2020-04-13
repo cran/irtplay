@@ -1,31 +1,102 @@
-#' irtplay: Online Item Calibration, Scoring, and Evaluation of Model-Data Fit in Item Response Theory
+#' irtplay: Unidimensional Item Response Theory Modeling
 #'
 #' @description
-#' Calibrate online item parameters (i.e., pretest and operational items), estimate examinees abilities, and
-#' examine the IRT model-data fit on item-level in different ways as well as provide useful functions related to unidimensional
-#' item response theory (IRT) models. For the online calibration, Stocking's Method A (Ban, Hanson, Wang, Yi, & Harris, 2001; stocking, 1988) is provided.
-#' More methods of online calibration (e.g., fixed item parameter calibration) will be included in the future updated version.
-#' For the ability estimation, several popular scoring methods (e.g., MLE, EAP, and MAP) are implemented. In terms of assessing
-#' the IRT model-data fit, one of distinguished features of this package is that it gives not only item fit statistics (e.g., \eqn{\chi^{2}}
-#' fit statistic (e.g., Bock, 1960; Yen, 1981), likelihood ratio \eqn{\chi^{2}} fit statistic (\eqn{G^{2}}; McKinley & Mills, 1985),
-#' infit and outfit statistics (Ames et al., 2015), and \eqn{S-X^{2}} (Orlando & Thissen, 2000, 2003))
-#' but also graphical displays to look at residuals between the observed data and model-based predictions
-#' (Hambleton, Swaminathan, & Rogers, 1991). In addition, there are many useful functions such as computing asymptotic
-#' variance-covariance matrices of item parameter estimates, importing item and/or ability parameters from popular IRT software,
-#' running flexMIRT (Cai, 2017) through R, generating simulated data, computing the conditional distribution of observed scores using
-#' the Lord-Wingersky recursion formula, computing the loglikelihood of individual items, computing the loglikelihood of abilities,
-#' computing item and test information functions, computing item and test characteristic curve functions, and plotting item and test
-#' characteristic curves and item and test information functions.
+#' Fit unidimensional item response theory (IRT) models to mixture of dichotomous and polytomous data,
+#' calibrate online item parameters (i.e., pretest and operational items), estimate examinees abilities, and examine the IRT model-data
+#' fit on item-level in different ways as well as provide useful functions related to unidimensional IRT.
 #'
-#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.4.1\cr Date: \tab
-#' 2020-02-21\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
+#' For the item parameter estimation, the marginal maximum likelihood estimation with expectation-maximization (MMLE-EM) algorithm
+#' (Bock & Aitkin, 1981) is used. For the online calibration, Stocking's Method A (Ban, Hanson, Wang, Yi, & Harris, 2001; stocking, 1988)
+#' and the fixed item parameter calibration (FIPC) method (Kim, 2006) are provided. For the ability estimation, several popular
+#' scoring methods (e.g., MLE, EAP, and MAP) are implemented. In terms of assessing the IRT model-data fit, one of distinguished features
+#' of this package is that it gives not only item fit statistics (e.g., \eqn{\chi^{2}} fit statistic (e.g., Bock, 1960; Yen, 1981),
+#' likelihood ratio \eqn{\chi^{2}} fit statistic (\eqn{G^{2}}; McKinley & Mills, 1985), infit and outfit statistics (Ames et al., 2015),
+#' and \eqn{S-X^{2}} (Orlando & Thissen, 2000, 2003)) but also graphical displays to look at residuals between the observed data and
+#' model-based predictions (Hambleton, Swaminathan, & Rogers, 1991).
+#'
+#' In addition, there are many useful functions such as computing asymptotic variance-covariance matrices of item parameter estimates,
+#' importing item and/or ability parameters from popular IRT software, running flexMIRT (Cai, 2017) through R, generating simulated data,
+#' computing the conditional distribution of observed scores using the Lord-Wingersky recursion formula, computing the loglikelihood of
+#' individual items, computing the loglikelihood of abilities, computing item and test information functions, computing item and test
+#' characteristic curve functions, and plotting item and test characteristic curves and item and test information functions.
+#'
+#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.5.0\cr Date: \tab
+#' 2020-04-12\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
 #'
 #' @details
-#' Following four sections describe a) how to implement the online item calibration using Method A, b) the process of evaluating the IRT model-data fit,
-#' c) two examples for the online calibration and evaluating the IRT model-data fit, and d) IRT Models used in \pkg{irtplay} package.
+#' Following five sections describe a) how to implement the online item calibration using FIPC, a) how to implement the online item
+#' calibration using Method A, b) the process of evaluating the IRT model-data fit, c) two examples for the online calibration and
+#' evaluating the IRT model-data fit, and d) IRT Models used in \pkg{irtplay} package.
+#'
+#'
+#' @section Online item calibration with the fixed item parameter calibration (FIPC) method (e.g., Kim, 2006):
+#'
+#' The fixed item parameter calibration (FIPC) is one of useful online item calibration methods for computerized adaptive testing (CAT)
+#' to put the parameter estimates of pretest items on the same scale of operational item parameter estimates without post hoc
+#' linking/scaling (Ban, Hanson, Wang, Yi, & Harris, 2001; Chen & Wang, 2016). In FIPC, the operational item parameters are fixed to
+#' estimate the characteristic of the underlying latent variable prior distribution when calibrating the pretest items. More specifically,
+#' the underlying latent variable prior distribution of the operational items is estimated during the calibration of the pretest
+#' items to put the item parameters of the pretest items on the scale of the operational item parameters (Kim, 2006). In \pkg{irtplay}
+#' package, FIPC is implemented with two main steps:
+#'
+#' \enumerate{
+#'   \item Prepare a response data set and the item meta data of the fixed (or operational) items.
+#'   \item Implement FIPC to estimate the item parameters of pretest items using the \code{\link{est_irt}} function.
+#' }
+#'
+#' \describe{
+#'   \item{1. Preparing a data set}{
+#'   To run the \code{\link{est_irt}} function, it requires two data sets:
+#'
+#'     \enumerate{
+#'       \item Item meta data set (i.e., model, score category, and item parameters. see the desciption of the argument \code{x} in the function \code{\link{est_irt}}).
+#'       \item Examinees' response data set for the items. It should be a matrix format where a row and column indicate the examinees and the items, respectively.
+#'       The order of the columns in the response data set must be exactly the same as the order of rows of the item meta data.
+#'     }
+#'   }
+#'
+#'   \item{2. Estimating the pretest item parameters}{
+#'   When FIPC is implemented in \code{\link{est_irt}} function, the pretest item parameters are estimated by fixing the operational item parameters. To estimate the item
+#'   parameters, you need to provide the item meta data in the argument \code{x} and the response data in the argument \code{data}.
+#'
+#'   It is worthwhile to explain about how to prepare the item meta data set in the argument \code{x}. A specific form of a data.frame should be used for
+#'   the argument \code{x}. The first column should have item IDs, the second column should contain the number of score categories of the items, and the third
+#'   column should include IRT models. The available IRT models are "1PLM", "2PLM", "3PLM", and "DRM" for dichotomous items, and "GRM" and "GPCM" for polytomous
+#'   items. Note that "DRM" covers all dichotomous IRT models (i.e, "1PLM", "2PLM", and "3PLM") and "GRM" and "GPCM" represent the graded response model and
+#'   (generalized) partial credit model, respectively. From the fourth column, item parameters should be included. For dichotomous items, the fourth, fifth,
+#'   and sixth columns represent the item discrimination (or slope), item difficulty, and item guessing parameters, respectively. When "1PLM" or "2PLM" is
+#'   specified for any items in the third column, NAs should be inserted for the item guessing parameters. For polytomous items, the item discrimination (or slope)
+#'   parameters should be contained in the fourth column and the item threshold (or step) parameters should be included from the fifth to the last columns.
+#'   When the number of categories differs between items, the empty cells of item parameters should be filled with NAs. See `est_irt` for more details about
+#'   the item meta data.
+#'
+#'   Also, you should specify in the argument \code{fipc = TRUE} and a specific FIPC method in the argument \code{fipc.method}. Finally, you should provide
+#'   a vector of the location of the items to be fixed in the argument \code{fix.loc}. For more details about implementing FIPC, see the
+#'   description of the function \code{\link{est_irt}}.
+#'
+#'   When implementing FIPC, you can estimate both the emprical histogram and the scale of latent variable prior distribution by setting \code{EmpHist = TRUE}.
+#'   If \code{EmpHist = FALSE}, the normal prior distribution is used during the item parameter estimation and the scale of the normal prior distribution is
+#'   updated during the EM cycle.
+#'
+#'   The \code{\link{est_item}} function requires a vector of the number of score categories for the items in the argument \code{cats}. For example, a dichotomous item has
+#'   two score categories. If a single numeric value is specified, that value will be recycled across all items. If NULL and all items are binary items
+#'   (i.e., dichotomous items), it assumes that all items have two score categories.
+#'
+#'   If necessary, you need to specify whether prior distributions of item slope and guessing parameters (only for the IRT 3PL model) are used in the arguments of
+#'   \code{use.aprior} and \code{use.gprior}, respectively. If you decide to use the prior distributions, you should specify what distributions will be used for the prior
+#'   distributions in the arguments of \code{aprior} and \code{gprior}, respectively. Currently three probability distributions of Beta, Log-normal, and Normal
+#'   distributions are available.
+#'
+#'   In addition, if the response data include missing values, you must indicate the missing value in argument \code{missing}.
+#'
+#'   Once the \code{\link{est_irt}} function has been implemented, you'll get a list of several internal objects such as the item parameter estimates,
+#'   standard error of the parameter estimates.
+#'   }
+#' }
+#'
 #'
 #' @section Online item calibration with Method A (Stocking, 1988):
-#' In computerized adaptive testing (CAT), Method A is the relatively simplest and most straightforward online calibration method,
+#' In CAT, Method A is the relatively simplest and most straightforward online calibration method,
 #' which is the maximum likelihood estimation of the item parameters given the proficiency estimates. In CAT, Method A can be used
 #' to put the parameter estimates of pretest items on the same scale of operational item parameter estimates and recalibrate
 #' the operational items to evaluate the parameter drifts of the operational items (Chen & Wang, 2016; Stocking, 1988).
@@ -49,8 +120,8 @@
 #'     }
 #'   }
 #'
-#'   \item{2. Estimating the item parameters}{
-#'   The \code{\link{est_item}} function estimates the item parameters given the proficiency estimates. To estimate the item parameters,
+#'   \item{2. Estimating the pretest item parameters}{
+#'   The \code{\link{est_item}} function estimates the pretest item parameters given the proficiency estimates. To estimate the item parameters,
 #'   you need to provide the response data in the argument \code{data} and the ability estimates in the argument \code{score}.
 #'
 #'   Also, you should provide a string vector of the IRT models in the argument \code{model} to indicate what IRT model is used to calibrate each item.
@@ -67,7 +138,7 @@
 #'   distributions in the arguments of \code{aprior} and \code{gprior}, respectively. Currently three probability distributions of Beta, Log-normal, and Normal
 #'   distributions are available.
 #'
-#'   In addition, if the response data include missing values, you must indicate the missing value in argument `missing`.
+#'   In addition, if the response data include missing values, you must indicate the missing value in argument \code{missing}.
 #'
 #'   Once the \code{\link{est_item}} function has been implemented, you'll get a list of several internal objects such as the item parameter estimates,
 #'   standard error of the parameter estimates.
@@ -136,15 +207,52 @@
 #' }
 #'
 #'
-#' @section Two examples of code:
+#' @section Three examples of R script:
 #'
-#' The example code below shows how to implement the online calibration and how to evalute the IRT model-data fit:\preformatted{
+#' The example code below shows how to implement the online calibration and how to evaluate the IRT model-data fit:\preformatted{
 #' ##---------------------------------------------------------------
 #' # Attach the packages
 #' library(irtplay)
 #'
 #' ##----------------------------------------------------------------------------
-#' # 1. The example code below shows how to prepare the data sets and how to estimate
+#' # 1. The example code below shows how to prepare the data sets and how to
+#' #    implement the fixed item parameter calibration (FIPC):
+#' ##----------------------------------------------------------------------------
+#'
+#' ## Step 1: prepare a data set
+#' ## In this example, we generated examinees' true proficiency parameters and simulated
+#' ## the item response data using the function "simdat".
+#'
+#' ## import the "-prm.txt" output file from flexMIRT
+#' flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
+#'
+#' # select the item meta data
+#' x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
+#'
+#' # generate 1,000 examinees' latent abilities from N(0.4, 1.3)
+#' set.seed(20)
+#' score <- rnorm(1000, mean=0.4, sd=1.3)
+#'
+#' # simulate the response data
+#' sim.dat <- simdat(x=x, theta=score, D=1)
+#'
+#' ## Step 2: Estimate the item parameters
+#' # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
+#' # fix the five 3PL items (1st - 5th items) and three GRM items (53th to 55th items)
+#' # also, estimate the empirical histogram of latent variable
+#' fix.loc <- c(1:5, 53:55)
+#' mod.fix1 <- est_irt(x=x, data=sim.dat, D=1, use.gprior=TRUE,
+#'                     gprior=list(dist="beta", params=c(5, 16)), EmpHist=TRUE, Etol=1e-3,
+#'                     fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc)
+#' print(mod.fix1)
+#'
+#' # plot the estimated empirical histogram of latent variable prior distribution
+#' emphist <- mod.fix1$weights
+#' plot(emphist$weight ~ emphist$theta, xlab="Theta", ylab="Density")
+#'
+#'
+#' ##----------------------------------------------------------------------------
+#' # 2. The example code below shows how to prepare the data sets and how to estimate
 #' #    the item parameters using Method A:
 #' ##----------------------------------------------------------------------------
 #'
@@ -193,7 +301,7 @@
 #'
 #'
 #' ##----------------------------------------------------------------------------
-#' # 2. The example code below shows how to prepare the data sets and how to conduct
+#' # 3. The example code below shows how to prepare the data sets and how to conduct
 #' #    the IRT model-data fit analysis:
 #' ##----------------------------------------------------------------------------
 #'
@@ -321,6 +429,9 @@
 #'
 #' Bock, R.D. (1960), \emph{Methods and applications of optimal scaling}. Chapel Hill, NC: L.L. Thurstone Psychometric Laboratory.
 #'
+#' Bock, R. D., & Aitkin, M. (1981). Marginal maximum likelihood estimation of item parameters: Application of an EM algorithm.
+#' \emph{Psychometrika, 46}, 443-459.
+#'
 #' Bock, R. D., & Mislevy, R. J. (1982). Adaptive EAP estimation of ability in a microcomputer environment. \emph{Psychometrika, 35}, 179-198.
 #'
 #' Cai, L. (2017). flexMIRT 3.5 Flexible multilevel multidimensional item analysis and test scoring [Computer software].
@@ -344,6 +455,9 @@
 #' Kang, T., & Chen, T. T. (2008). Performance of the generalized S-X2 item fit index for polytomous IRT models.
 #' \emph{Journal of Educational Measurement, 45}(4), 391-406.
 #'
+#' Kim, S. (2006). A comparative study of IRT fixed parameter calibration methods.
+#' \emph{Journal of Educational Measurement, 43}(4), 355-381.
+#'
 #' Kolen, M. J. & Brennan, R. L. (2004) \emph{Test Equating, Scaling, and Linking} (2nd ed.). New York:
 #' Springer.
 #'
@@ -360,6 +474,9 @@
 #'
 #' McKinley, R., & Mills, C. (1985). A comparison of several goodness-of-fit statistics.
 #' \emph{Applied Psychological Measurement, 9}, 49-57.
+#'
+#' Meilijson, I. (1989). A fast improvement to the EM algorithm on its own terms.
+#' \emph{Journal of the Royal Statistical Society: Series B (Methodological), 51}, 127-138.
 #'
 #' Muraki, E. & Bock, R. D. (2003). PARSCALE 4: IRT item analysis and test scoring for rating
 #' scale data [Computer Program]. Chicago, IL: Scientific Software International. URL http://www.ssicentral.com
@@ -381,12 +498,18 @@
 #'
 #' Stocking, M. L. (1988). \emph{Scale drift in on-line calibration} (Research Rep. 88-28). Princeton, NJ: ETS.
 #'
+#' Thissen, D. (1982). Marginal maximum likelihood estimation for the one-parameter logistic model.
+#' \emph{Psychometrika, 47}, 175-186.
+#'
 #' Thissen, D., Pommerich, M., Billeaud, K., & Williams, V. S. (1995). Item Response Theory
 #' for Scores on Tests Including Polytomous Items with Ordered Responses. \emph{Applied Psychological
 #' Measurement, 19}(1), 39-49.
 #'
 #' Thissen, D. & Orlando, M. (2001). Item response theory for items scored in two categories. In D. Thissen & H. Wainer (Eds.),
 #' \emph{Test scoring} (pp.73-140). Mahwah, NJ: Lawrence Erlbaum.
+#'
+#' Wainer, H., & Mislevy, R. J. (1990). Item response theory, item calibration, and proficiency estimation. In H. Wainer (Ed.),
+#' \emph{Computer adaptive testing: A primer} (Chap. 4, pp.65-102). Hillsdale, NJ: Lawrence Erlbaum.
 #'
 #' Weeks, J. P. (2010). plink: An R Package for Linking Mixed-Format Tests Using IRT-Based Methods.
 #' \emph{Journal of Statistical Software, 35}(12), 1-33. URL http://www.jstatsoft.org/v35/i12/.
@@ -396,6 +519,8 @@
 #'
 #' Wilson, E. B. (1927). Probable inference, the law of succession, and statistical inference.
 #' \emph{Journal of the American Statistical Association, 22}(158), 209-212.
+#'
+#' Woods, C. M. (2007). Empirical histograms in item response theory with ordinal data. \emph{Educational and Psychological Measurement, 67}(1), 73-87.
 #'
 #' Yen, W. M. (1981). Using simulation results to choose a latent trait model. \emph{Applied Psychological Measurement, 5}, 245-262.
 #'

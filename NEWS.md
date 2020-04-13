@@ -1,6 +1,38 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+# irtplay\_1.5.0 (2020-04-11)
+
+o Changed the title of ‘irtplay’ package to “Unidimensional Item
+Response Theory Modeling”.
+
+o Included a new function of ‘est\_irt’ to fit unidimensional IRT models
+to mixture of dichotomous and polytomous item data using the marginal
+maximum likelihood estimation with expectation-maximization (MMLE-EM;
+Bock & Aitkin, 1981) algorithm.
+
+o Included the fixed item parameter calibration (FIPC; Kim, 2006)
+approach, which is one of useful online calibration methods, in the
+function ‘est\_irt’.
+
+o Updated the documentation to explain how to implement the new function
+‘est\_irt’.
+
+o Included well-known LSAT6 dichotomous response data set from Thissen
+(1982).
+
+o Fixed a problem of inaccurate item parameter estimation in the
+function ‘est\_item’ when a prior distribution of the slope parameter is
+used with a scaling factor other than D = 1.
+
+o Updated the function ‘bring.flexmirt’ to read the item parameters of
+the generalized partial credit model when the number of score categories
+are two.
+
+o Updated the function ‘est\_score’ to find a smart starting value when
+MLE is used. More specifically, the smart starting value is a theta
+value where the log-likelihood is the maximum at the highest peak.
+
 # irtplay\_1.4.1 (2020-02-21)
 
 o Included the function ‘run\_flexmirt’ to implement flexMIRT software
@@ -59,8 +91,8 @@ included in the item meta data set.
 o Fixed a problem of the function ‘est\_item’, which returned an error
 message when the inverse of hessian matrix is not obtainable.
 
-o Included the ‘maximum likelihood estimation with fences’ scoring
-method (Han, 2016) in the function ‘est\_score’.
+o Included the ‘maximum likelihood estimation with fences scoring method
+(Han, 2016) in the function ’est\_score’.
 
 o Included the ‘inverse test characteristic curve (TCC)’ scoring method
 (e.g., Stocking, 1996) in the function ‘est\_score’.

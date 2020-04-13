@@ -17,4 +17,7 @@ simCAT_MX
 \description{
 This data set contains an item pool information, response data, and examinee's ability estimates.
 }
+\author{
+Hwanggyu Lim \email{hglim83@gmail.com}
+}
 \keyword{datasets}

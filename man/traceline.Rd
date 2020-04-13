@@ -4,6 +4,7 @@
 \alias{traceline}
 \alias{traceline.default}
 \alias{traceline.est_item}
+\alias{traceline.est_irt}
 \title{Compute Item/Test Characteristic Functions}
 \usage{
 traceline(x, ...)
@@ -11,12 +12,14 @@ traceline(x, ...)
 \method{traceline}{default}(x, theta, D = 1, ...)
 
 \method{traceline}{est_item}(x, theta, ...)
+
+\method{traceline}{est_irt}(x, theta, ...)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...) or an object
-of class \code{\link{est_item}} obtained from the function \code{\link{est_item}}. See \code{\link{irtfit}}, \code{\link{test.info}},
-or \code{\link{simdat}} for more details about the item meta data. The data.frame of item meta data can be easily obtained using
-the function \code{\link{shape_df}}.}
+\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...), an object
+of class \code{\link{est_item}} obtained from the function \code{\link{est_item}}, or an object of class \code{\link{est_irt}}
+obtained from the function \code{\link{est_irt}}. See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}}
+for more details about the item meta data. The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}.}
 
 \item{...}{Further arguments passed to or from other methods.}
 
@@ -40,6 +43,8 @@ to draw the item or test characteristic curve using the function \code{\link{plo
 test characteristic function for a data.frame \code{x} containing the item meta data.
 
 \item \code{est_item}: An object created by the function \code{\link{est_item}}.
+
+\item \code{est_irt}: An object created by the function \code{\link{est_irt}}.
 }}
 
 \examples{

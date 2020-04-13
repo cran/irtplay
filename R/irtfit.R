@@ -6,9 +6,9 @@
 #' outfit statistics for non-Rasch models. The saved object of this function, especially the object of contingency tables,
 #' is used in the function of \code{\link{plot.irtfit}} to draw a raw and standardized residual plots (Hambleton et al., 1991).
 #'
-#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...) or an object of class \code{\link{est_item}}
-#' obtained from the function \code{\link{est_item}}. The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}.
-#' See below for details.
+#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...), an object of class \code{\link{est_item}}
+#' obtained from the function \code{\link{est_item}}, or an object of class \code{\link{est_irt}} obtained from the function \code{\link{est_irt}}.
+#' The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}. See below for details.
 #' @param score A vector of examinees' ability estimates.
 #' @param data A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
 #' the examinees and items, respectively.
@@ -175,6 +175,7 @@
 #' # simulate the response data
 #' data <- simdat(x=x, theta=score, D=1)
 #'
+#' \donttest{
 #' # compute fit statistics
 #' fit2 <- irtfit(x=x, score=score, data=data, group.method="equal.freq",
 #'                n.width=11, loc.theta="average", range.score=c(-4, 4), D=1, alpha=0.05)
@@ -190,6 +191,8 @@
 #'
 #' # residual plots for the third item (polytomous item)
 #' plot(x=fit2, item.loc=3, type = "both", ci.method = "wald", show.table=FALSE, ylim.sr.adjust=TRUE)
+#'
+#' }
 #'
 #' @export
 irtfit <- function(x, ...) UseMethod("irtfit")
@@ -407,6 +410,116 @@ irtfit.est_item <- function(x, group.method=c("equal.width", "equal.freq"),
   rst
 
 }
+
+#' @describeIn irtfit An object created by the function \code{\link{est_irt}}.
+#'
+#' @export
+#'
+irtfit.est_irt <- function(x, score, group.method=c("equal.width", "equal.freq"),
+                           n.width=10, loc.theta="average", range.score=NULL, alpha=0.05,
+                           missing=NA, overSR=2, min.collapse=1, ...) {
+
+
+  # match.call
+  cl <- match.call()
+
+  # extract information from an object
+  data <- x$data
+  D <- x$scale.D
+  x <- x$par.est
+
+  # give column names
+  x <- data.frame(x)
+  colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
+
+  # consider DRM as 3PLM
+  x$model <- as.character(x$model)
+  # consider DRM as 3PLM
+  if("DRM" %in% x$model) {
+    x$model[x$model == "DRM"] <- "3PLM"
+    memo <- "All 'DRM' items were considered as '3PLM' items in during the item parameter estimation."
+    warning(memo, call.=TRUE)
+  }
+
+  # transform scores to a vector form
+  if(is.matrix(score) | is.data.frame(score)) {
+    score <- as.numeric(data.matrix(score))
+  }
+
+  # transform the response data to a matrix form
+  data <- data.matrix(data)
+
+  # recode missing values
+  if(!is.na(missing)) {
+    data[data == missing] <- NA
+  }
+
+  # check if there are items which have zero or one response frequency
+  n.score <-  colSums(!is.na(data))
+  if(all(n.score %in% c(0L, 1L))) {
+    stop("Every item has frequency of zero or one for the item response data. Each item must have more than two item responses.", call.=TRUE)
+  }
+
+  if(any(n.score %in% c(0L, 1L))) {
+    del_item <- which(n.score %in% c(0L, 1L))
+
+    # delete the items which have no frequency of scores from the data set
+    x <- x[-del_item, ]
+    data <- data[, -del_item]
+
+    # warning message
+    memo <- paste0(paste0("item ", del_item, collapse = ", "),
+                   " is/are deleted in the analysis. Because the item(s) has/have frequency of zero or one for the item response data.")
+    warning(memo, call.=TRUE)
+  }
+
+  # restrict the range of scores if required
+  if(!is.null(range.score)) {
+    score <- ifelse(score < range.score[1], range.score[1], score)
+    score <- ifelse(score > range.score[2], range.score[2], score)
+  } else {
+    tmp.val <- max(ceiling(abs(range(score, na.rm=TRUE))))
+    range.score <- c(-tmp.val, tmp.val)
+  }
+
+  # compute item fit statistics and obtain contingency tables across all items
+  fits <-
+    purrr::map(1:nrow(x), .f=function(i)
+      itemfit(item_meta=x[i, ], score=score, resp=data[, i], group.method=group.method,
+              n.width=n.width, loc.theta=loc.theta, D=D, alpha=alpha, overSR=overSR, min.collapse=min.collapse))
+
+  # extract fit statistics
+  fit_stat <-
+    purrr::map(fits, .f=function(i) i$fit.stats) %>%
+    do.call(what="rbind")
+  fit_stat <- data.frame(id=x$id, fit_stat)
+
+  # extract the contingency tables used to compute the fit statistics
+  contingency.fitstat <-
+    purrr::map(fits, .f=function(i) i$contingency.fitstat)
+  names(contingency.fitstat) <- x$id
+
+  # extract the contingency tables to be used to draw residual plots
+  contingency.plot <-
+    purrr::map(fits, .f=function(i) i$contingency.plot)
+  names(contingency.plot) <- x$id
+
+  # extract the individual residuals and variances
+  individual.info <-
+    purrr::map(fits, .f=function(i) i$individual.info)
+  names(individual.info) <- x$id
+
+  # return results
+  rst <- list(fit_stat=fit_stat, contingency.fitstat=contingency.fitstat, contingency.plot=contingency.plot,
+              item_df=x, individual.info=individual.info, ancillary=list(range.score=range.score, alpha=alpha, overSR=overSR, scale.D=D))
+  class(rst) <- "irtfit"
+  rst$call <- cl
+
+  rst
+
+}
+
+
 
 
 

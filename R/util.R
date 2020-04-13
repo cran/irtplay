@@ -79,6 +79,48 @@ print.est_item <- function(x, digits = max(2L, getOption("digits") - 5L), ...) {
 
 }
 
+#' @export
+print.est_irt <- function(x, digits = max(2L, getOption("digits") - 5L), ...) {
+
+  call.expr <- deparse(x$call)
+  cat("\nCall:\n", paste(call.expr, sep = "\n", collapse = "\n"),
+      "\n\n", sep = "")
+  cat("Summary of the Data \n")
+  cat(" Number of Items: ", x$nitem, "\n", sep="")
+  cat(" Number of Cases: ", x$ncase, "\n\n", sep="")
+
+  cat("Summary of Estimation Process \n")
+  cat(" Maximum number of EM cycles: ", x$MaxE, "\n", sep="")
+  cat(" Convergence criterion of E-step: ", x$Etol, "\n", sep="")
+  cat(" Number of rectangular quadrature points: ", nrow(x$weights), "\n", sep="")
+  cat(" Minimum & Maximum quadrature points: ", x$weights[1, 1], ", ", -x$weights[1, 1], "\n", sep="")
+  cat(" Number of free parameters: ", x$npar.est, "\n", sep="")
+  cat(" Number of fixed items: ", length(x$fix.loc), "\n", sep="")
+  cat(" Number of E-step cycles completed: ", x$niter, "\n", sep="")
+  cat(" Maximum parameter change: ", x$maxpar.diff, "\n\n", sep="")
+
+  cat("Processing time (in seconds) \n")
+  cat(" EM algorithm: ", x$EMtime, "\n", sep="")
+  cat(" Standard error computation: ", x$SEtime, "\n\n", sep="")
+
+  cat("Convergence and Stability of Solution \n")
+  cat(" First-order test: ", x$test.1, "\n", sep="")
+  cat(" Second-order test: ", x$test.2, "\n", sep="")
+  cat(" Computation of variance-covariance matrix: ", x$var.note, "\n\n", sep="")
+
+  cat("Summary of Estimation Results \n")
+  cat(" -2loglikelihood: ", (-2 * x$loglikelihood), "\n", sep="")
+  cat(" Item Parameters: \n")
+  item.par <- purrr::modify_if(.x=x$estimates, .p=is.numeric, .f=round, digits=digits)
+  print(item.par, print.gap=2, quote=FALSE)
+  cat(" Group Parameters: \n")
+  group.par <- round(x$group.par, digits=digits)
+  print(group.par, print.gap=2, quote=FALSE)
+  cat("\n")
+  invisible(x)
+
+}
+
 
 # a function to calculate a mean and variance at each theta point
 cal_moment <- function(node, weight) {
@@ -86,5 +128,33 @@ cal_moment <- function(node, weight) {
   sigma2 <- sum(node^2 * weight) - mu^2
   rst <- c(mu=mu, sigma2=sigma2)
   rst
+}
+
+
+# This function divides the item response data sets into the two dichotomous (correct and incorrect)
+# and one polytomous item parts.
+divide_data <- function(data, cats, freq.cat) {
+
+  # divide the data set for the mixed-item format
+  if(any(cats == 2L)) {
+    data1_drm <- data[, cats == 2L]
+    data2_drm <- 1 - data1_drm
+    data1_drm[is.na(data1_drm)] <- 0
+    data2_drm[is.na(data2_drm)] <- 0
+  } else {
+    data1_drm <- NULL
+    data2_drm <- NULL
+  }
+  if(any(cats > 2)) {
+    data_plm <-
+      freq.cat[cats > 2L] %>%
+      do.call(what='cbind')
+  } else {
+    data_plm <- NULL
+  }
+
+  # return the results
+  list(data1_drm=data1_drm, data2_drm=data2_drm, data_plm=data_plm)
+
 }
 

@@ -2,9 +2,9 @@
 #'
 #' @description This function computes both item and test information functions (Hambleton et al., 1991) given a set of theta values.
 #'
-#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...)or an object of class \code{\link{est_item}}
-#' obtained from the function \code{\link{est_item}}. The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}.
-#' See below for details.
+#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...), an object of class \code{\link{est_item}}
+#' obtained from the function \code{\link{est_item}}, or an object of class \code{\link{est_irt}} obtained from the function \code{\link{est_irt}}.
+#' The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}. See below for details.
 #' @param theta A vector of theta values where item and test information values are computed.
 #' @param D A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
 #' Default is 1.
@@ -287,61 +287,68 @@ test.info.est_item <- function(x, theta, ...) {
 
 }
 
-# item information function for dichotomous data
-info.dich <- function(theta, a, b, g, D=1) {
+#' @describeIn test.info An object created by the function \code{\link{est_irt}}.
+#' @import purrr
+#' @import dplyr
+#' @export
+test.info.est_irt <- function(x, theta, ...) {
 
-  z <- D * a * (theta - b)
-  numer <- D^2 * a^2 * (1 - g)
-  denom <- (g + exp(z)) * (1 + exp(-z))^2
-  info <- numer / denom
-  info
+  # extract information from an object
+  D <- x$scale.D
+  x <- x$par.est
+
+  any.dc <- any(x[, 2] == 2)
+  any.py <- any(x[, 2] > 2)
+  id <- x[, 1]
+  meta <- metalist2(x)
+
+  # if there are dichotomous items
+  if(any.dc) {
+    drmlist <- list(a=meta$drm$a, b=meta$drm$b, g=meta$drm$g)
+
+    # item information matrix
+    infomat_dc <-
+      purrr::pmap_dfc(.l=drmlist, .f=function(a, b, g) info.dich(theta=theta, a=a, b=b, g=g, D=D)) %>%
+      data.matrix() %>%
+      t()
+  } else {
+    infomat_dc <- NULL
+  }
+
+  # if there are polytomous items
+  if(any.py) {
+    plmlist <- list(aa=meta$plm$a, d=meta$plm$d, pmodel=meta$plm$model, cats=meta$plm$cats)
+
+    # item information matrix
+    infomat_py <-
+      purrr::pmap_dfc(.l=plmlist, .f=function(aa, d, pmodel, cats) info.poly(theta=theta, a=aa, d=d, D=D, pmodel=pmodel, cats=cats)) %>%
+      data.matrix() %>%
+      t()
+  } else {
+    infomat_py <- NULL
+  }
+
+  # creat a item infomation matrix for all items
+  infomat <- rbind(infomat_dc, infomat_py)
+
+  # re-order the item information maxtirx along with the original order of items
+  pos <- c(meta$drm$loc, meta$plm$loc)
+  if(length(pos) > 1) {
+    infomat <- cbind(infomat[order(pos), ])
+  } else {
+    infomat <- infomat
+  }
+  rownames(infomat) <- id
+  colnames(infomat) <- paste0("theta.", 1:length(theta))
+
+  # create a vector for test infomation
+  testInfo <- colSums(infomat)
+
+  rr <- list(itemInfo=infomat, testInfo=testInfo, theta=theta)
+  class(rr) <- c("test.info")
+
+  rr
 
 }
 
-# item information function for polytomous data
-info.poly <- function(theta, a, d, D=1, pmodel, cats) {
 
-  pmodel <- toupper(pmodel)
-  if(!pmodel %in% c("GRM", "GPCM")) stop("'pmodel' must be either 'GRM' or 'GPCM'.", call.=FALSE)
-
-  # a vector of item parameters
-  item_par <- as.numeric(c(a, d))
-
-  # create the gradient and hessian equations for score category probability
-  funList <- equation_scocat(model=pmodel, cats=cats, fix.a.gpcm=FALSE, hessian=TRUE, type="ability")
-
-  # create a list containing the arguments to be used in the equation function
-  args.pars <- list()
-  for(i in 1:cats) {
-    args.pars[[i]] <- item_par[i]
-  }
-  args.list <- args.pars
-  args.list$theta <- theta
-  args.list$D <- D
-
-  # create an empty matrix to stack each score category information
-  ip <- matrix(0, nrow=length(theta), ncol=cats)
-
-  # compute the score category information
-  for(i in 1:cats) {
-    # select a function for each score category
-    fun.tmp <- funList[[i]]
-
-    # implement the fuction for each score category
-    tmp <- do.call("fun.tmp", args.list, envir=environment())
-
-    # compute the amount of information for each score category
-    ps <- tmp
-    ps.d1 <- attributes(tmp)$gradient[, 1]
-    ps.d2 <- attributes(tmp)$hessian[, , 1]
-
-    # stack the score category information
-    ip[, i] <- ((ps.d1)^2 / ps) - ps.d2
-  }
-
-  # sum of all score category information
-  info <- rowSums(ip)
-
-  info
-
-}

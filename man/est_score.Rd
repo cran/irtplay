@@ -2,17 +2,29 @@
 % Please edit documentation in R/est_score.R
 \name{est_score}
 \alias{est_score}
+\alias{est_score.default}
+\alias{est_score.est_irt}
 \title{Estimate examinees' ability (proficiency) parameters}
 \usage{
-est_score(x, data, D = 1, method = "MLE", range = c(-4, 4),
+est_score(x, ...)
+
+\method{est_score}{default}(x, data, D = 1, method = "MLE",
+  range = c(-4, 4), norm.prior = c(0, 1), nquad = 41,
+  weights = NULL, fence.a = 3, fence.b = NULL, se = TRUE,
+  constant = 0.1, constraint = FALSE, range.tcc = c(-7, 7),
+  missing = NA, ncore = 1, ...)
+
+\method{est_score}{est_irt}(x, method = "MLE", range = c(-4, 4),
   norm.prior = c(0, 1), nquad = 41, weights = NULL, fence.a = 3,
   fence.b = NULL, se = TRUE, constant = 0.1, constraint = FALSE,
   range.tcc = c(-7, 7), missing = NA, ncore = 1, ...)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
-See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data.
-This data.frame can be easily obtained using the function \code{\link{shape_df}}.}
+\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...) or an object of
+class \code{\link{est_irt}} obtained from the function \code{\link{est_irt}}. See \code{\link{irtfit}}, \code{\link{test.info}},
+or \code{\link{simdat}} for more details about the item meta data. This data.frame can be easily obtained using the function \code{\link{shape_df}}.}
+
+\item{...}{additional arguments to pass to \code{parallel::makeCluster}.}
 
 \item{data}{A matrix or vector containing examinees' response data for the items in the argument \code{x}. When a matrix is used, a row and column indicate
 the examinees and items, respectively. When a vector is used, it should contains the item response data for an examinee.}
@@ -22,7 +34,7 @@ Default is 1.}
 
 \item{method}{A character string indicating a scoring method. Available methods are "MLE" for the maximum likelihood estimation,
 "MLEF" for the maximum likelihood estimation with fences, "MAP" for the maximum a posteriori estimation,
-"EAP" for the expected a posteriori estimation, "EAP.SUM" for the expected a posteriori summed scoring, and "INV.TCC" for the inverse TCC socring.
+"EAP" for the expected a posteriori estimation, "EAP.SUM" for the expected a posteriori summed scoring, and "INV.TCC" for the inverse TCC scoring.
 Default method is "MLE".}
 
 \item{range}{A numeric vector of two components to restrict the range of ability scale for the MLE. Default is c(-4, 4).}
@@ -34,10 +46,10 @@ c(0,1). Ignored if \code{method} is "MLE", "MLEF", or "INV.TCC".}
 \item{nquad}{An integer value specifying the number of gaussian quadrature points from the normal prior distribution. Default is 41.
 Ignored if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".}
 
-\item{weights}{A two-column matrix or data.frame containing the theta values (in the first column) and the weights (in the second column)
-for the prior distribution. The weights and theta values can be easily obtained using the function \code{\link{gen.weight}}.
-If NULL and \code{method} is "EAP" or "EAP.SUM", default values are used (see the arguments of \code{norm.prior} and \code{nquad}). Ignored
-if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".}
+\item{weights}{A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
+(in the second column) of the latent variable prior distribution. The weights and quadrature points can be easily obtained
+using the function \code{\link{gen.weight}}. If NULL and \code{method} is "EAP" or "EAP.SUM", default values are used (see the arguments
+of \code{norm.prior} and \code{nquad}). Ignored if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".}
 
 \item{fence.a}{A numeric value specifying the item slope parameter (i.e., \emph{a}-parameter) for the two imaginary items in MLEF. See below for details.
 Default is 3.0.}
@@ -56,7 +68,7 @@ the raw sum score equal to the sum of item guessing parameters is forced to beco
 
 \item{constraint}{A logical value indicating whether the ability estimates will be restricted within a specific ability range
 specified in the argument \code{range.tcc} when \code{method = "INV.TCC"}. If \code{constraint = TRUE}, all ability estimates less than the first value in the vector specified in
-the argument \code{range.tcc} are transformed to the first value and all ability estimates greather than the second value in the vector specified in
+the argument \code{range.tcc} are transformed to the first value and all ability estimates greater than the second value in the vector specified in
 the argument \code{range.tcc} are transformed to the second value. Also, when \code{constraint = TRUE} and the 3PLM items are contained
 in the item meta data, linear interpolation method is used to find the ability estimates for the raw sum scores less than the sum of item guessing
 parameters. When \code{constraint = FALSE} and the 3PLM items are contained in the item meta data, linear extrapolation method is used to find
@@ -68,8 +80,6 @@ the ability estimates for the raw sum scores less than the sum of item guessing 
 \item{missing}{A value indicating missing values in the response data set. Default is NA. See below for details.}
 
 \item{ncore}{The number of logical CPU cores to use. Default is 1. See below for details.}
-
-\item{...}{additional arguments to pass to \code{parallel::makeCluster}.}
 }
 \value{
 A list including a vector of the ability estimates and a vector of the standard errors of ability estimates. When \code{method} is
@@ -115,6 +125,13 @@ You can set the number of logical CPU cores by specifying a positive integer val
 
 Note that the standard errors of ability estimates are computed using observed information functions for MLE, MLEF, and MAP methods.
 }
+\section{Methods (by class)}{
+\itemize{
+\item \code{default}: Default method to estimate examinees' latent ability parameters using a data.frame \code{x} containing the item meta data.
+
+\item \code{est_irt}: An object created by the function \code{\link{est_irt}}.
+}}
+
 \examples{
 ## the use of a "-prm.txt" file obtained from a flexMIRT
 flex_prm <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")

@@ -93,11 +93,6 @@ Regarding the standardized residual plot, any standardized residuals greater tha
 in the argument {\code{overSR}} of the function \code{\link{irtfit}} are displayed as triangles. Otherwise,
 they are displayed as circles.
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{irtfit}: An object created by the function \code{\link{irtfit}}.
-}}
-
 \examples{
 ## import the "-prm.txt" output file from flexMIRT
 flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")

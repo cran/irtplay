@@ -3,56 +3,150 @@
 
 # irtplay
 
-The goal of `irtplay` is to calibrate online item parameters (i.e.,
-pretest and operational items), estimate examinees abilities, and
-examine the IRT model-data fit on item-level in different ways as well
-as provide useful functions related to unidimensional item response
-theory (IRT). For the online calibration, Stocking’s Method A (Ban,
-Hanson, Wang, Yi, & Harris, 2001; stocking, 1988) is provided. More
-methods of online calibration (e.g., fixed item parameter calibration)
-will be included in the future updated version. For the ability
-estimation, several popular scoring methods (e.g., MLE, EAP, and MAP)
-are implemented. In terms of assessing the IRT model-data fit, one of
-distinguished features of this package is that it gives not only item
-fit statistics (e.g., chi-square fit statistic (X2; e.g., Bock, 1960;
-Yen, 1981), likelihood ratio chi-square fit statistic (G2; McKinley &
-Mills, 1985), infit and outfit statistics (Ames et al., 2015), and S-X2
-(Orlando & Thissen, 2000, 2003)) but also graphical displays to look at
-residuals between the observed data and model-based predictions
-(Hambleton, Swaminathan, & Rogers, 1991). In addition, there are many
-useful functions such as computing asymptotic variance-covariance
-matrices of item parameter estimates, importing item and/or ability
-parameters from popular IRT software, running flexMIRT (Cai, 2017)
-through R, generating simulated data, computing the conditional
-distribution of observed scores using the Lord-Wingersky recursion
-formula, computing item and test information functions, computing item
-and test characteristic curve functions, and plotting item and test
-characteristic curves and item and test information functions.
+The goal of `irtplay` is to fit unidimensional item response theory
+(IRT) models to mixture of dichotomous and polytomous data, calibrate
+online item parameters (i.e., pretest and operational items), estimate
+examinees abilities, and examine the IRT model-data fit on item-level in
+different ways as well as provide useful functions related to
+unidimensional IRT.
+
+For the item parameter estimation, the marginal maximum likelihood
+estimation with expectation-maximization (MMLE-EM) algorithm (Bock &
+Aitkin, 1981) is used. For the online calibration, Stocking’s Method A
+(Ban, Hanson, Wang, Yi, & Harris, 2001; stocking, 1988) and the fixed
+item parameter calibration (FIPC) method (Kim, 2006) are provided. For
+the ability estimation, several popular scoring methods (e.g., MLE, EAP,
+and MAP) are implemented. In terms of assessing the IRT model-data fit,
+one of distinguished features of this package is that it gives not only
+item fit statistics (e.g., chi-square fit statistic (X2; e.g., Bock,
+1960; Yen, 1981), likelihood ratio chi-square fit statistic (G2;
+McKinley & Mills, 1985), infit and outfit statistics (Ames et al.,
+2015), and S-X2 (Orlando & Thissen, 2000, 2003)) but also graphical
+displays to look at residuals between the observed data and model-based
+predictions (Hambleton, Swaminathan, & Rogers, 1991).
+
+In addition, there are many useful functions such as computing
+asymptotic variance-covariance matrices of item parameter estimates,
+importing item and/or ability parameters from popular IRT software,
+running flexMIRT (Cai, 2017) through R, generating simulated data,
+computing the conditional distribution of observed scores using the
+Lord-Wingersky recursion formula, computing item and test information
+functions, computing item and test characteristic curve functions, and
+plotting item and test characteristic curves and item and test
+information functions.
 
 ## Installation
 
 You can install the released version of irtplay from
-[CRAN](https://CRAN.R-project.org) with:
+[CRAN](https://CRAN.R-project.org)
+with:
 
 ``` r
 install.packages("irtplay")
 ```
 
-## 1\. Online item calibration with Method A (Stocking, 1988)
+## 1\. Online item calibration with the fixed item parameter calibration (FIPC) method (e.g., Kim, 2006)
 
-In computerized adaptive testing (CAT), Method A is the relatively
-simplest and most straightforward online calibration method, which is
-the maximum likelihood estimation of the item parameters given the
-proficiency estimates. In CAT, Method A can be used to put the parameter
-estimates of pretest items on the same scale of operational item
-parameter estimates and recalibrate the operational items to evaluate
-the parameter drifts of the operational items (Chen & Wang, 2016;
-Stocking, 1988). Also, Method A is known to result in accurate, unbiased
-item parameters calibration when items are randomly rather than
-adaptively administered to examinees, which occurs most commonly with
-pretest items (Ban et al., 2001; Chen & Wang, 2016). Using `irtplay`
-package, Method A is implemented to calibrate the items with two main
-steps:
+The fixed item parameter calibration (FIPC) is one of useful online item
+calibration methods for computerized adaptive testing (CAT) to put the
+parameter estimates of pretest items on the same scale of operational
+item parameter estimates without post hoc linking/scaling (Ban, Hanson,
+Wang, Yi, & Harris, 2001; Chen & Wang, 2016). In FIPC, the operational
+item parameters are fixed to estimate the characteristic of the
+underlying latent variable prior distribution when calibrating the
+pretest items. More specifically, the underlying latent variable prior
+distribution of the operational items is estimated during the
+calibration of the pretest items to put the item parameters of the
+pretest items on the scale of the operational item parameters (Kim,
+2006). In `irtplay` package, FIPC is implemented with two main steps:
+
+1.  Prepare a response data set and the item meta data of the fixed (or
+    operational) items.
+2.  Implement FIPC to estimate the item parameters of pretest items
+    using the `est_irt` function.
+
+### (1) Preparing a data set
+
+To run the `est_irt` function, it requires two data sets:
+
+1.  Item meta data set (i.e., model, score category, and item
+    parameters. see the desciption of the argument `x` in the function
+    `est_irt`).
+2.  Examinees’ response data set for the items. It should be a matrix
+    format where a row and column indicate the examinees and the items,
+    respectively. The order of the columns in the response data set must
+    be exactly the same as the order of rows of the item meta data.
+
+### (2) Estimating the pretest item parameters
+
+When FIPC is implemented in `est_irt` function, the pretest item
+parameters are estimated by fixing the operational item parameters. To
+estimate the item parameters, you need to provide the item meta data in
+the argument `x` and the response data in the argument `data`.
+
+It is worthwhile to explain about how to prepare the item meta data set
+in the argument `x`. A specific form of a data.frame should be used for
+the argument `x`. The first column should have item IDs, the second
+column should contain the number of score categories of the items, and
+the third column should include IRT models. The available IRT models are
+“1PLM”, “2PLM”, “3PLM”, and “DRM” for dichotomous items, and “GRM” and
+“GPCM” for polytomous items. Note that “DRM” covers all dichotomous
+IRT models (i.e, “1PLM”, “2PLM”, and “3PLM”) and “GRM” and “GPCM”
+represent the graded response model and (generalized) partial credit
+model, respectively. From the fourth column, item parameters should be
+included. For dichotomous items, the fourth, fifth, and sixth columns
+represent the item discrimination (or slope), item difficulty, and item
+guessing parameters, respectively. When “1PLM” or “2PLM” is specified
+for any items in the third column, NAs should be inserted for the item
+guessing parameters. For polytomous items, the item discrimination (or
+slope) parameters should be contained in the fourth column and the item
+threshold (or step) parameters should be included from the fifth to the
+last columns. When the number of categories differs between items, the
+empty cells of item parameters should be filled with NAs. See `est_irt`
+for more details about the item meta data.
+
+Also, you should specify in the argument ’fipc = TRUE`and a specific
+FIPC method in the argument`fipc.method`. Finally, you should provide a
+vector of the location of the items to be fixed in the
+argument`fix.loc`. For more details about implementing FIPC, see the
+description of the function`est\_irt\`.
+
+When implementing FIPC, you can estimate both the emprical histogram and
+the scale of latent variable prior distribution by setting `EmpHist =
+TRUE`. If `EmpHist = FALSE`, the normal prior distribution is used
+during the item parameter estimation and the scale of the normal prior
+distribution is updated during the EM cycle.
+
+If necessary, you need to specify whether prior distributions of item
+slope and guessing parameters (only for the IRT 3PL model) are used in
+the arguments of `use.aprior` and `use.gprior`, respectively. If you
+decide to use the prior distributions, you should specify what
+distributions will be used for the prior distributions in the arguments
+of `aprior` and `gprior`, respectively. Currently three probability
+distributions of Beta, Log-normal, and Normal distributions are
+available.
+
+In addition, if the response data include missing values, you must
+indicate the missing value in argument `missing`.
+
+Once the `est_irt` function has been implemented, you’ll get a list of
+several internal objects such as the item parameter estimates, standard
+error of the parameter estimates.
+
+## 2\. Online item calibration with Method A (Stocking, 1988)
+
+In CAT, Method A is the relatively simplest and most straightforward
+online calibration method, which is the maximum likelihood estimation of
+the item parameters given the proficiency estimates. In CAT, Method A
+can be used to put the parameter estimates of pretest items on the same
+scale of operational item parameter estimates and recalibrate the
+operational items to evaluate the parameter drifts of the operational
+items (Chen & Wang, 2016; Stocking, 1988). Also, Method A is known to
+result in accurate, unbiased item parameters calibration when items are
+randomly rather than adaptively administered to examinees, which occurs
+most commonly with pretest items (Ban et al., 2001; Chen & Wang, 2016).
+Using `irtplay` package, Method A is implemented to calibrate the items
+with two main steps:
 
 1.  Prepare a data set for the calibration of item parameters (i.e.,
     item response data and ability estimates).
@@ -71,9 +165,9 @@ To run the `est_item` function, it requires two data sets:
     data set must be exactly the same as that of the examinees’ ability
     estimates.
 
-### (2) Estimating the item parameters
+### (2) Estimating the pretest item parameters
 
-The `est_item` function estimates the item parameters given the
+The `est_item` function estimates the pretest item parameters given the
 proficiency estimates. To estimate the item parameters, you need to
 provide the response data in the argument `data` and the ability
 estimates in the argument `score`.
@@ -110,7 +204,7 @@ Once the `est_item` function has been implemented, you’ll get a list of
 several internal objects such as the item parameter estimates, standard
 error of the parameter estimates.
 
-## 2\. The process of evaluating the IRT model-data fit
+## 3\. The process of evaluating the IRT model-data fit
 
 One way to assess goodness of IRT model-data fit is through an item fit
 analysis by examining the traditional item fit statistics and looking at
@@ -198,21 +292,256 @@ normal approximation (Laplace, 1812), “cp” for Clopper-Pearson interval
 correction (Newcombe,
 1998).
 
-## 3\. Two examples for the online calibration using Method A and evaluating the IRT model-data fit
+## 3\. Examples of implementing online calibration and evaluating the IRT model-data fit
 
 ``` r
 
 library(irtplay)
 
 ##----------------------------------------------------------------------------
-# 1. The example code below shows how to prepare the data sets and how to estimate 
+# 1. The example code below shows how to prepare the data sets and how to 
+#    implement the fixed item parameter calibration (FIPC):
+##----------------------------------------------------------------------------
+
+## Step 1: prepare a data set
+## In this example, we generated examinees' true proficiency parameters and simulated 
+## the item response data using the function "simdat".  
+
+## import the "-prm.txt" output file from flexMIRT
+flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
+
+# select the item meta data
+x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
+
+# generate 1,000 examinees' latent abilities from N(0.4, 1.3)
+set.seed(20)
+score <- rnorm(1000, mean=0.4, sd=1.3)
+
+# simulate the response data
+sim.dat <- simdat(x=x, theta=score, D=1)
+
+## Step 2: Estimate the item parameters
+# fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
+# fix the five 3PL items (1st - 5th items) and three GRM items (53th to 55th items)
+# also, estimate the empirical histogram of latent variable
+fix.loc <- c(1:5, 53:55)
+mod.fix1 <- est_irt(x=x, data=sim.dat, D=1, use.gprior=TRUE, gprior=list(dist="beta", params=c(5, 16)),
+                    EmpHist=TRUE, Etol=1e-3, fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc)
+#> Parsing input... 
+#> Estimating item parameters... 
+#> 
+ EM iteration: 1, Loglike: -28912.3526, Max-Change: 3.22265
+ EM iteration: 2, Loglike: -25094.9221, Max-Change: 0.86707
+ EM iteration: 3, Loglike: -24854.5695, Max-Change: 0.23789
+ EM iteration: 4, Loglike: -24847.9987, Max-Change: 0.09966
+ EM iteration: 5, Loglike: -24846.7185, Max-Change: 0.0740
+ EM iteration: 6, Loglike: -24846.1673, Max-Change: 0.05455
+ EM iteration: 7, Loglike: -24845.8645, Max-Change: 0.04023
+ EM iteration: 8, Loglike: -24845.6791, Max-Change: 0.02986
+ EM iteration: 9, Loglike: -24845.5582, Max-Change: 0.02239
+ EM iteration: 10, Loglike: -24845.4763, Max-Change: 0.01698
+ EM iteration: 11, Loglike: -24845.4193, Max-Change: 0.01302
+ EM iteration: 12, Loglike: -24845.3793, Max-Change: 0.01048
+ EM iteration: 13, Loglike: -24845.3513, Max-Change: 0.00898
+ EM iteration: 14, Loglike: -24845.3319, Max-Change: 0.0083
+ EM iteration: 15, Loglike: -24845.3191, Max-Change: 0.00759
+ EM iteration: 16, Loglike: -24845.3112, Max-Change: 0.00689
+ EM iteration: 17, Loglike: -24845.3072, Max-Change: 0.00623
+ EM iteration: 18, Loglike: -24845.3061, Max-Change: 0.00562
+ EM iteration: 19, Loglike: -24845.3075, Max-Change: 0.00506
+ EM iteration: 20, Loglike: -24845.3108, Max-Change: 0.00455
+ EM iteration: 21, Loglike: -24845.3156, Max-Change: 0.00409
+ EM iteration: 22, Loglike: -24845.3217, Max-Change: 0.00369
+ EM iteration: 23, Loglike: -24845.3288, Max-Change: 0.00332
+ EM iteration: 24, Loglike: -24845.3367, Max-Change: 0.00299
+ EM iteration: 25, Loglike: -24845.3453, Max-Change: 0.0027
+ EM iteration: 26, Loglike: -24845.3544, Max-Change: 0.00244
+ EM iteration: 27, Loglike: -24845.3641, Max-Change: 0.00221
+ EM iteration: 28, Loglike: -24845.3740, Max-Change: 0.0020
+ EM iteration: 29, Loglike: -24845.3843, Max-Change: 0.00181
+ EM iteration: 30, Loglike: -24845.3948, Max-Change: 0.00164
+ EM iteration: 31, Loglike: -24845.4055, Max-Change: 0.00149
+ EM iteration: 32, Loglike: -24845.4163, Max-Change: 0.00135
+ EM iteration: 33, Loglike: -24845.4273, Max-Change: 0.00123
+ EM iteration: 34, Loglike: -24845.4383, Max-Change: 0.00111
+ EM iteration: 35, Loglike: -24845.4493, Max-Change: 0.00101
+ EM iteration: 36, Loglike: -24845.4604, Max-Change: 0.00092 
+#> Computing item parameter var-covariance matrix... 
+#> Estimation is finished.
+print(mod.fix1)
+#> 
+#> Call:
+#> est_irt_fipc(x = x, data = data, D = D, fix.a.1pl = fix.a.1pl, 
+#>     fix.a.gpcm = fix.a.gpcm, fix.g = fix.g, a.val.1pl = a.val.1pl, 
+#>     a.val.gpcm = a.val.gpcm, g.val = g.val, use.aprior = use.aprior, 
+#>     use.gprior = use.gprior, aprior = aprior, gprior = gprior, 
+#>     missing = missing, Quadrature = Quadrature, weights = weights, 
+#>     group.mean = group.mean, group.var = group.var, EmpHist = EmpHist, 
+#>     use.startval = use.startval, Etol = Etol, MaxE = MaxE, control = control, 
+#>     fipc = TRUE, fipc.method = fipc.method, fix.loc = fix.loc)
+#> 
+#> Summary of the Data 
+#>  Number of Items: 55
+#>  Number of Cases: 1000
+#> 
+#> Summary of Estimation Process 
+#>  Maximum number of EM cycles: 500
+#>  Convergence criterion of E-step: 0.001
+#>  Number of rectangular quadrature points: 49
+#>  Minimum & Maximum quadrature points: -6, 6
+#>  Number of free parameters: 145
+#>  Number of fixed items: 8
+#>  Number of E-step cycles completed: 36
+#>  Maximum parameter change: 0.0009203781
+#> 
+#> Processing time (in seconds) 
+#>  EM algorithm: 11.14524
+#>  Standard error computation: 2.567132
+#> 
+#> Convergence and Stability of Solution 
+#>  First-order test: Convergence criteria are satisfied.
+#>  Second-order test: Solution is a possible local maximum.
+#>  Computation of variance-covariance matrix: Variance-covariance matrix of item parameter estimates is obtainable.
+#> 
+#> Summary of Estimation Results 
+#>  -2loglikelihood: 49690.92
+#>  Item Parameters: 
+#>        id  cats  model  par.1  se.1  par.2  se.2  par.3  se.3  par.4  se.4
+#> 1    CMC1     2   3PLM   0.76    NA   1.46    NA   0.26    NA     NA    NA
+#> 2    CMC2     2   3PLM   1.92    NA  -1.05    NA   0.18    NA     NA    NA
+#> 3    CMC3     2   3PLM   0.93    NA   0.39    NA   0.10    NA     NA    NA
+#> 4    CMC4     2   3PLM   1.05    NA  -0.41    NA   0.20    NA     NA    NA
+#> 5    CMC5     2   3PLM   0.87    NA  -0.12    NA   0.16    NA     NA    NA
+#> 6    CMC6     2   3PLM   1.47  0.15   0.61  0.09   0.07  0.03     NA    NA
+#> 7    CMC7     2   3PLM   1.45  0.25   1.23  0.14   0.24  0.04     NA    NA
+#> 8    CMC8     2   3PLM   0.80  0.11   0.82  0.21   0.12  0.05     NA    NA
+#> 9    CMC9     2   3PLM   0.81  0.13   0.63  0.28   0.20  0.07     NA    NA
+#> 10  CMC10     2   3PLM   1.55  0.21   0.16  0.14   0.18  0.05     NA    NA
+#> 11  CMC11     2   3PLM   0.99  0.17  -0.01  0.33   0.32  0.08     NA    NA
+#> 12  CMC12     2   3PLM   0.86  0.13   1.30  0.18   0.11  0.04     NA    NA
+#> 13  CMC13     2   3PLM   1.48  0.26   1.61  0.12   0.18  0.03     NA    NA
+#> 14  CMC14     2   3PLM   1.53  0.21   0.25  0.16   0.27  0.05     NA    NA
+#> 15  CMC15     2   3PLM   1.53  0.18  -0.11  0.13   0.14  0.05     NA    NA
+#> 16  CMC16     2   3PLM   2.16  0.22   0.02  0.07   0.08  0.03     NA    NA
+#> 17  CMC17     2   3PLM   1.39  0.19   0.03  0.17   0.20  0.06     NA    NA
+#> 18  CMC18     2   3PLM   1.36  0.27   1.34  0.16   0.27  0.04     NA    NA
+#> 19  CMC19     2   3PLM   2.48  0.37  -0.94  0.12   0.19  0.06     NA    NA
+#> 20  CMC20     2   3PLM   1.80  0.37  -1.21  0.26   0.40  0.10     NA    NA
+#> 21  CMC21     2   3PLM   1.76  0.22  -0.98  0.17   0.21  0.07     NA    NA
+#> 22  CMC22     2   3PLM   0.94  0.13  -0.51  0.27   0.19  0.08     NA    NA
+#> 23  CMC23     2   3PLM   0.83  0.10  -0.37  0.23   0.13  0.06     NA    NA
+#> 24  CMC24     2   3PLM   0.98  0.21   1.86  0.20   0.22  0.04     NA    NA
+#> 25  CMC25     2   3PLM   0.63  0.09  -2.01  0.47   0.21  0.09     NA    NA
+#> 26  CMC26     2   3PLM   1.13  0.14  -1.68  0.28   0.22  0.09     NA    NA
+#> 27  CMC27     2   3PLM   1.19  0.14   0.01  0.16   0.14  0.05     NA    NA
+#> 28  CMC28     2   3PLM   2.23  0.26  -0.13  0.09   0.15  0.04     NA    NA
+#> 29  CMC29     2   3PLM   1.31  0.16  -1.32  0.22   0.19  0.08     NA    NA
+#> 30  CMC30     2   3PLM   1.63  0.30   1.03  0.15   0.37  0.04     NA    NA
+#> 31  CMC31     2   3PLM   1.03  0.15   0.93  0.17   0.15  0.05     NA    NA
+#> 32  CMC32     2   3PLM   1.55  0.21  -0.75  0.20   0.26  0.08     NA    NA
+#> 33  CMC33     2   3PLM   1.24  0.19  -1.09  0.30   0.31  0.10     NA    NA
+#> 34  CMC34     2   3PLM   1.34  0.16   0.31  0.15   0.17  0.05     NA    NA
+#> 35  CMC35     2   3PLM   1.24  0.15  -0.36  0.20   0.19  0.07     NA    NA
+#> 36  CMC36     2   3PLM   1.06  0.17   1.05  0.17   0.15  0.05     NA    NA
+#> 37  CMC37     2   3PLM   2.11  0.26  -0.29  0.11   0.16  0.05     NA    NA
+#> 38  CMC38     2   3PLM   0.57  0.11  -0.30  0.55   0.26  0.10     NA    NA
+#> 39   CFR1     5    GRM   2.09  0.13  -1.81  0.10  -1.14  0.07  -0.68  0.06
+#> 40   CFR2     5    GRM   1.38  0.08  -0.70  0.08  -0.08  0.07   0.48  0.06
+#> 41   AMC1     2   3PLM   1.25  0.18   0.62  0.16   0.18  0.05     NA    NA
+#> 42   AMC2     2   3PLM   1.79  0.22  -1.61  0.18   0.17  0.07     NA    NA
+#> 43   AMC3     2   3PLM   1.37  0.17   0.64  0.12   0.12  0.04     NA    NA
+#> 44   AMC4     2   3PLM   0.94  0.11  -0.22  0.23   0.16  0.06     NA    NA
+#> 45   AMC5     2   3PLM   1.11  0.33   2.83  0.26   0.21  0.03     NA    NA
+#> 46   AMC6     2   3PLM   2.22  0.37   1.70  0.09   0.19  0.02     NA    NA
+#> 47   AMC7     2   3PLM   1.16  0.13   0.02  0.14   0.10  0.04     NA    NA
+#> 48   AMC8     2   3PLM   1.31  0.16   0.33  0.15   0.18  0.05     NA    NA
+#> 49   AMC9     2   3PLM   1.22  0.13   0.30  0.12   0.09  0.04     NA    NA
+#> 50  AMC10     2   3PLM   1.83  0.28   1.48  0.09   0.15  0.03     NA    NA
+#> 51  AMC11     2   3PLM   1.68  0.22  -1.08  0.17   0.19  0.07     NA    NA
+#> 52  AMC12     2   3PLM   0.91  0.13  -0.82  0.35   0.26  0.09     NA    NA
+#> 53   AFR1     5    GRM   1.14    NA  -0.37    NA   0.22    NA   0.85    NA
+#> 54   AFR2     5    GRM   1.23    NA  -2.08    NA  -1.35    NA  -0.71    NA
+#> 55   AFR3     5    GRM   0.88    NA  -0.76    NA  -0.01    NA   0.67    NA
+#>     par.5  se.5
+#> 1      NA    NA
+#> 2      NA    NA
+#> 3      NA    NA
+#> 4      NA    NA
+#> 5      NA    NA
+#> 6      NA    NA
+#> 7      NA    NA
+#> 8      NA    NA
+#> 9      NA    NA
+#> 10     NA    NA
+#> 11     NA    NA
+#> 12     NA    NA
+#> 13     NA    NA
+#> 14     NA    NA
+#> 15     NA    NA
+#> 16     NA    NA
+#> 17     NA    NA
+#> 18     NA    NA
+#> 19     NA    NA
+#> 20     NA    NA
+#> 21     NA    NA
+#> 22     NA    NA
+#> 23     NA    NA
+#> 24     NA    NA
+#> 25     NA    NA
+#> 26     NA    NA
+#> 27     NA    NA
+#> 28     NA    NA
+#> 29     NA    NA
+#> 30     NA    NA
+#> 31     NA    NA
+#> 32     NA    NA
+#> 33     NA    NA
+#> 34     NA    NA
+#> 35     NA    NA
+#> 36     NA    NA
+#> 37     NA    NA
+#> 38     NA    NA
+#> 39  -0.24  0.05
+#> 40   1.05  0.07
+#> 41     NA    NA
+#> 42     NA    NA
+#> 43     NA    NA
+#> 44     NA    NA
+#> 45     NA    NA
+#> 46     NA    NA
+#> 47     NA    NA
+#> 48     NA    NA
+#> 49     NA    NA
+#> 50     NA    NA
+#> 51     NA    NA
+#> 52     NA    NA
+#> 53   1.38    NA
+#> 54  -0.12    NA
+#> 55   1.25    NA
+#>  Group Parameters: 
+#>              mu  sigma2  sigma
+#> estimates  0.40    1.88   1.37
+#> se         0.04    0.08   0.03
+
+# plot the estimated empirical histogram of latent variable prior distribution  
+emphist <- mod.fix1$weights
+plot(emphist$weight ~ emphist$theta, xlab="Theta", ylab="Density")
+```
+
+<img src="man/figures/README-example-1.png" width="100%" />
+
+``` r
+
+
+##----------------------------------------------------------------------------
+# 2. The example code below shows how to prepare the data sets and how to estimate 
 #    the item parameters using Method A:
 ##----------------------------------------------------------------------------
 
 ## Step 1: prepare a data set
 ## In this example, we generated examinees' true proficiency parameters and simulated 
-## the item response data using the function "simdat". Because, the true 
-## proficiency parameters are not known in reality, however, the true proficiencies  
+## the item response data using the function "simdat". Because the true 
+## proficiency parameters are not known in reality, the true proficiencies  
 ## would be replaced with the proficiency estimates for the calibration. 
 
 # import the "-prm.txt" output file from flexMIRT
@@ -652,7 +981,7 @@ print(mod3)
 
 
 ##----------------------------------------------------------------------------
-# 2. The example code below shows how to prepare the data sets and how to conduct 
+# 3. The example code below shows how to prepare the data sets and how to conduct 
 #    the IRT model-data fit analysis:
 ##----------------------------------------------------------------------------
 
@@ -856,7 +1185,7 @@ fit2$contingency.fitstat[[4]]
 plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE)
 ```
 
-<img src="man/figures/README-example-1.png" width="100%" />
+<img src="man/figures/README-example-2.png" width="100%" />
 
     #>                               theta   N freq.0 freq.1 obs.prop.0 obs.prop.1
     #> [-0.1218815,0.08512996] -0.02529272   3      3      0  1.0000000  0.0000000
@@ -922,7 +1251,7 @@ plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE
     # (2) the raw residual plots using the object "fit1"  
     plot(x=fit1, item.loc=1, type = "icc", ci.method = "wald",  ylim.sr.adjust=TRUE)
 
-<img src="man/figures/README-example-2.png" width="100%" />
+<img src="man/figures/README-example-3.png" width="100%" />
 
     #>                               theta   N freq.0 freq.1 obs.prop.0 obs.prop.1
     #> [-0.1218815,0.08512996] -0.02529272   3      3      0  1.0000000  0.0000000
@@ -988,7 +1317,7 @@ plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE
     # (3) the standardized residual plots using the object "fit1"  
     plot(x=fit1, item.loc=113, type = "sr", ci.method = "wald",  ylim.sr.adjust=TRUE)
 
-<img src="man/figures/README-example-3.png" width="100%" />
+<img src="man/figures/README-example-4.png" width="100%" />
 
     #>                           theta   N freq.0 freq.1 freq.2 freq.3 obs.prop.0
     #> [0.3564295,0.5199582] 0.3564295   1      1      0      0      0 1.00000000
@@ -1091,7 +1420,7 @@ plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE
     # (1) both raw and standardized residual plots using the object "fit1"  
     plot(x=fit1, item.loc=113, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE)
 
-<img src="man/figures/README-example-4.png" width="100%" />
+<img src="man/figures/README-example-5.png" width="100%" />
 
     #>                           theta   N freq.0 freq.1 freq.2 freq.3 obs.prop.0
     #> [0.3564295,0.5199582] 0.3564295   1      1      0      0      0 1.00000000
@@ -1193,7 +1522,7 @@ plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE
     # (2) the raw residual plots using the object "fit1"  
     plot(x=fit1, item.loc=113, type = "icc", ci.method = "wald", layout.col=2, ylim.sr.adjust=TRUE)
 
-<img src="man/figures/README-example-5.png" width="100%" />
+<img src="man/figures/README-example-6.png" width="100%" />
 
     #>                           theta   N freq.0 freq.1 freq.2 freq.3 obs.prop.0
     #> [0.3564295,0.5199582] 0.3564295   1      1      0      0      0 1.00000000
@@ -1295,7 +1624,7 @@ plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE
     # (3) the standardized residual plots using the object "fit1"  
     plot(x=fit1, item.loc=113, type = "sr", ci.method = "wald", layout.col=4, ylim.sr.adjust=TRUE)
 
-<img src="man/figures/README-example-6.png" width="100%" />
+<img src="man/figures/README-example-7.png" width="100%" />
 
     #>                           theta   N freq.0 freq.1 freq.2 freq.3 obs.prop.0
     #> [0.3564295,0.5199582] 0.3564295   1      1      0      0      0 1.00000000

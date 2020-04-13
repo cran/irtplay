@@ -243,7 +243,7 @@ loglike_plm <- function(item_par, r_i, theta, pmodel=c("GRM", "GPCM"), D=1, fix.
     log_ps <- log(ps)
 
     # to prevent that log(p) and log(q) have -Inf values
-    log_ps <- ifelse(is.infinite(log_ps), log(1e-4), log_ps)
+    log_ps <- ifelse(is.infinite(log_ps), log(1e-20), log_ps)
 
     # log-likelihood
     llike <- sum(r_i * log_ps)

@@ -5,16 +5,16 @@
 #' expected a posteriori estimation (EAP; Bock & Mislevy, 1982), EAP summed scoring (Thissen et al., 1995; Thissen & Orlando, 2001),
 #' and inverse test characteristic curve (TCC) scoring (e.g., Kolen & Brennan, 2004; Kolen & Tong, 2010; Stocking, 1996).
 #'
-#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
-#' See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data.
-#' This data.frame can be easily obtained using the function \code{\link{shape_df}}.
+#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...) or an object of
+#' class \code{\link{est_irt}} obtained from the function \code{\link{est_irt}}. See \code{\link{irtfit}}, \code{\link{test.info}},
+#' or \code{\link{simdat}} for more details about the item meta data. This data.frame can be easily obtained using the function \code{\link{shape_df}}.
 #' @param data A matrix or vector containing examinees' response data for the items in the argument \code{x}. When a matrix is used, a row and column indicate
 #' the examinees and items, respectively. When a vector is used, it should contains the item response data for an examinee.
 #' @param D A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
 #' Default is 1.
 #' @param method A character string indicating a scoring method. Available methods are "MLE" for the maximum likelihood estimation,
 #' "MLEF" for the maximum likelihood estimation with fences, "MAP" for the maximum a posteriori estimation,
-#' "EAP" for the expected a posteriori estimation, "EAP.SUM" for the expected a posteriori summed scoring, and "INV.TCC" for the inverse TCC socring.
+#' "EAP" for the expected a posteriori estimation, "EAP.SUM" for the expected a posteriori summed scoring, and "INV.TCC" for the inverse TCC scoring.
 #' Default method is "MLE".
 #' @param range A numeric vector of two components to restrict the range of ability scale for the MLE. Default is c(-4, 4).
 #' @param norm.prior A numeric vector of two components specifying a mean and standard deviation of the normal prior distribution.
@@ -22,10 +22,10 @@
 #' c(0,1). Ignored if \code{method} is "MLE", "MLEF", or "INV.TCC".
 #' @param nquad An integer value specifying the number of gaussian quadrature points from the normal prior distribution. Default is 41.
 #' Ignored if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".
-#' @param weights A two-column matrix or data.frame containing the theta values (in the first column) and the weights (in the second column)
-#' for the prior distribution. The weights and theta values can be easily obtained using the function \code{\link{gen.weight}}.
-#' If NULL and \code{method} is "EAP" or "EAP.SUM", default values are used (see the arguments of \code{norm.prior} and \code{nquad}). Ignored
-#' if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".
+#' @param weights A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
+#' (in the second column) of the latent variable prior distribution. The weights and quadrature points can be easily obtained
+#' using the function \code{\link{gen.weight}}. If NULL and \code{method} is "EAP" or "EAP.SUM", default values are used (see the arguments
+#' of \code{norm.prior} and \code{nquad}). Ignored if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".
 #' @param fence.a A numeric value specifying the item slope parameter (i.e., \emph{a}-parameter) for the two imaginary items in MLEF. See below for details.
 #' Default is 3.0.
 #' @param fence.b A numeric vector of two components specifying the lower and upper fences of item difficulty parameters (i.e., \emph{b}-parameters)
@@ -39,7 +39,7 @@
 #' the raw sum score equal to the sum of item guessing parameters is forced to become the score of "the raw sum score + constant". Default is .1.
 #' @param constraint A logical value indicating whether the ability estimates will be restricted within a specific ability range
 #' specified in the argument \code{range.tcc} when \code{method = "INV.TCC"}. If \code{constraint = TRUE}, all ability estimates less than the first value in the vector specified in
-#' the argument \code{range.tcc} are transformed to the first value and all ability estimates greather than the second value in the vector specified in
+#' the argument \code{range.tcc} are transformed to the first value and all ability estimates greater than the second value in the vector specified in
 #' the argument \code{range.tcc} are transformed to the second value. Also, when \code{constraint = TRUE} and the 3PLM items are contained
 #' in the item meta data, linear interpolation method is used to find the ability estimates for the raw sum scores less than the sum of item guessing
 #' parameters. When \code{constraint = FALSE} and the 3PLM items are contained in the item meta data, linear extrapolation method is used to find
@@ -114,7 +114,6 @@
 #' for Scores on Tests Including Polytomous Items with Ordered Responses. \emph{Applied Psychological
 #' Measurement, 19}(1), 39-49.
 #'
-#' @export
 #' @examples
 #' ## the use of a "-prm.txt" file obtained from a flexMIRT
 #' flex_prm <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
@@ -150,7 +149,13 @@
 #'
 #' }
 #'
-est_score <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), norm.prior = c(0, 1),
+#' @export
+est_score <- function(x, ...) UseMethod("est_score")
+
+#' @describeIn est_score Default method to estimate examinees' latent ability parameters using a data.frame \code{x} containing the item meta data.
+#'
+#' @export
+est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), norm.prior = c(0, 1),
                       nquad = 41, weights = NULL, fence.a = 3.0, fence.b = NULL, se = TRUE,
                       constant=0.1, constraint=FALSE, range.tcc=c(-7, 7), missing = NA, ncore=1, ...) {
 
@@ -336,6 +341,202 @@ est_score <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), norm.pri
 
 }
 
+#' @describeIn est_score An object created by the function \code{\link{est_irt}}.
+#'
+#' @export
+#'
+est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = c(0, 1),
+                              nquad = 41, weights = NULL, fence.a = 3.0, fence.b = NULL, se = TRUE,
+                              constant=0.1, constraint=FALSE, range.tcc=c(-7, 7), missing = NA, ncore=1, ...) {
+
+  method <- toupper(method)
+
+  # extract information from an object
+  data <- x$data
+  D <- x$scale.D
+  x <- x$par.est
+
+  # check if the data set is a vector of an examinee
+  if(is.vector(data)) {
+    data <- rbind(data)
+  }
+
+  # scoring of MLE, MAP, and EAP
+  if(method %in% c("MLE", "MAP", "EAP", "MLEF")) {
+
+    # check the number of examinees
+    nstd <- nrow(data)
+
+    # recode missing values
+    if(!is.na(missing)) {
+      data[data == missing] <- NA
+    }
+
+    # give column names
+    x <- data.frame(x)
+    colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
+
+    # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
+    if(ncol(x[, -c(1, 2, 3)]) == 2) {
+      x <- data.frame(x, par.3=NA)
+    }
+
+    # add two more items and data responses when "MLE" with Fences method is used
+    if(method == "MLEF") {
+      if(is.null(fence.b)) {
+        # find the range of b-parameters in the item meta data
+        range.b <- range(x[, 4])
+        range.b[1] <- floor(range.b[1] - 0.001)
+        range.b[2] <- ceiling(range.b[2] + 0.001)
+
+        # adjust the range of b-parameters to be used as a fence
+        fence.b[1] <- ifelse(range.b[1] >= -3.5, -3.5, range.b[1])
+        fence.b[2] <- ifelse(range.b[2] >= 3.5, range.b[2], 3.5)
+      }
+
+      # add two more response columns for the two fence items
+      data <- data.frame(data, f.lower=rep(1, nstd), f.upper=rep(0, nstd))
+
+      # create a new item meta data for the two fence items
+      x.fence <- shape_df(par.dc=list(a=rep(fence.a, 2), b=fence.b, g=0),
+                          item.id=c("fence.lower", "fence.upper"), cats=rep(2, 2), model="3PLM")
+      if(ncol(x) > ncol(x.fence)) {
+        add.colnum <- ncol(x) - ncol(x.fence)
+        x.fence <- data.frame(x.fence, matrix(NA, nrow=2, ncol=add.colnum))
+        colnames(x.fence) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x.fence) - 3)))
+      }
+
+      # create the new item meta data by adding two fence items
+      x <- rbind(x, x.fence)
+    }
+
+    # listrize the data.frame
+    meta <- metalist2(x)
+
+    # create equations for gradient vector and hessian matrix
+    if(!is.null(meta$drm)) {
+      # create equations for gradient vector and hessian matrix
+      eq_grad_drm <- equation_drm(model="3PLM", use.pprior=FALSE, hessian=FALSE, type="ability")$params_fun
+      eq_hess_drm <- equation_drm(model="3PLM", use.pprior=FALSE, hessian=TRUE, type="ability")$params_fun
+    } else {
+      eq_grad_drm <- NULL
+      eq_hess_drm <- NULL
+    }
+    if(!is.null(meta$plm)) {
+      eq_grad_plm <-
+        purrr::map(.x=1:length(meta$plm$cats),
+                   .f=function(i) equation_plm(cats=meta$plm$cats[i], pmodel=meta$plm$model[i], use.pprior=FALSE,
+                                               hessian=FALSE, type="ability")$params_fun)
+      eq_hess_plm <-
+        purrr::map(.x=1:length(meta$plm$cats),
+                   .f=function(i) equation_plm(cats=meta$plm$cats[i], pmodel=meta$plm$model[i], use.pprior=FALSE,
+                                               hessian=TRUE, type="ability")$params_fun)
+    } else {
+      eq_grad_plm <- NULL
+      eq_hess_plm <- NULL
+    }
+    if(method == "MAP") {
+      eq_grad_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
+                                    hessian=FALSE, type="ability")$pprior_fun
+      eq_hess_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
+                                    hessian=TRUE, type="ability")$pprior_fun
+    } else {
+      eq_grad_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
+                                    hessian=FALSE, type="ability")$pprior_fun
+      eq_hess_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
+                                    hessian=TRUE, type="ability")$pprior_fun
+    }
+
+    # create lists of the equations
+    FUN.grad=list(drm=eq_grad_drm, plm=eq_grad_plm, prior=eq_grad_prior)
+    FUN.hess=list(drm=eq_hess_drm, plm=eq_hess_plm, prior=eq_hess_prior)
+
+    # check the number of CPU cores
+    if(ncore < 1) {
+      stop("The number of logical CPU cores must not be less than 1.", call.=FALSE)
+    }
+
+    # estimation
+    if(ncore == 1L) {
+
+      # set a function for scoring
+      f <- function(i) est_score_indiv(meta=meta, resp=data[i, ], D=D, method=method, range=range,
+                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se,
+                                       FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+
+      # scoring
+      est <- purrr::map(.x=1:nrow(data), .f=function(i) f(i))
+
+      # assign estimated values
+      est.theta <- purrr::map_dbl(est, .f=function(x) x$est.theta)
+      if(se) {
+        se.theta <- purrr::map_dbl(est, .f=function(x) x$se.theta)
+      } else {
+        se.theta <- NULL
+      }
+
+      rst <- list(est.theta=est.theta, se.theta=se.theta)
+
+    } else {
+
+      # specify the number of CPU cores
+      numCores <- ncore
+
+      # create a parallel processesing cluster
+      cl = parallel::makeCluster(numCores, ...)
+
+      # load some specific variable names into processing cluster
+      parallel::clusterExport(cl, c("meta", "data", "D", "method", "range",
+                                    "norm.prior", "nquad", "weights", "se",
+                                    "FUN.grad", "FUN.hess",
+                                    "est_score_indiv", "loglike_score", "grad_score", "hess_score",
+                                    "ll_brute",
+                                    "drm", "plm", "grm", "gpcm", "gen.weight"), envir = environment())
+      parallel::clusterEvalQ(cl, library(dplyr))
+
+      # set a function for scoring
+      f <- function(i) est_score_indiv(meta=meta, resp=data[i, ], D=D, method=method, range=range,
+                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se,
+                                       FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+
+      # parallel scoring
+      est <- pbapply::pblapply(X=1:nrow(data), FUN=f, cl=cl) # to see the progress bar
+
+      # finish
+      parallel::stopCluster(cl)
+
+      # assign estimated values
+      est.theta <- purrr::map_dbl(est, .f=function(x) x$est.theta)
+      if(se) {
+        se.theta <- purrr::map_dbl(est, .f=function(x) x$se.theta)
+      } else {
+        se.theta <- NULL
+      }
+
+      rst <- list(est.theta=est.theta, se.theta=se.theta)
+
+    }
+
+  }
+
+  if(method == "EAP.SUM") {
+    if(is.null(weights)) {
+      rst <- eap_sum(x, data, norm.prior=norm.prior, nquad=nquad, D=D)
+    } else {
+      rst <- eap_sum(x, data, weights=weights, D=D)
+    }
+  }
+
+  if(method == "INV.TCC") {
+    rst <- inv_tcc(x, data, D=D, constant=constant, constraint=constraint, range.tcc=range.tcc)
+  }
+
+  # return results
+  rst
+
+}
+
+
 # This function computes an abiltiy estimate for each examinee
 est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4), norm.prior = c(0, 1),
                             nquad = 41, weights=NULL, se = TRUE,
@@ -430,9 +631,19 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
     if(method %in% c("MLE", "MLEF")) {
 
       # find a better starting value for MLE using a brute force method
-      startval_tmp <- c(seq(from=range[1], to=range[2], length.out=100))
+      # prepare the discrete theta values
+      startval_tmp <- c(seq(from=range[1], to=range[2], length.out=102))
+
+      # compute the negative log-likelihood values for all the theta values
       ll_tmp <- ll_brute(theta=startval_tmp, meta=meta, freq.cat=freq.cat, method="MLE", D=D)
-      startval_tmp1 <- startval_tmp[utils::tail(which(sign(ll_tmp[-100] - ll_tmp[-1]) >= 1), 1) + 1]
+
+      # find the locations of thetas where the sign of slope changes
+      loc_change <- which(diff(sign(diff(ll_tmp))) != 0L) + 1
+
+      # select a theta value that has the minimum of negative log-likelihood value
+      startval_tmp1 <- startval_tmp[loc_change][which.min(ll_tmp[loc_change])]
+
+      # if there is no selected value from step 2, use the starting value from step 1
       startval <- ifelse(length(startval_tmp1) > 0L, startval_tmp1, startval)
 
       # estimation

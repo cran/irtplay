@@ -15,12 +15,20 @@ equation_prior <- function(x, dist=c("norm", "lnorm", "beta"), params, pars, hes
   # take a log
   equation <- paste0("log(", equation, ")")
 
-  # negarive loglikelihood
+  # negative loglikelihood
   equation <- paste0("-(", equation, ")")
+
+  # set the function arguments
+  has.D <- grepl(pattern="D \\* ", x=x)
+  if(has.D) {
+    function.arg <- c(gsub(pattern="D \\* ", replacement="", x=x), "D")
+  } else {
+    function.arg <- x
+  }
 
   # return results
   stats::deriv(expr=parse(text=equation), namevec=pars, hessian=hessian,
-               function.arg=x)
+               function.arg=function.arg)
 
 }
 
@@ -34,8 +42,7 @@ equation_drm <- function(model=c("1PLM", "2PLM", "3PLM", "DRM"), fix.a=FALSE, fi
                          use.gprior=TRUE,
                          use.pprior=FALSE,
                          hessian=FALSE,
-                         type=c("item", "ability"),
-                         negative=TRUE) {
+                         type=c("item", "ability")) {
 
 
   if((model %in% c("2PLM", "3PLM", "DRM")) & fix.a) {
@@ -69,7 +76,7 @@ equation_drm <- function(model=c("1PLM", "2PLM", "3PLM", "DRM"), fix.a=FALSE, fi
     equation <- paste0("(", paste(log.sum, collapse = " + "), ")")
     # if priors are specified is used
     if(use.aprior) {
-      aprior_fun <- equation_prior(x=pars[1], dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
+      aprior_fun <- equation_prior(x=paste0("D * ", pars[1]), dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
     }
 
   }
@@ -97,7 +104,7 @@ equation_drm <- function(model=c("1PLM", "2PLM", "3PLM", "DRM"), fix.a=FALSE, fi
     equation <- paste(log.1, log.2, sep=" + ")
     # if priors are specified is used
     if(use.aprior) {
-      aprior_fun <- equation_prior(x=pars[1], dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
+      aprior_fun <- equation_prior(x=paste0("D * ", pars[1]), dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
     }
 
   }
@@ -113,7 +120,7 @@ equation_drm <- function(model=c("1PLM", "2PLM", "3PLM", "DRM"), fix.a=FALSE, fi
     equation <- paste(log.1, log.2, sep=" + ")
     # if priors are specified is used
     if(use.aprior) {
-      aprior_fun <- equation_prior(x=pars[1], dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
+      aprior_fun <- equation_prior(x=paste0("D * ", pars[1]), dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
     }
     if(use.gprior) {
       gprior_fun <- equation_prior(x=pars[3], dist=gprior$dist, params=gprior$params, pars=pars, hessian=hessian)
@@ -132,18 +139,13 @@ equation_drm <- function(model=c("1PLM", "2PLM", "3PLM", "DRM"), fix.a=FALSE, fi
     equation <- paste(log.1, log.2, sep=" + ")
     # if priors are specified is used
     if(use.aprior) {
-      aprior_fun <- equation_prior(x=pars[1], dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
+      aprior_fun <- equation_prior(x=paste0("D * ", pars[1]), dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
     }
 
   }
 
   # negative loglikelihood
-  if(negative) {
-    equation <- paste0("-(", equation, ")")
-  } else {
-    equation <- paste0("(", equation, ")")
-  }
-
+  equation <- paste0("-(", equation, ")")
 
   ##----------------------------------------------------------------------------
   # create a function for loglikelihood, gradient, hessian
@@ -192,8 +194,7 @@ equation_plm <- function(cats, pmodel=c("GRM", "GPCM"), fix.a=FALSE, a.val=1,
                          use.aprior=FALSE,
                          use.pprior=FALSE,
                          hessian=FALSE,
-                         type=c("item", "ability"),
-                         negative=TRUE) {
+                         type=c("item", "ability")) {
 
   if(pmodel == "GRM" & fix.a) {
     stop("The slope parameter can't be fixed for GRM.", call.=FALSE)
@@ -234,7 +235,7 @@ equation_plm <- function(cats, pmodel=c("GRM", "GPCM"), fix.a=FALSE, a.val=1,
     }
     # if priors are specified is used
     if(use.aprior) {
-      aprior_fun <- equation_prior(x=pars[1], dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
+      aprior_fun <- equation_prior(x=paste0("D * ", pars[1]), dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
     }
 
   }
@@ -287,7 +288,7 @@ equation_plm <- function(cats, pmodel=c("GRM", "GPCM"), fix.a=FALSE, a.val=1,
 
     # if priors are specified is used
     if(use.aprior) {
-      aprior_fun <- equation_prior(x=pars[1], dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
+      aprior_fun <- equation_prior(x=paste0("D * ", pars[1]), dist=aprior$dist, params=aprior$params, pars=pars, hessian=hessian)
     }
 
   }
@@ -341,11 +342,7 @@ equation_plm <- function(cats, pmodel=c("GRM", "GPCM"), fix.a=FALSE, a.val=1,
   }
 
   # negative loglikelihood
-  if(negative) {
-    equation <- paste0("-(", equation, ")")
-  } else {
-    equation <- paste0("(", equation, ")")
-  }
+  equation <- paste0("-(", equation, ")")
 
   ##----------------------------------------------------------------------------
   # create a function for loglikelihood, gradient, hessian
@@ -461,7 +458,7 @@ equation_scocat <- function(model=c("1PLM", "2PLM", "3PLM", "GRM", "GPCM"), cats
       numer <- c(numer, paste0("exp(", paste(tmp, collapse = " + "), ")"))
     }
 
-    # loglikelihood equation
+    # likelihood equation
     equation <- paste(numer, denom, sep=" / ")
 
   }

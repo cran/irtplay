@@ -114,7 +114,7 @@
 #' @import ggplot2
 #' @importFrom reshape2 melt
 #' @importFrom rlang .data
-#' @describeIn plot An object created by the function \code{\link{irtfit}}.
+#'
 #' @export
 #'
 plot.irtfit <- function(x, item.loc=NULL, type = "both",

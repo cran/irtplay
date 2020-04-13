@@ -4,6 +4,7 @@
 \alias{irtfit}
 \alias{irtfit.default}
 \alias{irtfit.est_item}
+\alias{irtfit.est_irt}
 \title{Traditional IRT item fit statistics}
 \usage{
 irtfit(x, ...)
@@ -17,11 +18,16 @@ irtfit(x, ...)
   "equal.freq"), n.width = 10, loc.theta = "average",
   range.score = NULL, alpha = 0.05, missing = NA, overSR = 2,
   min.collapse = 1, ...)
+
+\method{irtfit}{est_irt}(x, score, group.method = c("equal.width",
+  "equal.freq"), n.width = 10, loc.theta = "average",
+  range.score = NULL, alpha = 0.05, missing = NA, overSR = 2,
+  min.collapse = 1, ...)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...) or an object of class \code{\link{est_item}}
-obtained from the function \code{\link{est_item}}. The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}.
-See below for details.}
+\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...), an object of class \code{\link{est_item}}
+obtained from the function \code{\link{est_item}}, or an object of class \code{\link{est_irt}} obtained from the function \code{\link{est_irt}}.
+The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}. See below for details.}
 
 \item{...}{Further arguments passed to or from other methods.}
 
@@ -149,6 +155,8 @@ the \eqn{\chi^{2}} fit statistic.
 \item \code{default}: Default method to compute the traditional IRT item fit statistics for a data.frame \code{x} containing the item meta data.
 
 \item \code{est_item}: An object created by the function \code{\link{est_item}}.
+
+\item \code{est_irt}: An object created by the function \code{\link{est_irt}}.
 }}
 
 \examples{
@@ -193,6 +201,7 @@ score <- rnorm(1000, mean=0, sd=1)
 # simulate the response data
 data <- simdat(x=x, theta=score, D=1)
 
+\donttest{
 # compute fit statistics
 fit2 <- irtfit(x=x, score=score, data=data, group.method="equal.freq",
                n.width=11, loc.theta="average", range.score=c(-4, 4), D=1, alpha=0.05)
@@ -208,6 +217,8 @@ plot(x=fit2, item.loc=1, type = "both", ci.method = "wald", show.table=TRUE, yli
 
 # residual plots for the third item (polytomous item)
 plot(x=fit2, item.loc=3, type = "both", ci.method = "wald", show.table=FALSE, ylim.sr.adjust=TRUE)
+
+}
 
 }
 \references{

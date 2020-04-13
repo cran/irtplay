@@ -216,9 +216,11 @@ bring.flexPrm <- function(file, rePrm = TRUE) {
           if(dims == 1 & isGpc) {
             Tmat <- matrix(0, nrow=catg, ncol=(catg-1))
             Tmat[, 1] <- 0:(catg-1)
-            for(k in 2:(catg-1)) {
-              for(j in 2:(catg-1)) {
-                Tmat[k, j] <- sin( pi*(j-1)*(k-1) / (catg-1) )
+            if(catg > 2) {
+              for(k in 2:(catg-1)) {
+                for(j in 2:(catg-1)) {
+                  Tmat[k, j] <- sin( pi*(j-1)*(k-1) / (catg-1) )
+                }
               }
             }
             c.Vec <- Tmat%*%gam

@@ -4,6 +4,7 @@
 \alias{sx2_fit}
 \alias{sx2_fit.default}
 \alias{sx2_fit.est_item}
+\alias{sx2_fit.est_irt}
 \title{S-X2 fit statistic}
 \usage{
 sx2_fit(x, ...)
@@ -13,12 +14,15 @@ sx2_fit(x, ...)
 
 \method{sx2_fit}{est_item}(x, alpha = 0.05, min.collapse = 1,
   norm.prior = c(0, 1), nquad = 30, weights, ...)
+
+\method{sx2_fit}{est_irt}(x, alpha = 0.05, min.collapse = 1,
+  norm.prior = c(0, 1), nquad = 30, weights, ...)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...) or an object
-of class \code{\link{est_item}} obtained from the function \code{\link{est_item}}. See \code{\link{irtfit}}, \code{\link{test.info}},
-or \code{\link{simdat}} for more details about the item meta data. The data.frame of item meta data can be easily obtained using
-the function \code{\link{shape_df}}.}
+\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...), an object
+of class \code{\link{est_item}} obtained from the function \code{\link{est_item}}, or an object of class \code{\link{est_irt}}
+obtained from the function \code{\link{est_irt}}. See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}}
+for more details about the item meta data. The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}.}
 
 \item{...}{Further arguments passed to or from other methods.}
 
@@ -38,9 +42,9 @@ c(0,1).}
 
 \item{nquad}{An integer value specifying the number of gaussian quadrature points from the normal prior distribution. Default is 30.}
 
-\item{weights}{A two-column matrix or data.frame containing the theta values (in the first column) and the weights (in the second column)
-for the prior distribution. The weights and theta values can be easily obtained using the function \code{\link{gen.weight}}.
-If missing, default values are used (see the arguments of \code{norm.prior} and \code{nquad}).}
+\item{weights}{A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
+(in the second column) of the latent variable prior distribution. The weights and quadrature points can be easily obtained
+using the function \code{\link{gen.weight}}. If missing, default values are used (see the arguments of \code{norm.prior} and \code{nquad}).}
 }
 \value{
 This function returns a list. Within a list, several internal objects are contained such as:
@@ -72,6 +76,8 @@ the \eqn{S-X^{2}} fit statistic.
 \item \code{default}: Default method to compute \eqn{S-X^{2}} fit statistics for a data.frame \code{x} containing the item meta data.
 
 \item \code{est_item}: An object created by the function \code{\link{est_item}}.
+
+\item \code{est_irt}: An object created by the function \code{\link{est_irt}}.
 }}
 
 \examples{

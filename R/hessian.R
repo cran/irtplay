@@ -136,7 +136,7 @@ hess_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
     # extract the hessian matrix when the slope parameter prior is used
     if(use.aprior) {
       aprior_fun <- FUN.hess$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
 
       # extract the hessian matrix
       hess.aprior <- attributes(rst.aprior)$hessian
@@ -214,7 +214,7 @@ hess_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
     # extract the hessian matrix when the slope parameter prior is used
     if(use.aprior) {
       aprior_fun <- FUN.hess$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
 
       # extract the hessian matrix
       hess.aprior <- attributes(rst.aprior)$hessian
@@ -264,7 +264,7 @@ hess_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
     # extract the hessian matrix when the slope parameter prior is used
     if(use.aprior) {
       aprior_fun <- FUN.hess$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
 
       # extract the hessian matrix
       hess.aprior <- attributes(rst.aprior)$hessian
@@ -329,7 +329,7 @@ hess_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
     # extract the hessian matrix when the slope parameter prior is used
     if(use.aprior) {
       aprior_fun <- FUN.hess$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
 
       # extract the hessian matrix
       hess.aprior <- attributes(rst.aprior)$hessian
@@ -420,7 +420,7 @@ hess_item_plm <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=
     # extract the hessian matrix when the slope parameter prior is used
     if(use.aprior) {
       aprior_fun <- FUN.hess$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
 
       # extract the hessian matrix
       hess.aprior <- attributes(rst.aprior)$hessian
@@ -493,12 +493,12 @@ hess_item_plm <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=
 #' @import purrr
 #' @import dplyr
 hess_item_drm2 <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "DRM"), D=1,
-                          fix.a=FALSE, fix.g=TRUE, a.val=1, g.val=.2, n.1PLM=NULL,
-                          aprior=list(dist="lnorm", params=c(1, 0.5)),
-                          gprior=list(dist="beta", params=c(5, 17)),
-                          use.aprior=FALSE,
-                          use.gprior=TRUE,
-                          FUN.grad, FUN.hess) {
+                           fix.a=FALSE, fix.g=TRUE, a.val=1, g.val=.2, n.1PLM=NULL,
+                           aprior=list(dist="lnorm", params=c(1, 0.5)),
+                           gprior=list(dist="beta", params=c(5, 17)),
+                           use.aprior=FALSE,
+                           use.gprior=TRUE,
+                           FUN.grad, FUN.hess) {
 
 
   # consider DRM as 3PLM
@@ -553,7 +553,7 @@ hess_item_drm2 <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3
     # extract the hessian matrix when the slope parameter prior is used
     if(use.aprior) {
       aprior_fun <- FUN.hess$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
 
       # extract the hessian matrix
       hess.aprior <- attributes(rst.aprior)$hessian
@@ -631,7 +631,7 @@ hess_item_drm2 <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3
     # extract the hessian matrix when the slope parameter prior is used
     if(use.aprior) {
       aprior_fun <- FUN.hess$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
 
       # extract the hessian matrix
       hess.aprior <- attributes(rst.aprior)$hessian
@@ -681,7 +681,7 @@ hess_item_drm2 <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3
     # extract the hessian matrix when the slope parameter prior is used
     if(use.aprior) {
       aprior_fun <- FUN.hess$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
 
       # extract the hessian matrix
       hess.aprior <- attributes(rst.aprior)$hessian
@@ -746,7 +746,7 @@ hess_item_drm2 <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3
     # extract the hessian matrix when the slope parameter prior is used
     if(use.aprior) {
       aprior_fun <- FUN.hess$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
 
       # extract the hessian matrix
       hess.aprior <- attributes(rst.aprior)$hessian
@@ -772,9 +772,9 @@ hess_item_drm2 <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3
 #' @import purrr
 #' @import dplyr
 hess_item_plm2 <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=1,
-                          aprior=list(dist="lnorm", params=c(1, 0.5)),
-                          use.aprior=FALSE,
-                          FUN.grad, FUN.hess) {
+                           aprior=list(dist="lnorm", params=c(1, 0.5)),
+                           use.aprior=FALSE,
+                           FUN.grad, FUN.hess) {
 
 
   if(pmodel == "GRM" & fix.a) {
@@ -826,7 +826,7 @@ hess_item_plm2 <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val
     # extract the hessian matrix when the slope parameter prior is used
     if(use.aprior) {
       aprior_fun <- FUN.hess$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
 
       # extract the hessian matrix
       hess.aprior <- attributes(rst.aprior)$hessian
@@ -884,6 +884,176 @@ hess_item_plm2 <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val
 }
 
 
+# This function computes the hessian matrix of the negative log likelihood of priors for an item
+hess_prior <- function(item_par, model=c("1PLM", "2PLM", "3PLM", "GRM", "GPCM"), D=1,
+                       fix.a.1pl=TRUE, fix.a.gpcm=FALSE, fix.g=FALSE,
+                       aprior=list(dist="lnorm", params=c(1, 0.5)),
+                       gprior=list(dist="beta", params=c(5, 16)),
+                       use.aprior=FALSE, use.gprior=FALSE, FUN.hess) {
+
+  # for dichotomous models
+  if(model %in% c("1PLM", "2PLM", "3PLM")) {
+
+    if(!fix.a.1pl & model == "1PLM") {
+
+      # 1PLM: when the item slope parameters are not constrained to be equal across all items
+      # compute the hessian matrix
+      hess <- hess_prior_drm(item_par=item_par, model=model, D=D,
+                             fix.a=fix.a.1pl, fix.g=fix.g, use.aprior=use.aprior, use.gprior=use.gprior,
+                             FUN.hess=FUN.hess)
+
+    } else {
+
+      # for all other dichotomous models
+      # compute the hessian matrix
+      hess <- hess_prior_drm(item_par=item_par, model=model, D=D, fix.a=fix.a.1pl, fix.g=fix.g,
+                             use.aprior=use.aprior, use.gprior=use.gprior, FUN.hess=FUN.hess)
+
+    }
+
+  } else {
+
+    # for polytomous models
+    # compute the hessian matrix
+    hess <- hess_prior_plm(item_par=item_par, pmodel=model, D=D, fix.a=fix.a.gpcm, use.aprior=use.aprior, FUN.hess=FUN.hess)
+
+  }
+
+  # return results
+  hess
+
+}
+
+# This function computes the hessian matrix of the negative log likelihood of priors for an dichotomous item
+hess_prior_drm <- function(item_par, model=c("1PLM", "2PLM", "3PLM", "DRM"), D=1,
+                           fix.a=FALSE, fix.g=TRUE, use.aprior=FALSE, use.gprior=FALSE,
+                           FUN.hess) {
+
+  # consider DRM as 3PLM
+  if(model == "DRM") model <- "3PLM"
+
+  # transform item parameters as numeric values
+  item_par <- as.numeric(item_par)
+  n.par <- length(item_par)
+
+  # (1) 1PLM: the slope parameters are fixed
+  if(fix.a & model == "1PLM") {
+    hess <- matrix(0, nrow=n.par, ncol=n.par)
+  }
+
+  # (1) 1PLM: the slope parameters are contrained to be equal across the 1PLM items or 2PLM
+  if((!fix.a & model  == "1PLM") | model == "2PLM") {
+
+    if(use.aprior) {
+      # extract the hessian matrix when the slope parameter prior is used
+      aprior_fun <- FUN.hess$aprior_fun
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+
+      # extract the hessian matrix
+      hess.aprior <- attributes(rst.aprior)$hessian
+      hess.aprior[is.nan(hess.aprior)] <- 0
+      hess <- matrix(hess.aprior, ncol=n.par)
+    } else {
+      hess <- matrix(0, nrow=n.par, ncol=n.par)
+    }
+
+  }
+
+  # (2) 3PLM: the guessing parameters are estimated
+  if(!fix.g & model == "3PLM") {
+
+    if(use.aprior) {
+      # extract the hessian matrix when the slope parameter prior is used
+      aprior_fun <- FUN.hess$aprior_fun
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+
+      # extract the hessian matrix
+      hess.aprior <- attributes(rst.aprior)$hessian
+      hess.aprior[is.nan(hess.aprior)] <- 0
+      hess.aprior <- matrix(hess.aprior, ncol=n.par)
+    } else {
+      hess.aprior <- matrix(0, nrow=n.par, ncol=n.par)
+    }
+
+    if(use.gprior) {
+      # extract the hessian matrix when the guessing parameter prior is used
+      gprior_fun <- FUN.hess$gprior_fun
+      rst.gprior <- do.call("gprior_fun", list(item_par[3]), envir=environment())
+
+      # extract the hessian matrix
+      hess.gprior <- attributes(rst.gprior)$hessian
+      hess.gprior[is.nan(hess.gprior)] <- 0
+      hess.gprior <- matrix(hess.gprior, ncol=n.par)
+    } else {
+      hess.gprior <- matrix(0, nrow=n.par, ncol=n.par)
+    }
+
+    hess <- hess.aprior + hess.gprior
+
+  }
+
+  # (3) 3PLM: the guessing parameters are fixed to be specified value
+  if(fix.g & model == "3PLM") {
+
+    if(use.aprior) {
+      # extract the hessian matrix when the slope parameter prior is used
+      aprior_fun <- FUN.hess$aprior_fun
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+
+      # extract the hessian matrix
+      hess.aprior <- attributes(rst.aprior)$hessian
+      hess.aprior[is.nan(hess.aprior)] <- 0
+      hess <- matrix(hess.aprior, ncol=n.par)
+    } else {
+      hess <- matrix(0, nrow=n.par, ncol=n.par)
+    }
+
+  }
+
+  # return results
+  hess
+
+}
+
+# This function computes the hessian matrix of the negative log likelihood of priors for an polytomous item
+hess_prior_plm <- function(item_par, pmodel, D=1, fix.a=FALSE, use.aprior=FALSE, FUN.hess) {
+
+
+  if(pmodel == "GRM" & fix.a) {
+    stop("The slope parameter can't be fixed for GRM.", call.=FALSE)
+  }
+
+  # transform item parameters as numeric values
+  item_par <- as.numeric(item_par)
+  n.par <- length(item_par)
+
+  ##-------------------------------------------------------------------------
+  # check the number of categories and parameters to be estimated
+  if(!fix.a) {
+
+    if(use.aprior) {
+      # extract the hessian matrix when the slope parameter prior is used
+      aprior_fun <- FUN.hess$aprior_fun
+      rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+
+      # extract the hessian matrix
+      hess.aprior <- attributes(rst.aprior)$hessian
+      hess.aprior[is.nan(hess.aprior)] <- 0
+      hess <- matrix(hess.aprior, ncol=n.par)
+    } else {
+      hess <- matrix(0, nrow=n.par, ncol=n.par)
+    }
+
+  } else {
+
+    hess <- matrix(0, nrow=n.par, ncol=n.par)
+
+  }
+
+  # return results
+  hess
+
+}
 
 
 

@@ -4,6 +4,7 @@
 \alias{test.info}
 \alias{test.info.default}
 \alias{test.info.est_item}
+\alias{test.info.est_irt}
 \title{Item and Test Information Function}
 \usage{
 test.info(x, ...)
@@ -11,11 +12,13 @@ test.info(x, ...)
 \method{test.info}{default}(x, theta, D = 1, ...)
 
 \method{test.info}{est_item}(x, theta, ...)
+
+\method{test.info}{est_irt}(x, theta, ...)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...)or an object of class \code{\link{est_item}}
-obtained from the function \code{\link{est_item}}. The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}.
-See below for details.}
+\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...), an object of class \code{\link{est_item}}
+obtained from the function \code{\link{est_item}}, or an object of class \code{\link{est_irt}} obtained from the function \code{\link{est_irt}}.
+The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}. See below for details.}
 
 \item{...}{Further arguments passed to or from other methods.}
 
@@ -74,6 +77,8 @@ the argument \code{x} is by using the function \code{\link{shape_df}}.
 \item \code{default}: Default method to compute item and test information functions for a data.frame \code{x} containing the item meta data.
 
 \item \code{est_item}: An object created by the function \code{\link{est_item}}.
+
+\item \code{est_irt}: An object created by the function \code{\link{est_irt}}.
 }}
 
 \examples{

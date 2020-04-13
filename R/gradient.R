@@ -1,3 +1,48 @@
+# This function computes the gradients vectors of the negative log likelihood for an item across all individuals
+# This function is used to compute the standard errors of item parameter estimates using the cross-product method.
+grad_llike <- function(item_par, f_i, r_i, quadpt, model=c("1PLM", "2PLM", "3PLM", "GRM", "GPCM"), D=1,
+                       fix.a.1pl=TRUE, fix.a.gpcm=FALSE, fix.g=FALSE, a.val.1pl=1, a.val.gpcm=1, g.val=.2, n.1PLM=NULL,
+                       aprior=list(dist="lnorm", params=c(1, 0.5)),
+                       gprior=list(dist="beta", params=c(5, 16)),
+                       use.aprior=FALSE, use.gprior=FALSE, FUN.grad) {
+
+  # for dichotomous models
+  if(model %in% c("1PLM", "2PLM", "3PLM")) {
+
+    if(!fix.a.1pl & model == "1PLM") {
+
+      # 1PLM: when the item slope parameters are not constrained to be equal across all items
+      # compute the gradient vectors
+      grad <- grad_item_drm(item_par=item_par, f_i=f_i, r_i=r_i, theta=quadpt, model=model, D=D,
+                            fix.a=fix.a.1pl, n.1PLM=n.1PLM, aprior=aprior, use.aprior=use.aprior,
+                            FUN.grad=FUN.grad, se=TRUE)
+
+    } else {
+
+      # for all other dichotomous models
+      # compute the gradient vectors
+      grad <- grad_item_drm(item_par=item_par, f_i=f_i, r_i=r_i, theta=quadpt, model=model, D=D,
+                            fix.a=fix.a.1pl, fix.g=fix.g, a.val=a.val.1pl, g.val=g.val, n.1PLM=NULL,
+                            aprior=aprior, gprior=gprior, use.aprior=use.aprior, use.gprior=use.gprior,
+                            FUN.grad=FUN.grad, se=TRUE)
+
+    }
+
+  } else {
+
+    # for polytomous models
+    # compute the gradient vectors
+    grad <- grad_item_plm(item_par=item_par, r_i=r_i, theta=quadpt, pmodel=model, D=D, fix.a=fix.a.gpcm,
+                          a.val=a.val.gpcm, aprior=aprior, use.aprior=use.aprior, FUN.grad=FUN.grad, se=TRUE)
+
+  }
+
+  # return results
+  grad
+
+}
+
+
 # This function analytically computes a gradient vector for scoring
 grad_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL), method=c("MLE", "MAP", "MLEF"),
                        D=1, norm.prior=c(0, 1), logL=TRUE,
@@ -77,7 +122,7 @@ grad_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
                           gprior=list(dist="beta", params=c(5, 17)),
                           use.aprior=FALSE,
                           use.gprior=TRUE,
-                          FUN.grad, FUN.hess) {
+                          FUN.grad, FUN.hess, se=FALSE) {
 
 
   # consider DRM as 3PLM
@@ -117,17 +162,21 @@ grad_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
     # extract the gradient vector
     grad <- attributes(rst)$gradient
     grad[is.nan(grad)] <- 0
-    grad <- colSums(grad)
 
-    # extract the gradient vector when the slope parameter prior is used
-    if(use.aprior) {
-      aprior_fun <- FUN.grad$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+    # additional steps when the gradients are used for item parameter estimation
+    if(!se) {
+      grad <- colSums(grad)
 
-      # extract the gradient vector
-      grad.aprior <- attributes(rst.aprior)$gradient
-      grad.aprior[is.nan(grad.aprior)] <- 0
-      grad <- grad + colSums(grad.aprior)
+      # extract the gradient vector when the slope parameter prior is used
+      if(use.aprior) {
+        aprior_fun <- FUN.grad$aprior_fun
+        rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+
+        # extract the gradient vector
+        grad.aprior <- attributes(rst.aprior)$gradient
+        grad.aprior[is.nan(grad.aprior)] <- 0
+        grad <- grad + colSums(grad.aprior)
+      }
     }
 
   }
@@ -153,7 +202,11 @@ grad_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
     # extract the gradient vector
     grad <- attributes(rst)$gradient
     grad[is.nan(grad)] <- 0
-    grad <- colSums(grad)
+
+    # additional steps when the gradients are used for item parameter estimation
+    if(!se) {
+      grad <- colSums(grad)
+    }
 
   }
 
@@ -178,17 +231,21 @@ grad_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
     # extract the gradient vector
     grad <- attributes(rst)$gradient
     grad[is.nan(grad)] <- 0
-    grad <- colSums(grad)
 
-    # extract the gradient vector when the slope parameter prior is used
-    if(use.aprior) {
-      aprior_fun <- FUN.grad$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+    # additional steps when the gradients are used for item parameter estimation
+    if(!se) {
+      grad <- colSums(grad)
 
-      # extract the gradient vector
-      grad.aprior <- attributes(rst.aprior)$gradient
-      grad.aprior[is.nan(grad.aprior)] <- 0
-      grad <- grad + colSums(grad.aprior)
+      # extract the gradient vector when the slope parameter prior is used
+      if(use.aprior) {
+        aprior_fun <- FUN.grad$aprior_fun
+        rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+
+        # extract the gradient vector
+        grad.aprior <- attributes(rst.aprior)$gradient
+        grad.aprior[is.nan(grad.aprior)] <- 0
+        grad <- grad + colSums(grad.aprior)
+      }
     }
 
   }
@@ -214,28 +271,32 @@ grad_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
     # extract the gradient vector
     grad <- attributes(rst)$gradient
     grad[is.nan(grad)] <- 0
-    grad <- colSums(grad)
 
-    # extract the gradient vector when the slope parameter prior is used
-    if(use.aprior) {
-      aprior_fun <- FUN.grad$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+    # additional steps when the gradients are used for item parameter estimation
+    if(!se) {
+      grad <- colSums(grad)
 
-      # extract the gradient vector
-      grad.aprior <- attributes(rst.aprior)$gradient
-      grad.aprior[is.nan(grad.aprior)] <- 0
-      grad <- grad + colSums(grad.aprior)
-    }
+      # extract the gradient vector when the slope parameter prior is used
+      if(use.aprior) {
+        aprior_fun <- FUN.grad$aprior_fun
+        rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
 
-    # extract the gradient vector when the guessing parameter prior is used
-    if(use.gprior) {
-      gprior_fun <- FUN.grad$gprior_fun
-      rst.gprior <- do.call("gprior_fun", list(item_par[3]), envir=environment())
+        # extract the gradient vector
+        grad.aprior <- attributes(rst.aprior)$gradient
+        grad.aprior[is.nan(grad.aprior)] <- 0
+        grad <- grad + colSums(grad.aprior)
+      }
 
-      # extract the gradient vector
-      grad.gprior <- attributes(rst.gprior)$gradient
-      grad.gprior[is.nan(grad.gprior)] <- 0
-      grad <- grad + colSums(grad.gprior)
+      # extract the gradient vector when the guessing parameter prior is used
+      if(use.gprior) {
+        gprior_fun <- FUN.grad$gprior_fun
+        rst.gprior <- do.call("gprior_fun", list(item_par[3]), envir=environment())
+
+        # extract the gradient vector
+        grad.gprior <- attributes(rst.gprior)$gradient
+        grad.gprior[is.nan(grad.gprior)] <- 0
+        grad <- grad + colSums(grad.gprior)
+      }
     }
 
   }
@@ -261,17 +322,21 @@ grad_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
     # extract the gradient vector
     grad <- attributes(rst)$gradient
     grad[is.nan(grad)] <- 0
-    grad <- colSums(grad)
 
-    # extract the gradient vector when the slope parameter prior is used
-    if(use.aprior) {
-      aprior_fun <- FUN.grad$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+    # additional steps when the gradients are used for item parameter estimation
+    if(!se) {
+      grad <- colSums(grad)
 
-      # extract the gradient vector
-      grad.aprior <- attributes(rst.aprior)$gradient
-      grad.aprior[is.nan(grad.aprior)] <- 0
-      grad <- grad + colSums(grad.aprior)
+      # extract the gradient vector when the slope parameter prior is used
+      if(use.aprior) {
+        aprior_fun <- FUN.grad$aprior_fun
+        rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+
+        # extract the gradient vector
+        grad.aprior <- attributes(rst.aprior)$gradient
+        grad.aprior[is.nan(grad.aprior)] <- 0
+        grad <- grad + colSums(grad.aprior)
+      }
     }
 
   }
@@ -286,7 +351,7 @@ grad_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
 grad_item_plm <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=1,
                           aprior=list(dist="lnorm", params=c(1, 0.5)),
                           use.aprior=FALSE,
-                          FUN.grad, FUN.hess) {
+                          FUN.grad, FUN.hess, se=FALSE) {
 
 
   if(pmodel == "GRM" & fix.a) {
@@ -323,17 +388,22 @@ grad_item_plm <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=
     # extract the gradient vector
     grad <- attributes(rst)$gradient
     grad[is.nan(grad)] <- 0
-    grad <- colSums(grad)
 
-    # extract the gradient vector when the slope parameter prior is used
-    if(use.aprior) {
-      aprior_fun <- FUN.grad$aprior_fun
-      rst.aprior <- do.call("aprior_fun", list(item_par[1]), envir=environment())
+    # additional steps when the gradients are used for item parameter estimation
+    if(!se) {
+      grad <- colSums(grad)
 
-      # extract the gradient vector
-      grad.aprior <- attributes(rst.aprior)$gradient
-      grad.aprior[is.nan(grad.aprior)] <- 0
-      grad <- grad + colSums(grad.aprior)
+      # extract the gradient vector when the slope parameter prior is used
+      if(use.aprior) {
+        aprior_fun <- FUN.grad$aprior_fun
+        rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+
+        # extract the gradient vector
+        grad.aprior <- attributes(rst.aprior)$gradient
+        grad.aprior[is.nan(grad.aprior)] <- 0
+        grad <- grad + colSums(grad.aprior)
+      }
+
     }
 
   } else {
@@ -361,7 +431,11 @@ grad_item_plm <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=
     # extract the gradient vector
     grad <- attributes(rst)$gradient
     grad[is.nan(grad)] <- 0
-    grad <- colSums(grad)
+
+    # additional steps when the gradients are used for item parameter estimation
+    if(!se) {
+      grad <- colSums(grad)
+    }
 
   }
 
@@ -369,4 +443,3 @@ grad_item_plm <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=
   grad
 
 }
-

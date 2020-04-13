@@ -7,12 +7,12 @@
 #' given the ability estimates (Birnbaum, 1968). Method A is one of potentially useful online item calibration methods
 #' for computerized adaptive testing (CAT) to put the parameter estimates of pretest items on the same scale of
 #' operational item parameter estimates and recalibrate the operational items to evaluate the parameter drifts
-#' of the operational items (Chen & Wang; Stocking, 1988).
+#' of the operational items (Chen & Wang, 2016; Stocking, 1988).
 #'
 #' @param x A data.frame containing the item meta data. This meta data is necessary to obtain the information of
 #' each item (i.e., number of score categories and IRT model) to be calibrated. You can easily create an empty
 #' item meta data using the function \code{\link{shape_df}}. When \code{use.startval = TRUE}, the item parameters
-#' specified in the item meta data are used as the starting values in the item parameter calibration.
+#' specified in the item meta data are used as the starting values for the item parameter estimation.
 #' If \code{x = NULL}, the arguments of \code{model} and \code{cats} must be specified. See \code{\link{irtfit}},
 #' \code{\link{test.info}} or \code{\link{simdat}} for more details about the item meta data. See below for details.
 #' @param data A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
@@ -59,9 +59,10 @@
 #' in the first argument. In terms of the two parameters of the three distributions, see \code{\link[stats]{dbeta}}, \code{\link[stats]{dlnorm}},
 #' and \code{\link[stats]{dnorm}} for more details.
 #' @param missing A value indicating missing values in the response data set. Default is NA.
-#' @param use.startval A logical value. If TRUE, the item parameters in the item meta data set (i.e., the argument \code{x}) are used for
-#' the starting values of item parameter estimation. Otherwise, internal starting values of this function are used. Default is FALSE.
-#' @param control A list of control parameters for item parameter estimation. See \code{\link[stats]{nlminb}} for details.
+#' @param use.startval A logical value. If TRUE, the item parameters provided in the item meta data (i.e., the argument \code{x}) are used as
+#' the starting values for the item parameter estimation. Otherwise, internal starting values of this function are used. Default is FALSE.
+#' @param control A list of control parameters to be passed to the optimization function of \code{\link[stats]{nlminb}}. The control parameters
+#' set the conditions of the item parameter estimation process such as the maximum number of iterations. See \code{\link[stats]{nlminb}} for details.
 #'
 #' @details In most cases, the function \code{\link{est_item}} will return successfully converged item parameter estimates using
 #' the default internal starting values. However, if there is a convergence problem in the calibration, one possible solution is using
@@ -73,7 +74,7 @@
 #' \item{par.est}{A data.frame containing the item parameter estimates.}
 #' \item{se.est}{A data.frame containing the standard errors of the item parameter estimates. Note that the standard errors are estimated using
 #' observed information functions.}
-#' \item{loglikelihood}{A sum of loglikelihood values across all estimated items.}
+#' \item{loglikelihood}{A sum of the log-likelihood values of the complete data set across all estimated items.}
 #' \item{data}{A data.frame of the examinees' response data set.}
 #' \item{score}{A vector of the examinees' ability values used as the fixed effects.}
 #' \item{scale.D}{A scaling factor in IRT models.}
@@ -174,6 +175,9 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
     if(ncol(x[, -c(1, 2, 3)]) == 2) {
       x <- data.frame(x, par.3=NA)
     }
+
+    # clear the item meta data set
+    x <- back2df(metalist2(x))
     model <-
       as.character(x[, 3]) %>%
       toupper()
@@ -203,7 +207,7 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   if("DRM" %in% model) {
     model[model == "DRM"] <- "3PLM"
     memo <- "All 'DRM' items were considered as '3PLM' items during the item parameter estimation."
-    warning(memo, call.=TRUE)
+    warning(memo, call.=FALSE)
   }
 
   # recode missing values
@@ -234,7 +238,7 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
     data <- data[, loc_nomiss]
     memo2 <- paste0(paste0("item ", loc_allmiss, collapse = ", "),
                     " is/are excluded in the item parameter estimation because the item(s) has/have no item response data.")
-    warning(memo2, call.=TRUE)
+    warning(memo2, call.=FALSE)
   } else {
     loc_allmiss <- NULL
   }

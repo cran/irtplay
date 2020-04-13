@@ -28,7 +28,7 @@ flexMIRT (i.e., *.flexmirt) through R. To run this function, flexMIRT software m
 This function will be useful especially when conducting a simulation study using flexMIRT.
 }
 \details{
-When a path of directory where flexMIRT is installed is provided in the argument \code{dir.flex}, the dirctory must
+When a path of directory where flexMIRT is installed is provided in the argument \code{dir.flex}, the directory must
 include following six files:
 \itemize{
   \item WinFlexMIRT.exe
@@ -40,25 +40,29 @@ include following six files:
 }
 }
 \examples{
+
+# Emxaples below will run when flexMIRT software is installed
+# in a default path of "C:/Program Files/flexMIRT3".
+# Otherwise provide a path where flexMIRT software is installed
+# in the argument 'dir.flex'.
+
+\dontrun{
 # (1) run a single syntax file
 # import an example of flexMIRT syntax file to run the item parameter estimation of IRT 3PL model
 file.syntax <- system.file("extdata", "2PLM_example.flexmirt", package = "irtplay")
 
-\donttest{
 # run flexMIRT to estimate the item parameters of IRT 3PL model
 run_flexmirt(file.syntax=file.syntax, dir.flex=NULL, show.output=TRUE)
 
 # check the output file
 out.file <- system.file("extdata", "2PLM_example-prm.txt", package = "irtplay")
 bring.flexmirt(out.file, type="par")
-}
 
 # (2) run multiple syntax files
 # import two examples of flexMIRT syntax files
 file.syntax1 <- system.file("extdata", "2PLM_example.flexmirt", package = "irtplay")
 file.syntax2 <- system.file("extdata", "3PLM_example.flexmirt", package = "irtplay")
 
-\donttest{
 # run flexMIRT to estimate the item parameters
 run_flexmirt(file.syntax=c(file.syntax1, file.syntax2), dir.flex=NULL, show.output=FALSE)
 

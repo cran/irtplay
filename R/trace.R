@@ -4,10 +4,10 @@
 #' test characteristic function given a set of theta values. The returned object of this function can be used
 #' to draw the item or test characteristic curve using the function \code{\link{plot.traceline}}.
 #'
-#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...) or an object
-#' of class \code{\link{est_item}} obtained from the function \code{\link{est_item}}. See \code{\link{irtfit}}, \code{\link{test.info}},
-#' or \code{\link{simdat}} for more details about the item meta data. The data.frame of item meta data can be easily obtained using
-#' the function \code{\link{shape_df}}.
+#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...), an object
+#' of class \code{\link{est_item}} obtained from the function \code{\link{est_item}}, or an object of class \code{\link{est_irt}}
+#' obtained from the function \code{\link{est_irt}}. See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}}
+#' for more details about the item meta data. The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}.
 #' @param theta A vector of theta values.
 #' @param D A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
 #'          Default is 1.
@@ -214,7 +214,94 @@ traceline.est_item <- function(x, theta, ...) {
 
 }
 
+#' @describeIn traceline An object created by the function \code{\link{est_irt}}.
+#' @import purrr
+#' @import dplyr
+#' @export
+traceline.est_irt <- function(x, theta, ...) {
 
+  # extract information from an object
+  D <- x$scale.D
+  x <- x$par.est
+
+  # listrize the meta data
+  meta <- metalist2(x)
+
+  # make the empty list and data.frame to contain probabilities
+  icc <- NULL
+  prob.cat <- list()
+
+  # when there are dichotomous items
+  if(!is.null(meta$drm)) {
+
+    # compute the probabilities of answerting correclty on items
+    prob.drm <- drm(theta=theta, a=meta$drm$a, b=meta$drm$b, g=meta$drm$g, D=D)
+    f <- function(theta, a, b, g, D) {
+      p <- drm(theta, a, b, g, D)
+      data.frame(score.0=(1 - p), score.1=p)
+    }
+    args <- list(a=meta$drm$a, b=meta$drm$b, g=meta$drm$g)
+    prob <- purrr::pmap(.l=args, .f=f, theta=theta, D=D)
+
+    if(length(theta) == 1L) {
+      prob.drm <- as.data.frame(t(prob.drm))
+    } else{
+      prob.drm <- as.data.frame(prob.drm)
+    }
+    colnames(prob.drm) <- meta$drm$id
+    names(prob) <- meta$drm$id
+    # fill the empty list and data.frame
+    prob.cat <- c(prob.cat, prob)
+    icc <- dplyr::bind_cols(icc, prob.drm)
+
+  }
+
+  # when there are polytomous items
+  if(!is.null(meta$plm)) {
+
+    # extract polytomous model info
+    model <- meta$plm$model
+
+    # make a list of arguments
+    args <- list(meta$plm$a, meta$plm$d, model)
+
+    # compute the category probabilities of items
+    prob.plm <- purrr::pmap(.l=args, .f=plm, theta=theta, D=D)
+    if(length(theta) == 1L) {
+      prob.plm <- purrr::map(prob.plm, function(x) matrix(x, nrow=1)) %>%
+        purrr::map(as.data.frame) %>%
+        purrr::map(function(x) stats::setNames(object=x, nm=paste0("score.", c(0:(ncol(x)-1)))))
+    } else {
+      prob.plm <- purrr::map(prob.plm, data.frame) %>%
+        purrr::map(function(x) stats::setNames(object=x, nm=paste0("score.", c(0:(ncol(x)-1)))))
+    }
+    names(prob.plm) <- meta$plm$id
+
+    # compute the TCCs for items
+    prob.icc <- purrr::map_dfc(prob.plm, function(x) as.matrix(x) %*% c(0:(ncol(x)-1)))
+    names(prob.icc) <- meta$plm$id
+
+    # fill the empty list and data.frame
+    prob.cat <- c(prob.cat, prob.plm)
+    icc <- dplyr::bind_cols(icc, prob.icc)
+
+  }
+
+  # relocate columns as the original order of the data
+  loc <- order(c(meta$drm$loc, meta$plm$loc))
+  icc <- as.matrix(icc[, loc])
+  if(ncol(icc) == 1L & !is.null(meta$drm)) colnames(icc) <- meta$drm$id
+  prob.cat <- prob.cat[loc]
+
+  # compute TCCs for theta values
+  tcc <- rowSums(icc)
+
+  # return results
+  rst <- list(prob.cat=prob.cat, icc=icc, tcc=tcc, theta=theta)
+  class(rst) <- "traceline"
+  rst
+
+}
 
 
 # Item and Test Characteristic Functions
