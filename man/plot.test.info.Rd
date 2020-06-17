@@ -35,7 +35,7 @@ the multiple items. Default is 4.}
 
 \item{strip.size}{The size of facet labels when the item information functions of the multiple items are drawn.}
 
-\item{...}{Further arguments passed from the function \code{\link[ggplot2]{geom_line}}.}
+\item{...}{Further arguments passed from the function \code{geom_line()} in the \pkg{ggplot2} package.}
 }
 \description{
 This function plots item or test information function given a specified theta values.

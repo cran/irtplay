@@ -1,7 +1,20 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# irtplay\_1.5.0 (2020-04-11)
+# irtplay\_1.5.1 (2020-06-16)
+
+o Included ‘summary’ method to summarize the IRT calibration results
+from ‘est\_irt’ or ‘est\_item’ objects.
+
+o Included a new function of ‘getirt’ to extract various estimates
+results from ‘est\_irt’ or ‘est\_item’ objects.
+
+o Fixed an error which happens when “DRM” is specified in the model name
+in the function ‘est\_irt’.
+
+o Included total computation time in the function ‘est\_irt’.
+
+# irtplay\_1.5.0 (2020-04-12)
 
 o Changed the title of ‘irtplay’ package to “Unidimensional Item
 Response Theory Modeling”.

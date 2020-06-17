@@ -297,6 +297,11 @@ correction (Newcombe,
 ``` r
 
 library(irtplay)
+#> 
+#> Attaching package: 'irtplay'
+#> The following object is masked from 'package:base':
+#> 
+#>     summary
 
 ##----------------------------------------------------------------------------
 # 1. The example code below shows how to prepare the data sets and how to 
@@ -325,60 +330,33 @@ sim.dat <- simdat(x=x, theta=score, D=1)
 # fix the five 3PL items (1st - 5th items) and three GRM items (53th to 55th items)
 # also, estimate the empirical histogram of latent variable
 fix.loc <- c(1:5, 53:55)
-mod.fix1 <- est_irt(x=x, data=sim.dat, D=1, use.gprior=TRUE, gprior=list(dist="beta", params=c(5, 16)),
-                    EmpHist=TRUE, Etol=1e-3, fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc)
+(mod.fix1 <- est_irt(x=x, data=sim.dat, D=1, use.gprior=TRUE, gprior=list(dist="beta", params=c(5, 16)),
+                    EmpHist=TRUE, Etol=1e-3, fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc))
 #> Parsing input... 
 #> Estimating item parameters... 
-#> 
- EM iteration: 1, Loglike: -28912.3526, Max-Change: 3.22265
- EM iteration: 2, Loglike: -25094.9221, Max-Change: 0.86707
- EM iteration: 3, Loglike: -24854.5695, Max-Change: 0.23789
- EM iteration: 4, Loglike: -24847.9987, Max-Change: 0.09966
- EM iteration: 5, Loglike: -24846.7185, Max-Change: 0.0740
- EM iteration: 6, Loglike: -24846.1673, Max-Change: 0.05455
- EM iteration: 7, Loglike: -24845.8645, Max-Change: 0.04023
- EM iteration: 8, Loglike: -24845.6791, Max-Change: 0.02986
- EM iteration: 9, Loglike: -24845.5582, Max-Change: 0.02239
- EM iteration: 10, Loglike: -24845.4763, Max-Change: 0.01698
- EM iteration: 11, Loglike: -24845.4193, Max-Change: 0.01302
- EM iteration: 12, Loglike: -24845.3793, Max-Change: 0.01048
- EM iteration: 13, Loglike: -24845.3513, Max-Change: 0.00898
- EM iteration: 14, Loglike: -24845.3319, Max-Change: 0.0083
- EM iteration: 15, Loglike: -24845.3191, Max-Change: 0.00759
- EM iteration: 16, Loglike: -24845.3112, Max-Change: 0.00689
- EM iteration: 17, Loglike: -24845.3072, Max-Change: 0.00623
- EM iteration: 18, Loglike: -24845.3061, Max-Change: 0.00562
- EM iteration: 19, Loglike: -24845.3075, Max-Change: 0.00506
- EM iteration: 20, Loglike: -24845.3108, Max-Change: 0.00455
- EM iteration: 21, Loglike: -24845.3156, Max-Change: 0.00409
- EM iteration: 22, Loglike: -24845.3217, Max-Change: 0.00369
- EM iteration: 23, Loglike: -24845.3288, Max-Change: 0.00332
- EM iteration: 24, Loglike: -24845.3367, Max-Change: 0.00299
- EM iteration: 25, Loglike: -24845.3453, Max-Change: 0.0027
- EM iteration: 26, Loglike: -24845.3544, Max-Change: 0.00244
- EM iteration: 27, Loglike: -24845.3641, Max-Change: 0.00221
- EM iteration: 28, Loglike: -24845.3740, Max-Change: 0.0020
- EM iteration: 29, Loglike: -24845.3843, Max-Change: 0.00181
- EM iteration: 30, Loglike: -24845.3948, Max-Change: 0.00164
- EM iteration: 31, Loglike: -24845.4055, Max-Change: 0.00149
- EM iteration: 32, Loglike: -24845.4163, Max-Change: 0.00135
- EM iteration: 33, Loglike: -24845.4273, Max-Change: 0.00123
- EM iteration: 34, Loglike: -24845.4383, Max-Change: 0.00111
- EM iteration: 35, Loglike: -24845.4493, Max-Change: 0.00101
- EM iteration: 36, Loglike: -24845.4604, Max-Change: 0.00092 
+#>  EM iteration: 1, Loglike: -28912.3526, Max-Change: 3.22265 EM iteration: 2, Loglike: -25094.9221, Max-Change: 0.86707 EM iteration: 3, Loglike: -24854.5695, Max-Change: 0.23789 EM iteration: 4, Loglike: -24847.9987, Max-Change: 0.09966 EM iteration: 5, Loglike: -24846.7185, Max-Change: 0.0740 EM iteration: 6, Loglike: -24846.1673, Max-Change: 0.05455 EM iteration: 7, Loglike: -24845.8645, Max-Change: 0.04023 EM iteration: 8, Loglike: -24845.6791, Max-Change: 0.02986 EM iteration: 9, Loglike: -24845.5582, Max-Change: 0.02239 EM iteration: 10, Loglike: -24845.4763, Max-Change: 0.01698 EM iteration: 11, Loglike: -24845.4193, Max-Change: 0.01302 EM iteration: 12, Loglike: -24845.3793, Max-Change: 0.01048 EM iteration: 13, Loglike: -24845.3513, Max-Change: 0.00898 EM iteration: 14, Loglike: -24845.3319, Max-Change: 0.0083 EM iteration: 15, Loglike: -24845.3191, Max-Change: 0.00759 EM iteration: 16, Loglike: -24845.3112, Max-Change: 0.00689 EM iteration: 17, Loglike: -24845.3072, Max-Change: 0.00623 EM iteration: 18, Loglike: -24845.3061, Max-Change: 0.00562 EM iteration: 19, Loglike: -24845.3075, Max-Change: 0.00506 EM iteration: 20, Loglike: -24845.3108, Max-Change: 0.00455 EM iteration: 21, Loglike: -24845.3156, Max-Change: 0.00409 EM iteration: 22, Loglike: -24845.3217, Max-Change: 0.00369 EM iteration: 23, Loglike: -24845.3288, Max-Change: 0.00332 EM iteration: 24, Loglike: -24845.3367, Max-Change: 0.00299 EM iteration: 25, Loglike: -24845.3453, Max-Change: 0.0027 EM iteration: 26, Loglike: -24845.3544, Max-Change: 0.00244 EM iteration: 27, Loglike: -24845.3641, Max-Change: 0.00221 EM iteration: 28, Loglike: -24845.3740, Max-Change: 0.0020 EM iteration: 29, Loglike: -24845.3843, Max-Change: 0.00181 EM iteration: 30, Loglike: -24845.3948, Max-Change: 0.00164 EM iteration: 31, Loglike: -24845.4055, Max-Change: 0.00149 EM iteration: 32, Loglike: -24845.4163, Max-Change: 0.00135 EM iteration: 33, Loglike: -24845.4273, Max-Change: 0.00123 EM iteration: 34, Loglike: -24845.4383, Max-Change: 0.00111 EM iteration: 35, Loglike: -24845.4493, Max-Change: 0.00101 EM iteration: 36, Loglike: -24845.4604, Max-Change: 0.00092 
 #> Computing item parameter var-covariance matrix... 
-#> Estimation is finished.
-print(mod.fix1)
+#> Estimation is finished in 14.11 seconds.
 #> 
 #> Call:
-#> est_irt_fipc(x = x, data = data, D = D, fix.a.1pl = fix.a.1pl, 
-#>     fix.a.gpcm = fix.a.gpcm, fix.g = fix.g, a.val.1pl = a.val.1pl, 
-#>     a.val.gpcm = a.val.gpcm, g.val = g.val, use.aprior = use.aprior, 
-#>     use.gprior = use.gprior, aprior = aprior, gprior = gprior, 
-#>     missing = missing, Quadrature = Quadrature, weights = weights, 
-#>     group.mean = group.mean, group.var = group.var, EmpHist = EmpHist, 
-#>     use.startval = use.startval, Etol = Etol, MaxE = MaxE, control = control, 
-#>     fipc = TRUE, fipc.method = fipc.method, fix.loc = fix.loc)
+#> est_irt(x = x, data = sim.dat, D = 1, use.gprior = TRUE, gprior = list(dist = "beta", 
+#>     params = c(5, 16)), EmpHist = TRUE, Etol = 0.001, fipc = TRUE, 
+#>     fipc.method = "MEM", fix.loc = fix.loc)
+#> 
+#> Item parameter estimation using MMLE-EM. 
+#> 36 E-step cycles were completed using 49 quadrature points.
+#> First-order test: Convergence criteria are satisfied.
+#> Second-order test: Solution is a possible local maximum.
+#> Computation of variance-covariance matrix: 
+#>   Variance-covariance matrix of item parameter estimates is obtainable.
+#> 
+#> Log-likelihood: -24845.46
+summary(mod.fix1)
+#> 
+#> Call:
+#> est_irt(x = x, data = sim.dat, D = 1, use.gprior = TRUE, gprior = list(dist = "beta", 
+#>     params = c(5, 16)), EmpHist = TRUE, Etol = 0.001, fipc = TRUE, 
+#>     fipc.method = "MEM", fix.loc = fix.loc)
 #> 
 #> Summary of the Data 
 #>  Number of Items: 55
@@ -395,13 +373,15 @@ print(mod.fix1)
 #>  Maximum parameter change: 0.0009203781
 #> 
 #> Processing time (in seconds) 
-#>  EM algorithm: 11.14524
-#>  Standard error computation: 2.567132
+#>  EM algorithm: 11.37
+#>  Standard error computation: 2.25
+#>  Total computation: 14.11
 #> 
 #> Convergence and Stability of Solution 
 #>  First-order test: Convergence criteria are satisfied.
 #>  Second-order test: Solution is a possible local maximum.
-#>  Computation of variance-covariance matrix: Variance-covariance matrix of item parameter estimates is obtainable.
+#>  Computation of variance-covariance matrix: 
+#>   Variance-covariance matrix of item parameter estimates is obtainable.
 #> 
 #> Summary of Estimation Results 
 #>  -2loglikelihood: 49690.92
@@ -524,7 +504,57 @@ print(mod.fix1)
 #> se         0.04    0.08   0.03
 
 # plot the estimated empirical histogram of latent variable prior distribution  
-emphist <- mod.fix1$weights
+(emphist <- getirt(mod.fix1, what="weights"))
+#>    theta       weight
+#> 1  -6.00 2.301252e-10
+#> 2  -5.75 1.434595e-09
+#> 3  -5.50 8.649281e-09
+#> 4  -5.25 5.019868e-08
+#> 5  -5.00 2.782912e-07
+#> 6  -4.75 1.456751e-06
+#> 7  -4.50 7.085630e-06
+#> 8  -4.25 3.134808e-05
+#> 9  -4.00 1.227012e-04
+#> 10 -3.75 4.100603e-04
+#> 11 -3.50 1.119742e-03
+#> 12 -3.25 2.386354e-03
+#> 13 -3.00 3.889321e-03
+#> 14 -2.75 5.167720e-03
+#> 15 -2.50 6.767224e-03
+#> 16 -2.25 1.053445e-02
+#> 17 -2.00 1.742567e-02
+#> 18 -1.75 2.236173e-02
+#> 19 -1.50 2.498735e-02
+#> 20 -1.25 3.374293e-02
+#> 21 -1.00 4.224442e-02
+#> 22 -0.75 4.948939e-02
+#> 23 -0.50 7.710828e-02
+#> 24 -0.25 8.024288e-02
+#> 25  0.00 4.752956e-02
+#> 26  0.25 5.636581e-02
+#> 27  0.50 8.674316e-02
+#> 28  0.75 6.936382e-02
+#> 29  1.00 6.035964e-02
+#> 30  1.25 6.234864e-02
+#> 31  1.50 5.768393e-02
+#> 32  1.75 4.254007e-02
+#> 33  2.00 3.148380e-02
+#> 34  2.25 3.111071e-02
+#> 35  2.50 2.935626e-02
+#> 36  2.75 1.950494e-02
+#> 37  3.00 1.019680e-02
+#> 38  3.25 5.154557e-03
+#> 39  3.50 2.816466e-03
+#> 40  3.75 1.753617e-03
+#> 41  4.00 1.282170e-03
+#> 42  4.25 1.097172e-03
+#> 43  4.50 1.050444e-03
+#> 44  4.75 1.046478e-03
+#> 45  5.00 1.004637e-03
+#> 46  5.25 8.721994e-04
+#> 47  5.50 6.557355e-04
+#> 48  5.75 4.168380e-04
+#> 49  6.00 2.220842e-04
 plot(emphist$weight ~ emphist$theta, xlab="Theta", ylab="Density")
 ```
 
@@ -567,26 +597,99 @@ data <- simdat(x=x, theta=score, D=1)
 
 ## Step 2: Estimate the item parameters
 # 1) item parameter estimation: constrain the slope parameters of the 1PLM to be equal
-mod1 <- est_item(x, data, score, D=1, fix.a.1pl=FALSE, use.gprior=TRUE,
-                 gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE)
+(mod1 <- est_item(x, data, score, D=1, fix.a.1pl=FALSE, use.gprior=TRUE,
+                 gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE))
 #> Starting... 
 #> Parsing input... 
 #> Estimating item parameters... 
 #> Estimation is finished.
-print(mod1)
 #> 
 #> Call:
 #> est_item(x = x, data = data, score = score, D = 1, fix.a.1pl = FALSE, 
 #>     use.gprior = TRUE, gprior = list(dist = "beta", params = c(5, 
 #>         17)), use.startval = FALSE)
 #> 
-#> 1. Convergence:
+#> Item calibration using Method-A. 
 #> All item parameters were successfully converged. 
 #> 
-#> 2. -2loglikelihood: 31661.31 
+#> Log-likelihood: -15830.66
+summary(mod1)
 #> 
-#> 3. Estimation Results:
-#> (1) Item Parameters 
+#> Call:
+#> est_item(x = x, data = data, score = score, D = 1, fix.a.1pl = FALSE, 
+#>     use.gprior = TRUE, gprior = list(dist = "beta", params = c(5, 
+#>         17)), use.startval = FALSE)
+#> 
+#> Summary of the Data 
+#>  Number of Items in Response Data: 55
+#>  Number of Excluded Items: 0
+#>  Number of Responses for Each Item: 
+#>        id    n
+#> 1    CMC1  500
+#> 2    CMC2  500
+#> 3    CMC3  500
+#> 4    CMC4  500
+#> 5    CMC5  500
+#> 6    CMC6  500
+#> 7    CMC7  500
+#> 8    CMC8  500
+#> 9    CMC9  500
+#> 10  CMC10  500
+#> 11  CMC11  500
+#> 12  CMC12  500
+#> 13  CMC13  500
+#> 14  CMC14  500
+#> 15  CMC15  500
+#> 16  CMC16  500
+#> 17  CMC17  500
+#> 18  CMC18  500
+#> 19  CMC19  500
+#> 20  CMC20  500
+#> 21  CMC21  500
+#> 22  CMC22  500
+#> 23  CMC23  500
+#> 24  CMC24  500
+#> 25  CMC25  500
+#> 26  CMC26  500
+#> 27  CMC27  500
+#> 28  CMC28  500
+#> 29  CMC29  500
+#> 30  CMC30  500
+#> 31  CMC31  500
+#> 32  CMC32  500
+#> 33  CMC33  500
+#> 34  CMC34  500
+#> 35  CMC35  500
+#> 36  CMC36  500
+#> 37  CMC37  500
+#> 38  CMC38  500
+#> 39   CFR1  500
+#> 40   CFR2  500
+#> 41   AMC1  500
+#> 42   AMC2  500
+#> 43   AMC3  500
+#> 44   AMC4  500
+#> 45   AMC5  500
+#> 46   AMC6  500
+#> 47   AMC7  500
+#> 48   AMC8  500
+#> 49   AMC9  500
+#> 50  AMC10  500
+#> 51  AMC11  500
+#> 52  AMC12  500
+#> 53   AFR1  500
+#> 54   AFR2  500
+#> 55   AFR3  500
+#> 
+#> Processing time (in seconds) 
+#>  Total computation: 2.99
+#> 
+#> Convergence of Solution 
+#>  All item parameters were successfully converged.
+#> 
+#> Summary of Estimation Results 
+#>  -2loglikelihood: 31661.31
+#>  Item Parameters: 
 #>        id  cats  model  par.1  se.1  par.2  se.2  par.3  se.3  par.4  se.4
 #> 1    CMC1     2   1PLM   1.02  0.06   1.60  0.13     NA    NA     NA    NA
 #> 2    CMC2     2   1PLM   1.02  0.06  -1.06  0.12     NA    NA     NA    NA
@@ -700,31 +803,104 @@ print(mod1)
 #> 54  -0.21  0.10
 #> 55   1.35  0.19
 #> 
-#> (2) Group Parameters 
+#>  Group Parameters: 
 #>    mu  sigma  
 #>  0.03   1.02
 
 # 2) item parameter estimation: fix the slope parameters of the 1PLM to 1
-mod2 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, a.val.1pl=1, use.gprior=TRUE,
-                 gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE)
+(mod2 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, a.val.1pl=1, use.gprior=TRUE,
+                 gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE))
 #> Starting... 
 #> Parsing input... 
 #> Estimating item parameters... 
 #> Estimation is finished.
-print(mod2)
 #> 
 #> Call:
 #> est_item(x = x, data = data, score = score, D = 1, fix.a.1pl = TRUE, 
 #>     a.val.1pl = 1, use.gprior = TRUE, gprior = list(dist = "beta", 
 #>         params = c(5, 17)), use.startval = FALSE)
 #> 
-#> 1. Convergence:
+#> Item calibration using Method-A. 
 #> All item parameters were successfully converged. 
 #> 
-#> 2. -2loglikelihood: 31661.4 
+#> Log-likelihood: -15830.7
+summary(mod2)
 #> 
-#> 3. Estimation Results:
-#> (1) Item Parameters 
+#> Call:
+#> est_item(x = x, data = data, score = score, D = 1, fix.a.1pl = TRUE, 
+#>     a.val.1pl = 1, use.gprior = TRUE, gprior = list(dist = "beta", 
+#>         params = c(5, 17)), use.startval = FALSE)
+#> 
+#> Summary of the Data 
+#>  Number of Items in Response Data: 55
+#>  Number of Excluded Items: 0
+#>  Number of Responses for Each Item: 
+#>        id    n
+#> 1    CMC1  500
+#> 2    CMC2  500
+#> 3    CMC3  500
+#> 4    CMC4  500
+#> 5    CMC5  500
+#> 6    CMC6  500
+#> 7    CMC7  500
+#> 8    CMC8  500
+#> 9    CMC9  500
+#> 10  CMC10  500
+#> 11  CMC11  500
+#> 12  CMC12  500
+#> 13  CMC13  500
+#> 14  CMC14  500
+#> 15  CMC15  500
+#> 16  CMC16  500
+#> 17  CMC17  500
+#> 18  CMC18  500
+#> 19  CMC19  500
+#> 20  CMC20  500
+#> 21  CMC21  500
+#> 22  CMC22  500
+#> 23  CMC23  500
+#> 24  CMC24  500
+#> 25  CMC25  500
+#> 26  CMC26  500
+#> 27  CMC27  500
+#> 28  CMC28  500
+#> 29  CMC29  500
+#> 30  CMC30  500
+#> 31  CMC31  500
+#> 32  CMC32  500
+#> 33  CMC33  500
+#> 34  CMC34  500
+#> 35  CMC35  500
+#> 36  CMC36  500
+#> 37  CMC37  500
+#> 38  CMC38  500
+#> 39   CFR1  500
+#> 40   CFR2  500
+#> 41   AMC1  500
+#> 42   AMC2  500
+#> 43   AMC3  500
+#> 44   AMC4  500
+#> 45   AMC5  500
+#> 46   AMC6  500
+#> 47   AMC7  500
+#> 48   AMC8  500
+#> 49   AMC9  500
+#> 50  AMC10  500
+#> 51  AMC11  500
+#> 52  AMC12  500
+#> 53   AFR1  500
+#> 54   AFR2  500
+#> 55   AFR3  500
+#> 
+#> Processing time (in seconds) 
+#>  Total computation: 2.17
+#> 
+#> Convergence of Solution 
+#>  All item parameters were successfully converged.
+#> 
+#> Summary of Estimation Results 
+#>  -2loglikelihood: 31661.4
+#>  Item Parameters: 
 #>        id  cats  model  par.1  se.1  par.2  se.2  par.3  se.3  par.4  se.4
 #> 1    CMC1     2   1PLM   1.00    NA   1.62  0.12     NA    NA     NA    NA
 #> 2    CMC2     2   1PLM   1.00    NA  -1.08  0.11     NA    NA     NA    NA
@@ -838,30 +1014,102 @@ print(mod2)
 #> 54  -0.21  0.10
 #> 55   1.35  0.19
 #> 
-#> (2) Group Parameters 
+#>  Group Parameters: 
 #>    mu  sigma  
 #>  0.03   1.02
 
 # 3) item parameter estimation: fix the guessing parameters of the 3PLM to 0.2
-mod3 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, fix.g=TRUE, a.val.1pl=1, g.val=.2,
-                 use.startval=FALSE)
+(mod3 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, fix.g=TRUE, a.val.1pl=1, g.val=.2,
+                 use.startval=FALSE))
 #> Starting... 
 #> Parsing input... 
 #> Estimating item parameters... 
 #> Estimation is finished.
-print(mod3)
 #> 
 #> Call:
 #> est_item(x = x, data = data, score = score, D = 1, fix.a.1pl = TRUE, 
 #>     fix.g = TRUE, a.val.1pl = 1, g.val = 0.2, use.startval = FALSE)
 #> 
-#> 1. Convergence:
+#> Item calibration using Method-A. 
 #> All item parameters were successfully converged. 
 #> 
-#> 2. -2loglikelihood: 31832.52 
+#> Log-likelihood: -15916.26
+summary(mod3)
 #> 
-#> 3. Estimation Results:
-#> (1) Item Parameters 
+#> Call:
+#> est_item(x = x, data = data, score = score, D = 1, fix.a.1pl = TRUE, 
+#>     fix.g = TRUE, a.val.1pl = 1, g.val = 0.2, use.startval = FALSE)
+#> 
+#> Summary of the Data 
+#>  Number of Items in Response Data: 55
+#>  Number of Excluded Items: 0
+#>  Number of Responses for Each Item: 
+#>        id    n
+#> 1    CMC1  500
+#> 2    CMC2  500
+#> 3    CMC3  500
+#> 4    CMC4  500
+#> 5    CMC5  500
+#> 6    CMC6  500
+#> 7    CMC7  500
+#> 8    CMC8  500
+#> 9    CMC9  500
+#> 10  CMC10  500
+#> 11  CMC11  500
+#> 12  CMC12  500
+#> 13  CMC13  500
+#> 14  CMC14  500
+#> 15  CMC15  500
+#> 16  CMC16  500
+#> 17  CMC17  500
+#> 18  CMC18  500
+#> 19  CMC19  500
+#> 20  CMC20  500
+#> 21  CMC21  500
+#> 22  CMC22  500
+#> 23  CMC23  500
+#> 24  CMC24  500
+#> 25  CMC25  500
+#> 26  CMC26  500
+#> 27  CMC27  500
+#> 28  CMC28  500
+#> 29  CMC29  500
+#> 30  CMC30  500
+#> 31  CMC31  500
+#> 32  CMC32  500
+#> 33  CMC33  500
+#> 34  CMC34  500
+#> 35  CMC35  500
+#> 36  CMC36  500
+#> 37  CMC37  500
+#> 38  CMC38  500
+#> 39   CFR1  500
+#> 40   CFR2  500
+#> 41   AMC1  500
+#> 42   AMC2  500
+#> 43   AMC3  500
+#> 44   AMC4  500
+#> 45   AMC5  500
+#> 46   AMC6  500
+#> 47   AMC7  500
+#> 48   AMC8  500
+#> 49   AMC9  500
+#> 50  AMC10  500
+#> 51  AMC11  500
+#> 52  AMC12  500
+#> 53   AFR1  500
+#> 54   AFR2  500
+#> 55   AFR3  500
+#> 
+#> Processing time (in seconds) 
+#>  Total computation: 1.7
+#> 
+#> Convergence of Solution 
+#>  All item parameters were successfully converged.
+#> 
+#> Summary of Estimation Results 
+#>  -2loglikelihood: 31832.52
+#>  Item Parameters: 
 #>        id  cats  model  par.1  se.1  par.2  se.2  par.3  se.3  par.4  se.4
 #> 1    CMC1     2   1PLM   1.00    NA   1.62  0.12     NA    NA     NA    NA
 #> 2    CMC2     2   1PLM   1.00    NA  -1.08  0.11     NA    NA     NA    NA
@@ -975,7 +1223,7 @@ print(mod3)
 #> 54  -0.21  0.10
 #> 55   1.35  0.19
 #> 
-#> (2) Group Parameters 
+#>  Group Parameters: 
 #>    mu  sigma  
 #>  0.03   1.02
 

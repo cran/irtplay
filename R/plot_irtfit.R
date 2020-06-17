@@ -37,7 +37,7 @@
 #' If FALSE, the range of y axis for the standardized residual plot is fixed to the values specified in the argument \code{ylim.sr}.
 #' @param ylim.sr A vector of two numeric values specifying the range of y axis for the standardized residual plot.
 #' Default is c(-4, 4).
-#' @param ... Further arguments passed from the function \code{\link[ggplot2]{ggplot}}.
+#' @param ... Further arguments passed from the function \code{ggplot()} in the \pkg{ggplot2} package.
 #'
 #' @details All of the plots are drawn using the ggplot2 package.
 #'

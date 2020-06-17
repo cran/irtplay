@@ -38,7 +38,7 @@ about colors used in ggplot2.}
 
 \item{strip.size}{The size of facet labels when ICCs for an item are plotted.}
 
-\item{...}{Further arguments passed from the function \code{\link[ggplot2]{geom_line}}.}
+\item{...}{Further arguments passed from the function \code{geom_line()} in the \pkg{ggplot2} package.}
 }
 \description{
 This function plots item or test characteristic curve using the ggplot2 package. The item characteristic

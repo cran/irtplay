@@ -62,7 +62,7 @@ If FALSE, the range of y axis for the standardized residual plot is fixed to the
 \item{ylim.sr}{A vector of two numeric values specifying the range of y axis for the standardized residual plot.
 Default is c(-4, 4).}
 
-\item{...}{Further arguments passed from the function \code{\link[ggplot2]{ggplot}}.}
+\item{...}{Further arguments passed from the function \code{ggplot()} in the \pkg{ggplot2} package.}
 }
 \description{
 This function provides graphical displays to look at residuals between the observed data

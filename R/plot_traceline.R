@@ -20,7 +20,7 @@
 #' about colors used in ggplot2.
 #' @param line.size The size of lines. Default is 1.
 #' @param strip.size The size of facet labels when ICCs for an item are plotted.
-#' @param ... Further arguments passed from the function \code{\link[ggplot2]{geom_line}}.
+#' @param ... Further arguments passed from the function \code{geom_line()} in the \pkg{ggplot2} package.
 #'
 #' @details All of the plots are drawn using the ggplot2 package.
 #' If \code{item.loc = NULL}, the TCC based on the total test form is plotted. In the argument \code{item.loc},

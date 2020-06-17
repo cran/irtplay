@@ -67,16 +67,16 @@ of Beta, Log-normal, and Normal distributions are available. In the list, a char
 in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
 distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
-in the first argument. In terms of the two parameters of the three distributions, see \code{\link[stats]{dbeta}}, \code{\link[stats]{dlnorm}},
-and \code{\link[stats]{dnorm}} for more details.}
+in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()},
+and \code{dnorm()} in the \pkg{stats} package for more details.}
 
 \item{gprior}{A list containing the information of the prior distribution for item guessing parameters. Three probability distributions
 of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
 in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
 distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
-in the first argument. In terms of the two parameters of the three distributions, see \code{\link[stats]{dbeta}}, \code{\link[stats]{dlnorm}},
-and \code{\link[stats]{dnorm}} for more details.}
+in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()},
+and \code{dnorm()} in the \pkg{stats} package for more details.}
 
 \item{missing}{A value indicating missing values in the response data set. Default is NA.}
 
@@ -106,10 +106,10 @@ the starting values for the item parameter estimation. Otherwise, internal start
 
 \item{MaxE}{A positive integer value. This value determines the maximum number of the E steps in the EM algorithm. Default is 500.}
 
-\item{control}{A list of control parameters to be passed to the optimization function of \code{\link[stats]{nlminb}}. The control parameters
+\item{control}{A list of control parameters to be passed to the optimization function of \code{nlminb()} in the \pkg{stats} package. The control parameters
 set the conditions of M steps of the EM algorithm. For example, the maximum number of iterations in each of the iterative M steps can
-be set by \code{control = list(iter.max=200)}. Default maximum number of iterations in each M step is 200. See \code{\link[stats]{nlminb}} for other
-control parameters.}
+be set by \code{control = list(iter.max=200)}. Default maximum number of iterations in each M step is 200. See \code{nlminb()} in the \pkg{stats} package
+for other control parameters.}
 
 \item{fipc}{A logical value. If TRUE, FIPC is implemented for item parameter estimation. See below for details.}
 
@@ -139,8 +139,8 @@ when interpreting the variance-covariance matrix of item parameter estimates.}
 The row and column indicate the response pattern and the quadrature point, respectively.}
 \item{data}{A data.frame of the examinees' response data set.}
 \item{scale.D}{A scaling factor in IRT models.}
-\item{ncase}{A total number of response patterns}
-\item{nitem}{A total number of items specified in the item meta data of \code{x}}
+\item{ncase}{A total number of response patterns.}
+\item{nitem}{A total number of items included in the response data.}
 \item{Etol}{A convergence criteria for E steps of the EM algorithm.}
 \item{MaxE}{The maximum number of E steps in the EM algorithm.}
 \item{aprior}{A list containing the information of the prior distribution for item slope parameters.}
@@ -150,6 +150,7 @@ The row and column indicate the response pattern and the quadrature point, respe
 \item{maxpar.diff}{A maximum item parameter change when the EM cycles were completed.}
 \item{EMtime}{Time (in seconds) spent for the EM cycles.}
 \item{SEtime}{Time (in seconds) spent for computing the standard errors of the item parameter estimates.}
+\item{TotalTime}{Time (in seconds) spent for total compuatation.}
 \item{test.1}{Status of the first-order test to report if the gradients has vanished sufficiently for the solution to be stable.}
 \item{test.2}{Status of the second-order test to report if the information matrix is positive definite, which is a prerequisite
 for the solution to be a possible maximum.}
@@ -157,6 +158,8 @@ for the solution to be a possible maximum.}
 \item{fipc}{A logical value to indicate if FIPC was used.}
 \item{fipc.method}{A method used for the FIPC.}
 \item{fix.loc}{A vector of integer values specifying the location of the fixed items when the FIPC was implemented.}
+
+The internal objects can be easily extracted using the function \code{\link{getirt}}.
 }
 \description{
 This function fits unidimensional item response (IRT) models to mixture of dichotomous and polytomous data using
@@ -239,11 +242,26 @@ the scale parameters of the normal prior distribution are fixed to the values sp
 # fit the 1PL model to LSAT6 data and constrain the slope parameters to be equal
 (mod.1pl.c <- est_irt(data=LSAT6, D=1, model="1PLM", cats=2, fix.a.1pl=FALSE))
 
+# summary of the estimation
+summary(mod.1pl.c)
+
+# extract the item parameter estimates
+getirt(mod.1pl.c, what="par.est")
+
+# extract the standard error estimates
+getirt(mod.1pl.c, what="se.est")
+
 # fit the 1PL model to LSAT6 data and fix the slope parameters to 1.0
 (mod.1pl.f <- est_irt(data=LSAT6, D=1, model="1PLM", cats=2, fix.a.1pl=TRUE, a.val.1pl=1))
 
+# summary of the estimation
+summary(mod.1pl.f)
+
 # fit the 2PL model to LSAT6 data
 (mod.2pl <- est_irt(data=LSAT6, D=1, model="2PLM", cats=2))
+
+# summary of the estimation
+summary(mod.2pl)
 
 # assess the fit of the 2PL model to the LSAT5 data using S-X2 fit statistic
 (sx2fit.2pl <- sx2_fit(x=mod.2pl))
@@ -263,7 +281,7 @@ plot(trace.2pl, item.loc=1)
 # estimate the empirical histogram of latent variable prior distribution
 # also use a less stringent convergence criterion for E-step
 (mod.2pl.hist <- est_irt(data=LSAT6, D=1, model="2PLM", cats=2, EmpHist=TRUE, Etol=0.001))
-(emphist <- mod.2pl.hist$weights)
+(emphist <- getirt(mod.2pl.hist, what="weights"))
 plot(emphist$weight ~ emphist$theta)
 
 # fit the 3PL model to LSAT6 data and use the Beta prior distribution for
@@ -271,8 +289,14 @@ plot(emphist$weight ~ emphist$theta)
 (mod.3pl <- est_irt(data=LSAT6, D=1, model="3PLM", cats=2, use.gprior=TRUE,
                     gprior=list(dist="beta", params=c(5, 16))))
 
+# summary of the estimation
+summary(mod.3pl)
+
 # fit the 3PL model to LSAT6 data, but fix the guessing parameters to be 0.2
 (mod.3pl.f <- est_irt(data=LSAT6, D=1, model="3PLM", cats=2, fix.g=TRUE, g.val=0.2))
+
+# summary of the estimation
+summary(mod.3pl.f)
 
 # fit the differnt dichotomous models to each item of LSAT6 data
 # fit the constrained 1PL model to the 1st, 2nd, and 3rd items, fit the 2PL model to
@@ -313,6 +337,9 @@ item.meta <- shape_df(item.id=x$id, cats=x$cats, model=x$model, empty.par=TRUE)
                      aprior=list(dist="lnorm", params=c(0.0, 0.5)),
                      gprior=list(dist="beta", params=c(5, 16))))
 
+# summary of the estimation
+summary(mod.mix1)
+
 # estimate examinees' latent scores given the item parameter estimates using the MLE
 (score.mle <- est_score(x=mod.mix1, method = "MLE", range = c(-4, 4), ncore=2))
 
@@ -336,6 +363,9 @@ plot(x=fit.mix1, item.loc=55, type = "both", ci.method = "wald",
                      model=c(rep("2PLM", 38), rep("GPCM", 2), rep("2PLM", 12), rep("GRM", 3)),
                      cats=c(rep(2, 38), rep(5, 2), rep(2, 12), rep(5, 3))))
 
+# summary of the estimation
+summary(mod.mix2)
+
 # fit the 2PL model to all dichotmous items, fit the GPCM model to 39th and 40th items,
 # fit the GRM model to the 53th, 54th, 55th items, and estimate the empirical histogram
 # of latent variable prior distribution.
@@ -344,7 +374,7 @@ plot(x=fit.mix1, item.loc=55, type = "both", ci.method = "wald",
 (mod.mix3 <- est_irt(data=sim.dat1, D=1,
                      model=c(rep("2PLM", 38), rep("GPCM", 2), rep("2PLM", 12), rep("GRM", 3)),
                      cats=c(rep(2, 38), rep(5, 2), rep(2, 12), rep(5, 3)), EmpHist=TRUE))
-(emphist <- mod.mix3$weights)
+(emphist <- getirt(mod.mix3, what="weights"))
 plot(emphist$weight ~ emphist$theta)
 
 # fit the 2PL model to all dichotmous items,
@@ -356,6 +386,9 @@ plot(emphist$weight ~ emphist$theta)
                      model=c(rep("2PLM", 38), rep("GPCM", 2), rep("2PLM", 12), rep("GRM", 3)),
                      cats=c(rep(2, 38), rep(5, 2), rep(2, 12), rep(5, 3)),
                      fix.a.gpcm=TRUE, a.val.gpcm=1))
+
+# summary of the estimation
+summary(mod.mix4)
 
 ##------------------------------------------------------------------------------
 # 3. fixed item parameter calibration (FIPC) for the mixed-item format data
@@ -383,8 +416,11 @@ fix.loc <- c(1:5, 53:55)
                      gprior=list(dist="beta", params=c(5, 16)), EmpHist=TRUE,
                      Etol=1e-3, fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc))
 (prior.par <- mod.fix1$group.par)
-(emphist <- mod.fix1$weights)
+(emphist <- getirt(mod.fix1, what="weights"))
 plot(emphist$weight ~ emphist$theta)
+
+# summary of the estimation
+summary(mod.fix1)
 
 # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
 # fix the five 3PL items (1st - 5th items) and three GRM items (53th to 55th items)
@@ -396,7 +432,7 @@ fix.loc <- c(1:5, 53:55)
                      gprior=list(dist="beta", params=c(5, 16)), EmpHist=FALSE,
                      Etol=1e-3, fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc))
 (prior.par <- mod.fix2$group.par)
-(emphist <- mod.fix2$weights)
+(emphist <- getirt(mod.fix2, what="weights"))
 plot(emphist$weight ~ emphist$theta)
 
 # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
@@ -408,8 +444,11 @@ fix.loc <- c(1:5)
                      gprior=list(dist="beta", params=c(5, 16)), EmpHist=TRUE,
                      Etol=1e-3, fipc=TRUE, fipc.method="OEM", fix.loc=fix.loc))
 (prior.par <- mod.fix3$group.par)
-(emphist <- mod.fix3$weights)
+(emphist <- getirt(mod.fix3, what="weights"))
 plot(emphist$weight ~ emphist$theta)
+
+# summary of the estimation
+summary(mod.fix3)
 
 }
 
@@ -436,7 +475,7 @@ Woods, C. M. (2007). Empirical histograms in item response theory with ordinal d
 }
 \seealso{
 \code{\link{est_item}}, \code{\link{irtfit}}, \code{\link{test.info}}, \code{\link{simdat}}, \code{\link{shape_df}}, \code{\link{sx2_fit}},
-\code{\link{traceline.est_item}}
+\code{\link{traceline.est_item}}, \code{\link{getirt}}
 }
 \author{
 Hwanggyu Lim \email{hglim83@gmail.com}

@@ -638,7 +638,8 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
       ll_tmp <- ll_brute(theta=startval_tmp, meta=meta, freq.cat=freq.cat, method="MLE", D=D)
 
       # find the locations of thetas where the sign of slope changes
-      loc_change <- which(diff(sign(diff(ll_tmp))) != 0L) + 1
+      # loc_change <- which(diff(sign(diff(ll_tmp))) != 0L) + 1
+      loc_change <- which(diff(sign(diff(ll_tmp))) > 0L) + 1
 
       # select a theta value that has the minimum of negative log-likelihood value
       startval_tmp1 <- startval_tmp[loc_change][which.min(ll_tmp[loc_change])]

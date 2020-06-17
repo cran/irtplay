@@ -49,20 +49,20 @@
 #' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 #' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
 #' distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
-#' in the first argument. In terms of the two parameters of the three distributions, see \code{\link[stats]{dbeta}}, \code{\link[stats]{dlnorm}},
-#' and \code{\link[stats]{dnorm}} for more details.
+#' in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()},
+#' and \code{dnorm()} in the \pkg{stats} package for more details.
 #' @param gprior A list containing the information of the prior distribution for item guessing parameters. Three probability distributions
 #' of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
 #' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 #' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
 #' distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
-#' in the first argument. In terms of the two parameters of the three distributions, see \code{\link[stats]{dbeta}}, \code{\link[stats]{dlnorm}},
-#' and \code{\link[stats]{dnorm}} for more details.
+#' in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()},
+#' and \code{dnorm()} in the \pkg{stats} package for more details.
 #' @param missing A value indicating missing values in the response data set. Default is NA.
 #' @param use.startval A logical value. If TRUE, the item parameters provided in the item meta data (i.e., the argument \code{x}) are used as
 #' the starting values for the item parameter estimation. Otherwise, internal starting values of this function are used. Default is FALSE.
-#' @param control A list of control parameters to be passed to the optimization function of \code{\link[stats]{nlminb}}. The control parameters
-#' set the conditions of the item parameter estimation process such as the maximum number of iterations. See \code{\link[stats]{nlminb}} for details.
+#' @param control A list of control parameters to be passed to the optimization function of \code{nlminb()} in the \pkg{stats} package. The control parameters
+#' set the conditions of the item parameter estimation process such as the maximum number of iterations. See \code{nlminb()} in the \pkg{stats} package for details.
 #'
 #' @details In most cases, the function \code{\link{est_item}} will return successfully converged item parameter estimates using
 #' the default internal starting values. However, if there is a convergence problem in the calibration, one possible solution is using
@@ -79,13 +79,17 @@
 #' \item{score}{A vector of the examinees' ability values used as the fixed effects.}
 #' \item{scale.D}{A scaling factor in IRT models.}
 #' \item{convergence}{A string indicating the convergence status of the item parameter estimation.}
+#' \item{nitem}{A total number of items included in the response data.}
 #' \item{deleted.item}{The items which have no item response data. Those items are excluded from the item parameter estimation.}
 #' \item{n.response}{An integer vector indicating the number of item responses for each item used to estimate the item parameters.}
+#' \item{TotalTime}{Time (in seconds) spent for total compuatation.}
+#'
+#' The internal objects can be easily extracted using the function \code{\link{getirt}}.
 #'
 #' @author Hwanggyu Lim \email{hglim83@@gmail.com}
 #'
 #' @seealso \code{\link{irtfit}}, \code{\link{test.info}}, \code{\link{simdat}}, \code{\link{shape_df}}, \code{\link{sx2_fit}},
-#' \code{\link{traceline.est_item}}
+#' \code{\link{traceline.est_item}}, \code{\link{getirt}}
 #'
 #' @references
 #' Baker, F. B., & Kim, S. H. (2004). \emph{Item response theory: Parameter estimation techniques.} CRC Press.
@@ -125,19 +129,28 @@
 #'
 #' \donttest{
 #' # 1) item parameter estimation: constrain the slope parameters of the 1PLM to be equal
-#' mod1 <- est_item(x, data, score, D=1, fix.a.1pl=FALSE, use.gprior=TRUE,
-#'                  gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE)
-#' mod1
+#' (mod1 <- est_item(x, data, score, D=1, fix.a.1pl=FALSE, use.gprior=TRUE,
+#'                   gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE))
+#' summary(mod1)
+#'
+#' # extract the item parameter estimates
+#' getirt(mod1, what="par.est")
 #'
 #' # 2) item parameter estimation: fix the slope parameters of the 1PLM to 1
-#' mod2 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, a.val.1pl=1, use.gprior=TRUE,
-#'                  gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE)
-#' mod2
+#' (mod2 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, a.val.1pl=1, use.gprior=TRUE,
+#'                   gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE))
+#' summary(mod2)
+#'
+#' # extract the standard error estimates
+#' getirt(mod2, what="se.est")
 #'
 #' # 3) item parameter estimation: fix the guessing parameters of the 3PLM to 0.2
-#' mod3 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, fix.g=TRUE, a.val.1pl=1, g.val=.2,
-#'                  use.startval=FALSE)
-#' mod3
+#' (mod3 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, fix.g=TRUE, a.val.1pl=1, g.val=.2,
+#'                   use.startval=FALSE))
+#' summary(mod3)
+#'
+#' # extract both item parameter and standard error estimates
+#' getirt(mod2, what="estimates")
 #'
 #' }
 #'
@@ -150,6 +163,9 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
                      a.val.1pl=1, a.val.gpcm=1, g.val=.2, use.aprior=FALSE, use.gprior=TRUE,
                      aprior=list(dist="lnorm", params=c(0, 0.5)), gprior=list(dist="beta", params=c(5, 17)),
                      missing=NA, use.startval=FALSE, control=list(eval.max=500, iter.max=500)) {
+
+  # check start time
+  start.time <- Sys.time()
 
   # match.call
   cl <- match.call()
@@ -206,6 +222,7 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   # consider DRM as 3PLM
   if("DRM" %in% model) {
     model[model == "DRM"] <- "3PLM"
+    x$model <- model
     memo <- "All 'DRM' items were considered as '3PLM' items during the item parameter estimation."
     warning(memo, call.=FALSE)
   }
@@ -221,6 +238,9 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   } else {
     data <- data.frame(data)
   }
+
+  # check the total number of item in the response data set
+  nitem <- ncol(data)
 
   # check the number of item responses across all items
   n.resp <- colSums(!is.na(data))
@@ -568,10 +588,16 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   full_all_df <- data.frame(x[, 1:3], all_df)
 
   ##---------------------------------------------------------------
+  # check end time
+  end.time <- Sys.time()
+
+  # record total computation time
+  est_time <- round(as.numeric(difftime(end.time, start.time, units = "secs")), 2)
+
   # return results
   rst <- structure(list(estimates=full_all_df, par.est=full_par_df, se.est=full_se_df, loglikelihood=llike, group.par=group.par,
-                        data=data, score=score2, scale.D=D, convergence=note, deleted.item=as.numeric(loc_allmiss),
-                        n.response=as.numeric(n.resp)),
+                        data=data, score=score2, scale.D=D, convergence=note, nitem=nitem, deleted.item=as.numeric(loc_allmiss),
+                        n.response=as.numeric(n.resp), TotalTime=est_time),
                    class="est_item")
   rst$call <- cl
 

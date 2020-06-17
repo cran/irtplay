@@ -17,7 +17,7 @@
 #' @param layout.col An integer value indicating the number of columns in the panel when displaying the item information functions of
 #' the multiple items. Default is 4.
 #' @param strip.size The size of facet labels when the item information functions of the multiple items are drawn.
-#' @param ... Further arguments passed from the function \code{\link[ggplot2]{geom_line}}.
+#' @param ... Further arguments passed from the function \code{geom_line()} in the \pkg{ggplot2} package.
 #'
 #' @details All of the plots are drawn using the ggplot2 package.
 #' The object of class \code{\link{test.info}} can be obtained from the function \code{\link{test.info}}.

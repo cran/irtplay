@@ -20,8 +20,8 @@
 #' individual items, computing the loglikelihood of abilities, computing item and test information functions, computing item and test
 #' characteristic curve functions, and plotting item and test characteristic curves and item and test information functions.
 #'
-#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.5.0\cr Date: \tab
-#' 2020-04-12\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
+#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.5.1\cr Date: \tab
+#' 2020-06-16\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
 #'
 #' @details
 #' Following five sections describe a) how to implement the online item calibration using FIPC, a) how to implement the online item
@@ -241,13 +241,13 @@
 #' # fix the five 3PL items (1st - 5th items) and three GRM items (53th to 55th items)
 #' # also, estimate the empirical histogram of latent variable
 #' fix.loc <- c(1:5, 53:55)
-#' mod.fix1 <- est_irt(x=x, data=sim.dat, D=1, use.gprior=TRUE,
+#' (mod.fix1 <- est_irt(x=x, data=sim.dat, D=1, use.gprior=TRUE,
 #'                     gprior=list(dist="beta", params=c(5, 16)), EmpHist=TRUE, Etol=1e-3,
-#'                     fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc)
-#' print(mod.fix1)
+#'                     fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc))
+#' summary(mod.fix1)
 #'
 #' # plot the estimated empirical histogram of latent variable prior distribution
-#' emphist <- mod.fix1$weights
+#' (emphist <- getirt(mod.fix1, what="weights"))
 #' plot(emphist$weight ~ emphist$theta, xlab="Theta", ylab="Density")
 #'
 #'
@@ -285,19 +285,19 @@
 #'
 #' ## Step 2: Estimate the item parameters
 #' # 1) item parameter estimation: constrain the slope parameters of the 1PLM to be equal
-#' mod1 <- est_item(x, data, score, D=1, fix.a.1pl=FALSE, use.gprior=TRUE,
-#'                  gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE)
-#' print(mod1)
+#' (mod1 <- est_item(x, data, score, D=1, fix.a.1pl=FALSE, use.gprior=TRUE,
+#'                  gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE))
+#' summary(mod1)
 #'
 #' # 2) item parameter estimation: fix the slope parameters of the 1PLM to 1
-#' mod2 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, a.val.1pl=1, use.gprior=TRUE,
-#'                  gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE)
-#' print(mod2)
+#' (mod2 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, a.val.1pl=1, use.gprior=TRUE,
+#'                  gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE))
+#' summary(mod2)
 #'
 #' # 3) item parameter estimation: fix the guessing parameters of the 3PLM to 0.2
-#' mod3 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, fix.g=TRUE, a.val.1pl=1, g.val=.2,
-#'                  use.startval=FALSE)
-#' print(mod3)
+#' (mod3 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, fix.g=TRUE, a.val.1pl=1, g.val=.2,
+#'                  use.startval=FALSE))
+#' summary(mod3)
 #'
 #'
 #' ##----------------------------------------------------------------------------

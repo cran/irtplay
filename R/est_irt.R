@@ -47,15 +47,15 @@
 #' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 #' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
 #' distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
-#' in the first argument. In terms of the two parameters of the three distributions, see \code{\link[stats]{dbeta}}, \code{\link[stats]{dlnorm}},
-#' and \code{\link[stats]{dnorm}} for more details.
+#' in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()},
+#' and \code{dnorm()} in the \pkg{stats} package for more details.
 #' @param gprior A list containing the information of the prior distribution for item guessing parameters. Three probability distributions
 #' of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
 #' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 #' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
 #' distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
-#' in the first argument. In terms of the two parameters of the three distributions, see \code{\link[stats]{dbeta}}, \code{\link[stats]{dlnorm}},
-#' and \code{\link[stats]{dnorm}} for more details.
+#' in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()},
+#' and \code{dnorm()} in the \pkg{stats} package for more details.
 #' @param missing A value indicating missing values in the response data set. Default is NA.
 #' @param Quadrature A numeric vector of two components specifying the number of quadrature points (in the first component) and
 #' the symmetric minimum and maximum values of these points (in the second component). For example, a vector of c(49, 6) indicates 49 rectangular
@@ -75,10 +75,10 @@
 #' the starting values for the item parameter estimation. Otherwise, internal starting values of this function are used. Default is FALSE.
 #' @param Etol A positive numeric value. This value sets the convergence criterion for E steps of the EM algorithm. Default is 1e-4.
 #' @param MaxE A positive integer value. This value determines the maximum number of the E steps in the EM algorithm. Default is 500.
-#' @param control A list of control parameters to be passed to the optimization function of \code{\link[stats]{nlminb}}. The control parameters
+#' @param control A list of control parameters to be passed to the optimization function of \code{nlminb()} in the \pkg{stats} package. The control parameters
 #' set the conditions of M steps of the EM algorithm. For example, the maximum number of iterations in each of the iterative M steps can
-#' be set by \code{control = list(iter.max=200)}. Default maximum number of iterations in each M step is 200. See \code{\link[stats]{nlminb}} for other
-#' control parameters.
+#' be set by \code{control = list(iter.max=200)}. Default maximum number of iterations in each M step is 200. See \code{nlminb()} in the \pkg{stats} package
+#' for other control parameters.
 #' @param fipc A logical value. If TRUE, FIPC is implemented for item parameter estimation. See below for details.
 #' @param fipc.method A character string specifying the FIPC method. Available methods include "OEM" for "No Prior Weights Updating and One EM Cycle
 #' (NWU-OEM; Wainer & Mislevy, 1990)" and "MEM" for "Multiple Prior Weights Updating and Multiple EM Cycles (MWU-MEM; Kim, 2006)."
@@ -166,8 +166,8 @@
 #' The row and column indicate the response pattern and the quadrature point, respectively.}
 #' \item{data}{A data.frame of the examinees' response data set.}
 #' \item{scale.D}{A scaling factor in IRT models.}
-#' \item{ncase}{A total number of response patterns}
-#' \item{nitem}{A total number of items specified in the item meta data of \code{x}}
+#' \item{ncase}{A total number of response patterns.}
+#' \item{nitem}{A total number of items included in the response data.}
 #' \item{Etol}{A convergence criteria for E steps of the EM algorithm.}
 #' \item{MaxE}{The maximum number of E steps in the EM algorithm.}
 #' \item{aprior}{A list containing the information of the prior distribution for item slope parameters.}
@@ -177,6 +177,7 @@
 #' \item{maxpar.diff}{A maximum item parameter change when the EM cycles were completed.}
 #' \item{EMtime}{Time (in seconds) spent for the EM cycles.}
 #' \item{SEtime}{Time (in seconds) spent for computing the standard errors of the item parameter estimates.}
+#' \item{TotalTime}{Time (in seconds) spent for total compuatation.}
 #' \item{test.1}{Status of the first-order test to report if the gradients has vanished sufficiently for the solution to be stable.}
 #' \item{test.2}{Status of the second-order test to report if the information matrix is positive definite, which is a prerequisite
 #' for the solution to be a possible maximum.}
@@ -185,10 +186,12 @@
 #' \item{fipc.method}{A method used for the FIPC.}
 #' \item{fix.loc}{A vector of integer values specifying the location of the fixed items when the FIPC was implemented.}
 #'
+#' The internal objects can be easily extracted using the function \code{\link{getirt}}.
+#'
 #' @author Hwanggyu Lim \email{hglim83@@gmail.com}
 #'
 #' @seealso \code{\link{est_item}}, \code{\link{irtfit}}, \code{\link{test.info}}, \code{\link{simdat}}, \code{\link{shape_df}}, \code{\link{sx2_fit}},
-#' \code{\link{traceline.est_item}}
+#' \code{\link{traceline.est_item}}, \code{\link{getirt}}
 #'
 #' @references
 #' Ban, J. C., Hanson, B. A., Wang, T., Yi, Q., & Harris, D., J. (2001) A comparative study of on-line pretest item calibration/scaling methods
@@ -219,11 +222,26 @@
 #' # fit the 1PL model to LSAT6 data and constrain the slope parameters to be equal
 #' (mod.1pl.c <- est_irt(data=LSAT6, D=1, model="1PLM", cats=2, fix.a.1pl=FALSE))
 #'
+#' # summary of the estimation
+#' summary(mod.1pl.c)
+#'
+#' # extract the item parameter estimates
+#' getirt(mod.1pl.c, what="par.est")
+#'
+#' # extract the standard error estimates
+#' getirt(mod.1pl.c, what="se.est")
+#'
 #' # fit the 1PL model to LSAT6 data and fix the slope parameters to 1.0
 #' (mod.1pl.f <- est_irt(data=LSAT6, D=1, model="1PLM", cats=2, fix.a.1pl=TRUE, a.val.1pl=1))
 #'
+#' # summary of the estimation
+#' summary(mod.1pl.f)
+#'
 #' # fit the 2PL model to LSAT6 data
 #' (mod.2pl <- est_irt(data=LSAT6, D=1, model="2PLM", cats=2))
+#'
+#' # summary of the estimation
+#' summary(mod.2pl)
 #'
 #' # assess the fit of the 2PL model to the LSAT5 data using S-X2 fit statistic
 #' (sx2fit.2pl <- sx2_fit(x=mod.2pl))
@@ -243,7 +261,7 @@
 #' # estimate the empirical histogram of latent variable prior distribution
 #' # also use a less stringent convergence criterion for E-step
 #' (mod.2pl.hist <- est_irt(data=LSAT6, D=1, model="2PLM", cats=2, EmpHist=TRUE, Etol=0.001))
-#' (emphist <- mod.2pl.hist$weights)
+#' (emphist <- getirt(mod.2pl.hist, what="weights"))
 #' plot(emphist$weight ~ emphist$theta)
 #'
 #' # fit the 3PL model to LSAT6 data and use the Beta prior distribution for
@@ -251,8 +269,14 @@
 #' (mod.3pl <- est_irt(data=LSAT6, D=1, model="3PLM", cats=2, use.gprior=TRUE,
 #'                     gprior=list(dist="beta", params=c(5, 16))))
 #'
+#' # summary of the estimation
+#' summary(mod.3pl)
+#'
 #' # fit the 3PL model to LSAT6 data, but fix the guessing parameters to be 0.2
 #' (mod.3pl.f <- est_irt(data=LSAT6, D=1, model="3PLM", cats=2, fix.g=TRUE, g.val=0.2))
+#'
+#' # summary of the estimation
+#' summary(mod.3pl.f)
 #'
 #' # fit the differnt dichotomous models to each item of LSAT6 data
 #' # fit the constrained 1PL model to the 1st, 2nd, and 3rd items, fit the 2PL model to
@@ -293,6 +317,9 @@
 #'                      aprior=list(dist="lnorm", params=c(0.0, 0.5)),
 #'                      gprior=list(dist="beta", params=c(5, 16))))
 #'
+#' # summary of the estimation
+#' summary(mod.mix1)
+#'
 #' # estimate examinees' latent scores given the item parameter estimates using the MLE
 #' (score.mle <- est_score(x=mod.mix1, method = "MLE", range = c(-4, 4), ncore=2))
 #'
@@ -316,6 +343,9 @@
 #'                      model=c(rep("2PLM", 38), rep("GPCM", 2), rep("2PLM", 12), rep("GRM", 3)),
 #'                      cats=c(rep(2, 38), rep(5, 2), rep(2, 12), rep(5, 3))))
 #'
+#' # summary of the estimation
+#' summary(mod.mix2)
+#'
 #' # fit the 2PL model to all dichotmous items, fit the GPCM model to 39th and 40th items,
 #' # fit the GRM model to the 53th, 54th, 55th items, and estimate the empirical histogram
 #' # of latent variable prior distribution.
@@ -324,7 +354,7 @@
 #' (mod.mix3 <- est_irt(data=sim.dat1, D=1,
 #'                      model=c(rep("2PLM", 38), rep("GPCM", 2), rep("2PLM", 12), rep("GRM", 3)),
 #'                      cats=c(rep(2, 38), rep(5, 2), rep(2, 12), rep(5, 3)), EmpHist=TRUE))
-#' (emphist <- mod.mix3$weights)
+#' (emphist <- getirt(mod.mix3, what="weights"))
 #' plot(emphist$weight ~ emphist$theta)
 #'
 #' # fit the 2PL model to all dichotmous items,
@@ -336,6 +366,9 @@
 #'                      model=c(rep("2PLM", 38), rep("GPCM", 2), rep("2PLM", 12), rep("GRM", 3)),
 #'                      cats=c(rep(2, 38), rep(5, 2), rep(2, 12), rep(5, 3)),
 #'                      fix.a.gpcm=TRUE, a.val.gpcm=1))
+#'
+#' # summary of the estimation
+#' summary(mod.mix4)
 #'
 #' ##------------------------------------------------------------------------------
 #' # 3. fixed item parameter calibration (FIPC) for the mixed-item format data
@@ -363,8 +396,11 @@
 #'                      gprior=list(dist="beta", params=c(5, 16)), EmpHist=TRUE,
 #'                      Etol=1e-3, fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc))
 #' (prior.par <- mod.fix1$group.par)
-#' (emphist <- mod.fix1$weights)
+#' (emphist <- getirt(mod.fix1, what="weights"))
 #' plot(emphist$weight ~ emphist$theta)
+#'
+#' # summary of the estimation
+#' summary(mod.fix1)
 #'
 #' # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
 #' # fix the five 3PL items (1st - 5th items) and three GRM items (53th to 55th items)
@@ -376,7 +412,7 @@
 #'                      gprior=list(dist="beta", params=c(5, 16)), EmpHist=FALSE,
 #'                      Etol=1e-3, fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc))
 #' (prior.par <- mod.fix2$group.par)
-#' (emphist <- mod.fix2$weights)
+#' (emphist <- getirt(mod.fix2, what="weights"))
 #' plot(emphist$weight ~ emphist$theta)
 #'
 #' # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
@@ -388,8 +424,11 @@
 #'                      gprior=list(dist="beta", params=c(5, 16)), EmpHist=TRUE,
 #'                      Etol=1e-3, fipc=TRUE, fipc.method="OEM", fix.loc=fix.loc))
 #' (prior.par <- mod.fix3$group.par)
-#' (emphist <- mod.fix3$weights)
+#' (emphist <- getirt(mod.fix3, what="weights"))
 #' plot(emphist$weight ~ emphist$theta)
+#'
+#' # summary of the estimation
+#' summary(mod.fix3)
 #'
 #' }
 #'
@@ -405,6 +444,8 @@ est_irt <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE, f
                     use.startval=FALSE, Etol=1e-04, MaxE=500, control=list(iter.max=200),
                     fipc=FALSE, fipc.method="MEM", fix.loc=NULL) {
 
+  # match.call
+  cl <- match.call()
 
   # item parameter estimation
   if(!fipc) {
@@ -427,6 +468,8 @@ est_irt <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE, f
   }
 
   # return the estimation results
+  class(est_par) <- "est_irt"
+  est_par$call <- cl
   est_par
 
 }
@@ -439,8 +482,8 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
                        missing=NA, Quadrature=c(49, 6.0), weights=NULL, group.mean=0, group.var=1, EmpHist=FALSE,
                        use.startval=FALSE, Etol=1e-04, MaxE=500, control=list(eval.max=200, iter.max=200)) {
 
-  # match.call
-  cl <- match.call()
+  # check start time
+  start.time <- Sys.time()
 
   ##---------------------------------------------------------------------
   # prepare the item parameter estimation
@@ -498,6 +541,7 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   # consider DRM as 3PLM
   if("DRM" %in% model) {
     model[model == "DRM"] <- "3PLM"
+    x$model <- model
     memo <- "All 'DRM' items were considered as '3PLM' items during the item parameter estimation. \n"
     warning(memo, call.=FALSE)
   }
@@ -640,7 +684,7 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   time2 <- Sys.time()
 
   # record the item parameter estimation time
-  est_time1 <- as.numeric(time2 - time1)
+  est_time1 <- round(as.numeric(difftime(time2, time1, units = "secs")), 2)
 
   # the first order test: check convergence-criteria test
   test_1st <- all(c(all(mstep$convergence == 0L), r < MaxE))
@@ -728,7 +772,7 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   time2 <- Sys.time()
 
   # record the standard error computationtime
-  est_time2 <- as.numeric(time2 - time1)
+  est_time2 <- round(as.numeric(difftime(time2, time1, units = "secs")), 2)
 
   # deploy the standard errors on the location of matrix as the item parameter estimates
   se_df <- loc.par <- param_loc$loc.par
@@ -774,14 +818,20 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   if(use.gprior) gprior.dist <- gprior else gprior.dist <- NULL
 
   ##---------------------------------------------------------------
+  # check end time
+  end.time <- Sys.time()
+
+  # record total computation time
+  est_time3 <- round(as.numeric(difftime(end.time, start.time, units = "secs")), 2)
+
   # return results
-  rst <- structure(list(estimates=full_all_df, par.est=par_df, se.est=se_df, pos.par=loc_df, covariance=cov_mat, loglikelihood=llike, group.par=group.par,
-                        weights=weights, posterior.dist=post_dist, data=data, scale.D=D, ncase=nstd, nitem=nrow(par_df), Etol=Etol, MaxE=MaxE,
-                        aprior=aprior.dist, gprior=gprior.dist, npar.est=length(param_loc$reloc.par), niter=r, maxpar.diff=max.diff,
-                        EMtime=est_time1, SEtime=est_time2, test.1=memo3, test.2=memo4, var.note=memo5, fipc=FALSE, fipc.method=NULL, fix.loc=NULL),
-                   class="est_irt")
-  rst$call <- cl
-  cat('Estimation is finished.', '\n')
+  rst <- list(estimates=full_all_df, par.est=par_df, se.est=se_df, pos.par=loc_df, covariance=cov_mat, loglikelihood=llike, group.par=group.par,
+              weights=weights, posterior.dist=post_dist, data=data, scale.D=D, ncase=nstd, nitem=nrow(par_df), Etol=Etol, MaxE=MaxE,
+              aprior=aprior.dist, gprior=gprior.dist, npar.est=length(param_loc$reloc.par), niter=r, maxpar.diff=max.diff,
+              EMtime=est_time1, SEtime=est_time2, TotalTime=est_time3, test.1=memo3, test.2=memo4, var.note=memo5, fipc=FALSE,
+              fipc.method=NULL, fix.loc=NULL)
+
+  cat("Estimation is finished in", est_time3, "seconds.",'\n')
   return(rst)
 
 }
@@ -795,9 +845,8 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
                          use.startval=FALSE, Etol=1e-04, MaxE=500, control=list(eval.max=200, iter.max=200),
                          fipc=TRUE, fipc.method="MEM", fix.loc=NULL) {
 
-
-  # match.call
-  cl <- match.call()
+  # check start time
+  start.time <- Sys.time()
 
   ##---------------------------------------------------------------------
   # prepare the item parameter estimation
@@ -1037,7 +1086,7 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   time2 <- Sys.time()
 
   # record the item parameter estimation time
-  est_time1 <- as.numeric(time2 - time1)
+  est_time1 <- round(as.numeric(difftime(time2, time1, units = "secs")), 2)
 
   # the first order test: check convergence-criteria test
   test_1st <- all(c(all(mstep$convergence == 0L), r < MaxE))
@@ -1123,7 +1172,7 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   time2 <- Sys.time()
 
   # record the standard error computationtime
-  est_time2 <- as.numeric(time2 - time1)
+  est_time2 <- round(as.numeric(difftime(time2, time1, units = "secs")), 2)
 
   # deploy the standard errors on the location of matrix as the item parameter estimates
   # 1) for the only new items
@@ -1187,15 +1236,22 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   if(use.gprior) gprior.dist <- gprior else gprior.dist <- NULL
 
   ##---------------------------------------------------------------
+  # check end time
+  end.time <- Sys.time()
+
+  # record total computation time
+  est_time3 <- round(as.numeric(difftime(end.time, start.time, units = "secs")), 2)
+
   # return results
-  rst <- structure(list(estimates=full_all_df, par.est=x_all, se.est=se_all_df, pos.par=loc_all_df, covariance=cov_mat, loglikelihood=llike, group.par=group.par,
-                        weights=weights, posterior.dist=post_dist, data=data_all, scale.D=D, ncase=nstd, nitem=nitem, Etol=Etol, MaxE=MaxE,
-                        aprior=aprior.dist, gprior=gprior.dist, npar.est=length(param_loc$reloc.par), niter=r, maxpar.diff=max.diff,
-                        EMtime=est_time1, SEtime=est_time2, test.1=memo3, test.2=memo4, var.note=memo5, fipc=TRUE, fipc.method=fipc.method, fix.loc=fix.loc),
-                   class="est_irt")
-  rst$call <- cl
-  cat('Estimation is finished.', '\n')
+  rst <- list(estimates=full_all_df, par.est=x_all, se.est=se_all_df, pos.par=loc_all_df, covariance=cov_mat, loglikelihood=llike, group.par=group.par,
+              weights=weights, posterior.dist=post_dist, data=data_all, scale.D=D, ncase=nstd, nitem=nitem, Etol=Etol, MaxE=MaxE,
+              aprior=aprior.dist, gprior=gprior.dist, npar.est=length(param_loc$reloc.par), niter=r, maxpar.diff=max.diff,
+              EMtime=est_time1, SEtime=est_time2, TotalTime=est_time3, test.1=memo3, test.2=memo4, var.note=memo5, fipc=TRUE,
+              fipc.method=fipc.method, fix.loc=fix.loc)
+
+  cat("Estimation is finished in", est_time3, "seconds.",'\n')
   return(rst)
 
 }
+
 

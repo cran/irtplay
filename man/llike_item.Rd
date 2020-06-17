@@ -34,16 +34,16 @@ of Beta, Log-normal, and Normal distributions are available. In the list, a char
 in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
 distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
-in the first argument. In terms of the two parameters of the three distributions, see \code{\link[stats]{dbeta}}, \code{\link[stats]{dlnorm}},
-and \code{\link[stats]{dnorm}} for more details.}
+in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()}, and \code{dnorm()}
+in the \pkg{stats} package for more details.}
 
 \item{gprior}{A list containing the information of the prior distribution for item guessing parameters. Three probability distributions
 of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
 in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
 distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
-in the first argument. In terms of the two parameters of the three distributions, see \code{\link[stats]{dbeta}}, \code{\link[stats]{dlnorm}},
-and \code{\link[stats]{dnorm}} for more details.}
+in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()}, and \code{dnorm()}
+in the \pkg{stats} package for more details.}
 
 \item{missing}{A value indicating missing values in the response data set. Default is NA.}
 }

@@ -14,7 +14,7 @@
 #'
 #' @details When the argument \code{theta} is missing, \emph{n} weights can be generated from either the normal distribution or the uniform distribution.
 #' Note that if \code{dist = "norm"}, gaussian quadrature points and weights from the normal distribution are generated. See
-#' \code{\link[statmod]{gauss.quad.prob}} for more details.
+#' \code{gauss.quad.prob()} in the \pkg{statmod} package for more details.
 #'
 #' When the argument \code{theta} is not missing, the weights corresponding to the provided theta values are generated. Specifically, if
 #' \code{dist = "norm"}, normalized weights from the normal distribution are returned. If \code{dist = "emp"}, every specified theta value has the equal
