@@ -48,6 +48,7 @@ The row and column indicate the response pattern and the quadrature point, respe
 \item{Etol}{A convergence criteria for E steps of the EM algorithm.}
 \item{MaxE}{The maximum number of E steps in the EM algorithm.}
 \item{aprior}{A list containing the information of the prior distribution for item slope parameters.}
+\item{bprior}{A list containing the information of the prior distribution for item difficulty (or threshold) parameters.}
 \item{gprior}{A list containing the information of the prior distribution for item guessing parameters.}
 \item{npar.est}{A total number of the estimated item parameters.}
 \item{niter}{The number of EM cycles completed.}
@@ -78,6 +79,7 @@ observed information functions.}
 \item{convergence}{A string indicating the convergence status of the item parameter estimation.}
 \item{nitem}{A total number of items included in the response data.}
 \item{deleted.item}{The items which have no item response data. Those items are excluded from the item parameter estimation.}
+\item{npar.est}{A total number of the estimated item parameters.}
 \item{n.response}{An integer vector indicating the number of item responses for each item used to estimate the item parameters.}
 \item{TotalTime}{Time (in seconds) spent for total compuatation.}
 }

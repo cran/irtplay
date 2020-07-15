@@ -76,7 +76,8 @@
 #' (x=\eqn{\theta_{X}}, y=X). Because \code{constraint = TRUE}, \eqn{\theta_{min}} is the first value in the argument \code{range.tcc}.
 #' When linear extrapolation method is used, a linear line is constructed using two points of (x=\eqn{\theta_{X}}, y=X) and
 #' (x=\eqn{\theta_{max}}, y=maximum raw score). Then, ability estimates for the raw sum scores between zero and the smallest raw score greater than or equal
-#' to the sum of item guessing parameters are found using the constructed linear line.
+#' to the sum of item guessing parameters are found using the constructed linear line. When it comes to the scoring method of "INV.TCC", the standard errors of ability
+#' estimates are computed using an approach suggested by Lim, Davey, and Wells (2020).
 #'
 #' To speed up the ability estimation for MLE, MLEF, MAP, and EAP methods, this function applies a parallel process using multiple logical CPU cores.
 #' You can set the number of logical CPU cores by specifying a positive integer value in the argument \code{ncore}. Default value is 1.
@@ -103,6 +104,9 @@
 #'
 #' Kolen, M. J. & Tong, Y. (2010). Psychometric properties of IRT proficiency estimates.
 #' \emph{Educational Measurement: Issues and Practice, 29}(3), 8-14.
+#'
+#' Lim, H., Davey, T., & Wells, C. S. (2020). A recursion-based analytical approach to evaluate the performance of MST.
+#' \emph{Journal of Educational Measurement}. DOI: 10.1111/jedm.12276.
 #'
 #' Stocking, M. L. (1996). An alternative method for scoring adaptive tests.
 #' \emph{Journal of Educational and Behavioral Statistics, 21}(4), 365-389.
@@ -141,6 +145,9 @@
 #' # estimate the abilities using MAP
 #' est_score(x, data, D=1, method="MAP", norm.prior=c(0, 1), nquad=30, se=TRUE, ncore=2)
 #'
+#' # estimate the abilities using EAP
+#' est_score(x, data, D=1, method="EAP", norm.prior=c(0, 1), nquad=30, se=TRUE, ncore=2)
+#'
 #' # estimate the abilities using EAP summed scoring
 #' est_score(x, data, D=1, method="EAP.SUM", norm.prior=c(0, 1), nquad=30)
 #'
@@ -156,8 +163,8 @@ est_score <- function(x, ...) UseMethod("est_score")
 #'
 #' @export
 est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), norm.prior = c(0, 1),
-                      nquad = 41, weights = NULL, fence.a = 3.0, fence.b = NULL, se = TRUE,
-                      constant=0.1, constraint=FALSE, range.tcc=c(-7, 7), missing = NA, ncore=1, ...) {
+                              nquad = 41, weights = NULL, fence.a = 3.0, fence.b = NULL, se = TRUE,
+                              constant=0.1, constraint=FALSE, range.tcc=c(-7, 7), missing = NA, ncore=1, ...) {
 
   method <- toupper(method)
 
@@ -185,6 +192,9 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
     if(ncol(x[, -c(1, 2, 3)]) == 2) {
       x <- data.frame(x, par.3=NA)
     }
+
+    # clear the item meta data set
+    x <- back2df(metalist2(x))
 
     # add two more items and data responses when "MLE" with Fences method is used
     if(method == "MLEF") {
@@ -218,44 +228,6 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
     # listrize the data.frame
     meta <- metalist2(x)
 
-    # create equations for gradient vector and hessian matrix
-    if(!is.null(meta$drm)) {
-      # create equations for gradient vector and hessian matrix
-      eq_grad_drm <- equation_drm(model="3PLM", use.pprior=FALSE, hessian=FALSE, type="ability")$params_fun
-      eq_hess_drm <- equation_drm(model="3PLM", use.pprior=FALSE, hessian=TRUE, type="ability")$params_fun
-    } else {
-      eq_grad_drm <- NULL
-      eq_hess_drm <- NULL
-    }
-    if(!is.null(meta$plm)) {
-      eq_grad_plm <-
-        purrr::map(.x=1:length(meta$plm$cats),
-                   .f=function(i) equation_plm(cats=meta$plm$cats[i], pmodel=meta$plm$model[i], use.pprior=FALSE,
-                                               hessian=FALSE, type="ability")$params_fun)
-      eq_hess_plm <-
-        purrr::map(.x=1:length(meta$plm$cats),
-                   .f=function(i) equation_plm(cats=meta$plm$cats[i], pmodel=meta$plm$model[i], use.pprior=FALSE,
-                                               hessian=TRUE, type="ability")$params_fun)
-    } else {
-      eq_grad_plm <- NULL
-      eq_hess_plm <- NULL
-    }
-    if(method == "MAP") {
-      eq_grad_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
-                                    hessian=FALSE, type="ability")$pprior_fun
-      eq_hess_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
-                                    hessian=TRUE, type="ability")$pprior_fun
-    } else {
-      eq_grad_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
-                                    hessian=FALSE, type="ability")$pprior_fun
-      eq_hess_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
-                                    hessian=TRUE, type="ability")$pprior_fun
-    }
-
-    # create lists of the equations
-    FUN.grad=list(drm=eq_grad_drm, plm=eq_grad_plm, prior=eq_grad_prior)
-    FUN.hess=list(drm=eq_hess_drm, plm=eq_hess_plm, prior=eq_hess_prior)
-
     # check the number of CPU cores
     if(ncore < 1) {
       stop("The number of logical CPU cores must not be less than 1.", call.=FALSE)
@@ -266,16 +238,32 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
 
       # set a function for scoring
       f <- function(i) est_score_indiv(meta=meta, resp=data[i, ], D=D, method=method, range=range,
-                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se,
-                                       FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se)
 
       # scoring
-      est <- purrr::map(.x=1:nrow(data), .f=function(i) f(i))
+      ncase <- nrow(data)
+      est <- vector('list', ncase)
+      for(i in 1:ncase) {
+
+        # start a progress bar
+        pb <- utils::txtProgressBar(min=1, max=100, initial=0, style=3, label="0% done", width=50)
+
+        # scoring
+        est[[i]] <- f(i)
+
+        # update the progress bar
+        info <- sprintf("%d%% done", round((i/ncase)*100))
+        utils::setTxtProgressBar(pb, i/ncase*100, label=info)
+
+      }
+
+      # closing the progress bar
+      close(pb)
 
       # assign estimated values
-      est.theta <- purrr::map_dbl(est, .f=function(x) x$est.theta)
+      est.theta <- purrr::map_dbl(est, "est.theta")
       if(se) {
-        se.theta <- purrr::map_dbl(est, .f=function(x) x$se.theta)
+        se.theta <- purrr::map_dbl(est, "se.theta")
       } else {
         se.theta <- NULL
       }
@@ -293,16 +281,14 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
       # load some specific variable names into processing cluster
       parallel::clusterExport(cl, c("meta", "data", "D", "method", "range",
                                     "norm.prior", "nquad", "weights", "se",
-                                    "FUN.grad", "FUN.hess",
                                     "est_score_indiv", "loglike_score", "grad_score", "hess_score",
-                                    "ll_brute",
+                                    "ll_brute", "logprior_deriv", "esprior_norm",
                                     "drm", "plm", "grm", "gpcm", "gen.weight"), envir = environment())
       parallel::clusterEvalQ(cl, library(dplyr))
 
       # set a function for scoring
       f <- function(i) est_score_indiv(meta=meta, resp=data[i, ], D=D, method=method, range=range,
-                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se,
-                                       FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se)
 
       # parallel scoring
       est <- pbapply::pblapply(X=1:nrow(data), FUN=f, cl=cl) # to see the progress bar
@@ -311,9 +297,9 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
       parallel::stopCluster(cl)
 
       # assign estimated values
-      est.theta <- purrr::map_dbl(est, .f=function(x) x$est.theta)
+      est.theta <- purrr::map_dbl(est, "est.theta")
       if(se) {
-        se.theta <- purrr::map_dbl(est, .f=function(x) x$se.theta)
+        se.theta <- purrr::map_dbl(est, "se.theta")
       } else {
         se.theta <- NULL
       }
@@ -340,6 +326,7 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
   rst
 
 }
+
 
 #' @describeIn est_score An object created by the function \code{\link{est_irt}}.
 #'
@@ -413,44 +400,6 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
     # listrize the data.frame
     meta <- metalist2(x)
 
-    # create equations for gradient vector and hessian matrix
-    if(!is.null(meta$drm)) {
-      # create equations for gradient vector and hessian matrix
-      eq_grad_drm <- equation_drm(model="3PLM", use.pprior=FALSE, hessian=FALSE, type="ability")$params_fun
-      eq_hess_drm <- equation_drm(model="3PLM", use.pprior=FALSE, hessian=TRUE, type="ability")$params_fun
-    } else {
-      eq_grad_drm <- NULL
-      eq_hess_drm <- NULL
-    }
-    if(!is.null(meta$plm)) {
-      eq_grad_plm <-
-        purrr::map(.x=1:length(meta$plm$cats),
-                   .f=function(i) equation_plm(cats=meta$plm$cats[i], pmodel=meta$plm$model[i], use.pprior=FALSE,
-                                               hessian=FALSE, type="ability")$params_fun)
-      eq_hess_plm <-
-        purrr::map(.x=1:length(meta$plm$cats),
-                   .f=function(i) equation_plm(cats=meta$plm$cats[i], pmodel=meta$plm$model[i], use.pprior=FALSE,
-                                               hessian=TRUE, type="ability")$params_fun)
-    } else {
-      eq_grad_plm <- NULL
-      eq_hess_plm <- NULL
-    }
-    if(method == "MAP") {
-      eq_grad_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
-                                    hessian=FALSE, type="ability")$pprior_fun
-      eq_hess_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
-                                    hessian=TRUE, type="ability")$pprior_fun
-    } else {
-      eq_grad_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
-                                    hessian=FALSE, type="ability")$pprior_fun
-      eq_hess_prior <- equation_drm(model="3PLM", pprior=list(dist="norm", params=norm.prior), use.pprior=TRUE,
-                                    hessian=TRUE, type="ability")$pprior_fun
-    }
-
-    # create lists of the equations
-    FUN.grad=list(drm=eq_grad_drm, plm=eq_grad_plm, prior=eq_grad_prior)
-    FUN.hess=list(drm=eq_hess_drm, plm=eq_hess_plm, prior=eq_hess_prior)
-
     # check the number of CPU cores
     if(ncore < 1) {
       stop("The number of logical CPU cores must not be less than 1.", call.=FALSE)
@@ -461,16 +410,32 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
 
       # set a function for scoring
       f <- function(i) est_score_indiv(meta=meta, resp=data[i, ], D=D, method=method, range=range,
-                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se,
-                                       FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se)
 
       # scoring
-      est <- purrr::map(.x=1:nrow(data), .f=function(i) f(i))
+      ncase <- nrow(data)
+      est <- vector('list', ncase)
+      for(i in 1:ncase) {
+
+        # start a progress bar
+        pb <- utils::txtProgressBar(min=1, max=100, initial=0, style=3, label="0% done", width=50)
+
+        # scoring
+        est[[i]] <- f(i)
+
+        # update the progress bar
+        info <- sprintf("%d%% done", round((i/ncase)*100))
+        utils::setTxtProgressBar(pb, i/ncase*100, label=info)
+
+      }
+
+      # closing the progress bar
+      close(pb)
 
       # assign estimated values
-      est.theta <- purrr::map_dbl(est, .f=function(x) x$est.theta)
+      est.theta <- purrr::map_dbl(est, "est.theta")
       if(se) {
-        se.theta <- purrr::map_dbl(est, .f=function(x) x$se.theta)
+        se.theta <- purrr::map_dbl(est, "se.theta")
       } else {
         se.theta <- NULL
       }
@@ -488,16 +453,14 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
       # load some specific variable names into processing cluster
       parallel::clusterExport(cl, c("meta", "data", "D", "method", "range",
                                     "norm.prior", "nquad", "weights", "se",
-                                    "FUN.grad", "FUN.hess",
                                     "est_score_indiv", "loglike_score", "grad_score", "hess_score",
-                                    "ll_brute",
+                                    "ll_brute", "logprior_deriv", "esprior_norm",
                                     "drm", "plm", "grm", "gpcm", "gen.weight"), envir = environment())
       parallel::clusterEvalQ(cl, library(dplyr))
 
       # set a function for scoring
       f <- function(i) est_score_indiv(meta=meta, resp=data[i, ], D=D, method=method, range=range,
-                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se,
-                                       FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se)
 
       # parallel scoring
       est <- pbapply::pblapply(X=1:nrow(data), FUN=f, cl=cl) # to see the progress bar
@@ -506,9 +469,9 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
       parallel::stopCluster(cl)
 
       # assign estimated values
-      est.theta <- purrr::map_dbl(est, .f=function(x) x$est.theta)
+      est.theta <- purrr::map_dbl(est, "est.theta")
       if(se) {
-        se.theta <- purrr::map_dbl(est, .f=function(x) x$se.theta)
+        se.theta <- purrr::map_dbl(est, "se.theta")
       } else {
         se.theta <- NULL
       }
@@ -539,17 +502,8 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
 
 # This function computes an abiltiy estimate for each examinee
 est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4), norm.prior = c(0, 1),
-                            nquad = 41, weights=NULL, se = TRUE,
-                            FUN.grad=list(drm=NULL, plm=NULL, prior=NULL),
-                            FUN.hess=list(drm=NULL, plm=NULL, prior=NULL)) {
+                            nquad = 41, weights=NULL, se = TRUE) {
 
-  # extract equations of a gradient and hessian
-  eq_grad_drm <- FUN.grad$drm
-  eq_grad_plm <- FUN.grad$plm
-  eq_grad_prior <- FUN.grad$prior
-  eq_hess_drm <- FUN.hess$drm
-  eq_hess_plm <- FUN.hess$plm
-  eq_hess_prior <- FUN.hess$prior
 
   # find missing data and
   # delete missing data from item data set and response data
@@ -557,21 +511,12 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
     loc.miss <- which(is.na(resp)) # check the locations of missing data
 
     # delete missing data from the item meta data
-    # delete equations for the polytomous IRT models if missing data exist
     if(!is.null(meta$drm)) {
       meta$drm <- purrr::map(.x=meta$drm, .f=function(x) x[!meta$drm$loc %in% loc.miss])
     }
     if(!is.null(meta$plm)) {
-      tmp <- purrr::map(.x=meta$plm, .f=function(x) x[!meta$plm$loc %in% loc.miss])
-      eq_grad_plm <- eq_grad_plm[!meta$plm$loc %in% loc.miss]
-      eq_hess_plm <- eq_hess_plm[!meta$plm$loc %in% loc.miss]
-      meta$plm <- tmp
+      meta$plm <- purrr::map(.x=meta$plm, .f=function(x) x[!meta$plm$loc %in% loc.miss])
     }
-
-    # create lists of the equations using the updated information for missing data
-    FUN.grad <- list(drm=eq_grad_drm, plm=eq_grad_plm, prior=eq_grad_prior)
-    FUN.hess <- list(drm=eq_hess_drm, plm=eq_hess_plm, prior=eq_hess_prior)
-
   }
 
   # factorize the response values
@@ -580,25 +525,20 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
 
   # calculate the score categories
   tmp.id <- 1:length(resp.f)
-  freq.cat <-
-    stats::xtabs(~ tmp.id + resp.f, addNA=TRUE) %>%
-    data.matrix()
-  if(any(is.na(resp))) freq.cat <- freq.cat[, -ncol(freq.cat)]
+  if(length(resp.f) > 1L) {
+    freq.cat <- data.matrix(stats::xtabs(~ tmp.id + resp.f, addNA=TRUE))
+  } else {
+    freq.cat <- rbind(stats::xtabs(~ tmp.id + resp.f, addNA=TRUE))
+  }
+
+  if(any(is.na(resp))) freq.cat <- freq.cat[, -ncol(freq.cat), drop=FALSE]
   if(!is.null(meta$drm)) {
-    if(length(meta$drm$id) == 1L) {
-      freq.cat_drm <- rbind(freq.cat[meta$drm$loc, 1:2])
-    } else {
-      freq.cat_drm <- freq.cat[meta$drm$loc, 1:2]
-    }
+    freq.cat_drm <- freq.cat[meta$drm$loc, 1:2, drop=FALSE]
   } else {
     freq.cat_drm <- NULL
   }
   if(!is.null(meta$plm)) {
-    if(length(meta$plm$id) == 1L) {
-      freq.cat_plm <- rbind(freq.cat[meta$plm$loc, ])
-    } else {
-      freq.cat_plm <- freq.cat[meta$plm$loc, ]
-    }
+    freq.cat_plm <- freq.cat[meta$plm$loc, , drop=FALSE]
   } else {
     freq.cat_plm <- NULL
   }
@@ -621,11 +561,6 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
     if(!sum(resp, na.rm=TRUE) %in% c(0, total.nc)) {
       startval <- log(sum(resp, na.rm=TRUE) / (total.nc - sum(resp, na.rm=TRUE)))
     }
-    # if(method == "MLE") {
-    #   startval_tmp <- c(seq(from=range[1], to=range[2], length.out=50), startval)
-    #   ll_tmp <- ll_brute(theta=startval_tmp, meta=meta, freq.cat=freq.cat, method="MLE", D=D, norm.prior=norm.prior)
-    #   startval <- startval_tmp[which.min(ll_tmp)]
-    # }
 
     # estimate an abiltiy and SE
     if(method %in% c("MLE", "MLEF")) {
@@ -651,14 +586,13 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
       est.mle <-
         suppressWarnings(tryCatch({stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
                                                  norm.prior=norm.prior, logL=TRUE,
-                                                 FUN.grad=FUN.grad, FUN.hess=FUN.hess,
                                                  gradient=grad_score, hessian=hess_score,
                                                  lower=range[1], upper=range[2])}, error = function(e) {NULL}))
+
       # when the estimation returns an error message
       if(is.null(est.mle)) {
         est.mle <- stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
                                  norm.prior=norm.prior, logL=TRUE,
-                                 FUN.grad=FUN.grad, FUN.hess=FUN.hess,
                                  lower=range[1], upper=range[2])
       }
       if(est.mle$convergence == 0L) {
@@ -676,13 +610,11 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
           se.theta <- 99.9999
         } else {
           hess <- hess_score(theta=est.theta, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
-                             norm.prior=norm.prior, logL=TRUE,
-                             FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+                             norm.prior=norm.prior, logL=TRUE)
           # to prevent the case when the hessian has a negative value
           if(hess < 0L) {
             hess <- stats::optimHess(par=est.theta, fn=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
-                                     norm.prior=norm.prior, logL=TRUE,
-                                     FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+                                     norm.prior=norm.prior, logL=TRUE)
           }
           se.theta <- as.numeric(sqrt(1 / hess))
         }
@@ -694,14 +626,12 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
       est.map <-
         suppressWarnings(tryCatch({stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
                                                  norm.prior=norm.prior, logL=TRUE,
-                                                 FUN.grad=FUN.grad, FUN.hess=FUN.hess,
                                                  gradient=grad_score, hessian=hess_score,
                                                  lower=range[1], upper=range[2])}, error = function(e) {NULL}))
       # when the estimation returns an error message
       if(is.null(est.map)) {
         est.map <- stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
                                  norm.prior=norm.prior, logL=TRUE,
-                                 FUN.grad=FUN.grad, FUN.hess=FUN.hess,
                                  lower=range[1], upper=range[2])
       }
       if(est.map$convergence == 0L) {
@@ -716,13 +646,11 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
 
       if(se) {
         hess <- hess_score(theta=est.theta, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
-                           norm.prior=norm.prior, logL=TRUE,
-                           FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+                           norm.prior=norm.prior, logL=TRUE)
         # to prevent the case when the hessian has a negative value
         if(hess < 0L) {
           hess <- stats::optimHess(par=est.theta, fn=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
-                                   norm.prior=norm.prior, logL=TRUE,
-                                   FUN.grad=FUN.grad, FUN.hess=FUN.hess)
+                                   norm.prior=norm.prior, logL=TRUE)
         }
         se.theta <- as.numeric(sqrt(1 / hess))
       } else {
@@ -743,8 +671,7 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
     }
 
     # estimating posterior dist
-    posterior <- purrr::map2_dbl(.x=popdist[, 1], .y=popdist[, 2],
-                                 .f=function(k, y) loglike_score(theta=k, meta=meta, freq.cat=freq.cat, D=D, logL=FALSE) * y)
+    posterior <- loglike_score(theta=popdist[, 1], meta=meta, freq.cat=freq.cat, D=D, logL=FALSE) * popdist[, 2]
 
     # Expected A Posterior
     posterior <- posterior / sum(posterior)

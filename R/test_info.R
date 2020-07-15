@@ -104,11 +104,22 @@
 test.info <- function(x, ...) UseMethod("test.info")
 
 #' @describeIn test.info Default method to compute item and test information functions for a data.frame \code{x} containing the item meta data.
-#' @import purrr
-#' @import dplyr
 #' @export
 test.info.default <- function(x, theta, D=1, ...) {
 
+  # give column names
+  x <- data.frame(x)
+  colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
+
+  # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
+  if(ncol(x[, -c(1, 2, 3)]) == 2) {
+    x <- data.frame(x, par.3=NA)
+  }
+
+  # clear the item meta data set
+  x <- back2df(metalist2(x))
+
+  # extract information
   any.dc <- any(x[, 2] == 2)
   any.py <- any(x[, 2] > 2)
   id <- x[, 1]
@@ -116,26 +127,26 @@ test.info.default <- function(x, theta, D=1, ...) {
 
   # if there are dichotomous items
   if(any.dc) {
-    drmlist <- list(a=meta$drm$a, b=meta$drm$b, g=meta$drm$g)
 
     # item information matrix
-    infomat_dc <-
-      purrr::pmap_dfc(.l=drmlist, .f=function(a, b, g) info.dich(theta=theta, a=a, b=b, g=g, D=D)) %>%
-      data.matrix() %>%
-      t()
+    infomat_dc <- info.dich(theta=theta, a=meta$drm$a, b=meta$drm$b, g=meta$drm$g, D=D)
+
   } else {
     infomat_dc <- NULL
   }
 
   # if there are polytomous items
   if(any.py) {
-    plmlist <- list(aa=meta$plm$a, d=meta$plm$d, pmodel=meta$plm$model, cats=meta$plm$cats)
+
+    # check the number of polytomous items
+    n.plm <- length(meta$plm$a)
 
     # item information matrix
-    infomat_py <-
-      purrr::pmap_dfc(.l=plmlist, .f=function(aa, d, pmodel, cats) info.poly(theta=theta, a=aa, d=d, D=D, pmodel=pmodel, cats=cats)) %>%
-      data.matrix() %>%
-      t()
+    infomat_py <- array(0, c(n.plm, length(theta)))
+    for(i in 1:n.plm) {
+      infomat_py[i, ] <- info.poly(theta=theta, a=meta$plm$a[i], d=meta$plm$d[[i]], D=D, pmodel=meta$plm$model[i])
+    }
+
   } else {
     infomat_py <- NULL
   }
@@ -163,69 +174,8 @@ test.info.default <- function(x, theta, D=1, ...) {
 
 }
 
-# item information function for dichotomous data
-info.dich <- function(theta, a, b, g, D=1) {
-
-  z <- D * a * (theta - b)
-  numer <- D^2 * a^2 * (1 - g)
-  denom <- (g + exp(z)) * (1 + exp(-z))^2
-  info <- numer / denom
-  info
-
-}
-
-# item information function for polytomous data
-info.poly <- function(theta, a, d, D=1, pmodel, cats) {
-
-  pmodel <- toupper(pmodel)
-  if(!pmodel %in% c("GRM", "GPCM")) stop("'pmodel' must be either 'GRM' or 'GPCM'.", call.=FALSE)
-
-  # a vector of item parameters
-  item_par <- as.numeric(c(a, d))
-
-  # create the gradient and hessian equations for score category probability
-  funList <- equation_scocat(model=pmodel, cats=cats, fix.a.gpcm=FALSE, hessian=TRUE, type="ability")
-
-  # create a list containing the arguments to be used in the equation function
-  args.pars <- list()
-  for(i in 1:cats) {
-    args.pars[[i]] <- item_par[i]
-  }
-  args.list <- args.pars
-  args.list$theta <- theta
-  args.list$D <- D
-
-  # create an empty matrix to stack each score category information
-  ip <- matrix(0, nrow=length(theta), ncol=cats)
-
-  # compute the score category information
-  for(i in 1:cats) {
-    # select a function for each score category
-    fun.tmp <- funList[[i]]
-
-    # implement the fuction for each score category
-    tmp <- do.call("fun.tmp", args.list, envir=environment())
-
-    # compute the amount of information for each score category
-    ps <- tmp
-    ps.d1 <- attributes(tmp)$gradient[, 1]
-    ps.d2 <- attributes(tmp)$hessian[, , 1]
-
-    # stack the score category information
-    ip[, i] <- ((ps.d1)^2 / ps) - ps.d2
-  }
-
-  # sum of all score category information
-  info <- rowSums(ip)
-
-  info
-
-}
-
 
 #' @describeIn test.info An object created by the function \code{\link{est_item}}.
-#' @import purrr
-#' @import dplyr
 #' @export
 test.info.est_item <- function(x, theta, ...) {
 
@@ -240,26 +190,26 @@ test.info.est_item <- function(x, theta, ...) {
 
   # if there are dichotomous items
   if(any.dc) {
-    drmlist <- list(a=meta$drm$a, b=meta$drm$b, g=meta$drm$g)
 
     # item information matrix
-    infomat_dc <-
-      purrr::pmap_dfc(.l=drmlist, .f=function(a, b, g) info.dich(theta=theta, a=a, b=b, g=g, D=D)) %>%
-      data.matrix() %>%
-      t()
+    infomat_dc <- info.dich(theta=theta, a=meta$drm$a, b=meta$drm$b, g=meta$drm$g, D=D)
+
   } else {
     infomat_dc <- NULL
   }
 
   # if there are polytomous items
   if(any.py) {
-    plmlist <- list(aa=meta$plm$a, d=meta$plm$d, pmodel=meta$plm$model, cats=meta$plm$cats)
+
+    # check the number of polytomous items
+    n.plm <- length(meta$plm$a)
 
     # item information matrix
-    infomat_py <-
-      purrr::pmap_dfc(.l=plmlist, .f=function(aa, d, pmodel, cats) info.poly(theta=theta, a=aa, d=d, D=D, pmodel=pmodel, cats=cats)) %>%
-      data.matrix() %>%
-      t()
+    infomat_py <- array(0, c(n.plm, length(theta)))
+    for(i in 1:n.plm) {
+      infomat_py[i, ] <- info.poly(theta=theta, a=meta$plm$a[i], d=meta$plm$d[[i]], D=D, pmodel=meta$plm$model[i])
+    }
+
   } else {
     infomat_py <- NULL
   }
@@ -288,8 +238,6 @@ test.info.est_item <- function(x, theta, ...) {
 }
 
 #' @describeIn test.info An object created by the function \code{\link{est_irt}}.
-#' @import purrr
-#' @import dplyr
 #' @export
 test.info.est_irt <- function(x, theta, ...) {
 
@@ -304,26 +252,26 @@ test.info.est_irt <- function(x, theta, ...) {
 
   # if there are dichotomous items
   if(any.dc) {
-    drmlist <- list(a=meta$drm$a, b=meta$drm$b, g=meta$drm$g)
 
     # item information matrix
-    infomat_dc <-
-      purrr::pmap_dfc(.l=drmlist, .f=function(a, b, g) info.dich(theta=theta, a=a, b=b, g=g, D=D)) %>%
-      data.matrix() %>%
-      t()
+    infomat_dc <- info.dich(theta=theta, a=meta$drm$a, b=meta$drm$b, g=meta$drm$g, D=D)
+
   } else {
     infomat_dc <- NULL
   }
 
   # if there are polytomous items
   if(any.py) {
-    plmlist <- list(aa=meta$plm$a, d=meta$plm$d, pmodel=meta$plm$model, cats=meta$plm$cats)
+
+    # check the number of polytomous items
+    n.plm <- length(meta$plm$a)
 
     # item information matrix
-    infomat_py <-
-      purrr::pmap_dfc(.l=plmlist, .f=function(aa, d, pmodel, cats) info.poly(theta=theta, a=aa, d=d, D=D, pmodel=pmodel, cats=cats)) %>%
-      data.matrix() %>%
-      t()
+    infomat_py <- array(0, c(n.plm, length(theta)))
+    for(i in 1:n.plm) {
+      infomat_py[i, ] <- info.poly(theta=theta, a=meta$plm$a[i], d=meta$plm$d[[i]], D=D, pmodel=meta$plm$model[i])
+    }
+
   } else {
     infomat_py <- NULL
   }
@@ -352,3 +300,111 @@ test.info.est_irt <- function(x, theta, ...) {
 }
 
 
+# item information function for dichotomous data
+info.dich <- function(theta, a, b, g, D=1) {
+
+
+  # check the numbers of examinees and items
+  nstd <- length(theta)
+  nitem <- length(a)
+
+  # when both the numbers of examiness and items are greater than 1
+  a <- matrix(a, nrow=nstd, ncol=nitem, byrow=TRUE)
+  b <- matrix(b, nrow=nstd, ncol=nitem, byrow=TRUE)
+  g <- matrix(g, nrow=nstd, ncol=nitem, byrow=TRUE)
+
+  # calculate item information
+  z <- D * a * (theta - b)
+  numer <- D^2 * a^2 * (1 - g)
+  denom <- (g + exp(z)) * (1 + exp(-z))^2
+  info <- numer / denom
+
+  # return
+  t(info)
+
+}
+
+
+# item information function for polytomous data
+info.poly <- function(theta, a, d, D=1, pmodel) {
+
+  pmodel <- toupper(pmodel)
+  if(!pmodel %in% c("GRM", "GPCM")) stop("'pmodel' must be either 'GRM' or 'GPCM'.", call.=FALSE)
+
+  if(pmodel == "GRM") {
+
+    # check the number of step parameters
+    m <- length(d)
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # calculate all the probabilities greater than equal to each threshold
+    allPst <- drm(theta=theta, a=rep(a, m), b=d, g=0, D=D)
+    if(nstd == 1L) {
+      allPst <- matrix(allPst, nrow=1)
+    }
+    allQst <- 1 - allPst[, ,drop=FALSE]
+
+    # calculate category probabilities
+    P <- cbind(1, allPst) - cbind(allPst, 0)
+    P <- ifelse(P == 0L, 1e-20, P)
+
+    # compute the component values to obtain information
+    Da <- D * a
+    pq_st <- allPst * allQst
+    deriv_Pstth <- Da * pq_st
+    deriv_Pth <- cbind(0, deriv_Pstth) - cbind(deriv_Pstth, 0)
+    w1 <- (1 - 2 * allPst) * deriv_Pstth
+    deriv2_Pth <- Da * (cbind(0, w1) - cbind(w1, 0))
+
+    # compute the informaton for all score categories
+    ip <- (deriv_Pth^2 / P) - deriv2_Pth
+
+  }
+
+  if(pmodel == "GPCM") {
+
+    # include zero for the step parameter of the first category
+    d <- c(0, d)
+
+    # check the number of step parameters
+    m <- length(d) - 1
+
+    # check the numbers of examinees and items
+    nstd <- length(theta)
+
+    # create a matrix for step parameters
+    dmat <- matrix(d, nrow=nstd, ncol=(m+1), byrow=TRUE)
+
+    # calculate category probabilities
+    Da <- D * a
+    z <- Da * (theta - dmat)
+    numer <- exp(t(apply(z, 1, cumsum))) # numerator
+    denom <- rowSums(numer) # denominator
+    P <- numer / denom
+    P <- ifelse(P == 0L, 1e-20, P)
+
+    # compute the component values to obtain information
+    denom2 <- denom^2
+    d1th_z <- matrix(Da * (1:(m+1)), nrow=nstd, ncol=(m+1), byrow=TRUE)
+    d1th_denom <- rowSums(numer * d1th_z)
+    deriv_Pth <- (numer / denom2) * (d1th_z * denom - d1th_denom)
+    denom4 <- denom2^2
+    d2th_denom <- rowSums(numer * d1th_z^2)
+    d1th_z_den <- d1th_z * denom
+    part1 <- d1th_z_den * denom * (d1th_z_den - d1th_denom)
+    part2 <- denom2 * (d1th_z * d1th_denom + d2th_denom) - 2 * denom * d1th_denom^2
+    deriv2_Pth <- (numer / denom4) * (part1 - part2)
+
+    # compute the informaton for all score categories
+    ip <- (deriv_Pth^2 / P) - deriv2_Pth
+
+  }
+
+  # sum of all score category information
+  info <- rowSums(ip)
+
+  info
+
+}

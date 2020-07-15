@@ -1,6 +1,31 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+# irtplay\_1.6.0 (2020-07-14)
+
+The package has been updated significantly in this verstion. In this
+version, I have:
+
+o Updated ‘est\_score’ function to estimate ability parameters much
+faster than the previous version of the function.
+
+o Updated ‘est\_irt’ and ‘est\_item’ functions to estimate item
+parameters much faster than the previous version of the functions.
+
+o Updated ‘test.info’ function to compute items infomation and test
+information much faster than the previous version of the function.
+
+o Added an option to use a prior distribution of the item difficulty (or
+threshold) parameters in ‘est\_irt’, ‘est\_item’, and ‘llike\_item’
+functions.
+
+o Solved unstable item parameter estimation of ‘est\_irt’ and
+‘est\_item’ functions which occured when the scaling factor of ‘D’
+is other than 1.0 and ‘use.aprior = TRUE’.
+
+o Fixed an error which occured in the function ‘est\_irt’ when the data
+set contains missing values and ‘fix.a.1pl = FALSE’.
+
 # irtplay\_1.5.1 (2020-06-16)
 
 o Included ‘summary’ method to summarize the IRT calibration results

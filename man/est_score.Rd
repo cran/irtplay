@@ -118,7 +118,8 @@ to the sum of item guessing parameters. When linear interpolation method is used
 (x=\eqn{\theta_{X}}, y=X). Because \code{constraint = TRUE}, \eqn{\theta_{min}} is the first value in the argument \code{range.tcc}.
 When linear extrapolation method is used, a linear line is constructed using two points of (x=\eqn{\theta_{X}}, y=X) and
 (x=\eqn{\theta_{max}}, y=maximum raw score). Then, ability estimates for the raw sum scores between zero and the smallest raw score greater than or equal
-to the sum of item guessing parameters are found using the constructed linear line.
+to the sum of item guessing parameters are found using the constructed linear line. When it comes to the scoring method of "INV.TCC", the standard errors of ability
+estimates are computed using an approach suggested by Lim, Davey, and Wells (2020).
 
 To speed up the ability estimation for MLE, MLEF, MAP, and EAP methods, this function applies a parallel process using multiple logical CPU cores.
 You can set the number of logical CPU cores by specifying a positive integer value in the argument \code{ncore}. Default value is 1.
@@ -159,6 +160,9 @@ est_score(x, data, D=1, method="MLEF", fence.a=3.0, fence.b=c(-5, 5), se=TRUE, n
 # estimate the abilities using MAP
 est_score(x, data, D=1, method="MAP", norm.prior=c(0, 1), nquad=30, se=TRUE, ncore=2)
 
+# estimate the abilities using EAP
+est_score(x, data, D=1, method="EAP", norm.prior=c(0, 1), nquad=30, se=TRUE, ncore=2)
+
 # estimate the abilities using EAP summed scoring
 est_score(x, data, D=1, method="EAP.SUM", norm.prior=c(0, 1), nquad=30)
 
@@ -181,6 +185,9 @@ Springer
 
 Kolen, M. J. & Tong, Y. (2010). Psychometric properties of IRT proficiency estimates.
 \emph{Educational Measurement: Issues and Practice, 29}(3), 8-14.
+
+Lim, H., Davey, T., & Wells, C. S. (2020). A recursion-based analytical approach to evaluate the performance of MST.
+\emph{Journal of Educational Measurement}. DOI: 10.1111/jedm.12276.
 
 Stocking, M. L. (1996). An alternative method for scoring adaptive tests.
 \emph{Journal of Educational and Behavioral Statistics, 21}(4), 365-389.

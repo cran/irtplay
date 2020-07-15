@@ -90,6 +90,18 @@ sx2_fit.default <- function(x, data, D=1, alpha=0.05, min.collapse=1, norm.prior
   # check missing data
   if(any(is.na(data))) stop("There should be no missing data in the data set.", call.=FALSE)
 
+  # give column names
+  x <- data.frame(x)
+  colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
+
+  # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
+  if(ncol(x[, -c(1, 2, 3)]) == 2) {
+    x <- data.frame(x, par.3=NA)
+  }
+
+  # clear the item meta data set
+  x <- back2df(metalist2(x))
+
   # consider DRM as 3PLM
   x[, 3] <- as.character(x[, 3])
   # consider DRM as 3PLM

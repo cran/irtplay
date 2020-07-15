@@ -63,6 +63,7 @@ summary.est_item <- function(object, ...) {
   nitem <- object$nitem
   deleted.item <- object$deleted.item
   nitem.del <- length(deleted.item)
+  npar.est <- object$npar.est
   n.response <- object$n.response
   TotalTime <- object$TotalTime
   convergence <- object$convergence
@@ -70,7 +71,7 @@ summary.est_item <- function(object, ...) {
   estimates <- object$estimates
   group.par <- object$group.par
 
-  out <- list(call.expr=call.expr, nitem=nitem, deleted.item=deleted.item, nitem.del=nitem.del,
+  out <- list(call.expr=call.expr, nitem=nitem, deleted.item=deleted.item, nitem.del=nitem.del, npar.est=npar.est,
               n.response=n.response, TotalTime=TotalTime, convergence=convergence, loglikelihood=loglikelihood,
               estimates=estimates, group.par=group.par)
   class(out) <- "summary.est_item"

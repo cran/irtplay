@@ -1,20 +1,19 @@
-# This function computes the information matrix and SEs of the complete data of an item obtained from M step of EM algorithm (M step informaton matrix and SEs)
+# This function computes the information matrix and SEs of the complete data of an item obtained from M step of EM algorithm (M step information matrix and SEs)
 info_mstep <- function(item_par, f_i, r_i, quadpt, model=c("1PLM", "2PLM", "3PLM", "GRM", "GPCM"), D=1,
-                       fix.a.1pl=TRUE, fix.a.gpcm=FALSE, fix.g=FALSE, a.val.1pl=1, a.val.gpcm=1, g.val=.2, n.1PLM=NULL,
-                       FUN.gh) {
+                       fix.a.1pl=TRUE, fix.a.gpcm=FALSE, fix.g=FALSE, a.val.1pl=1, a.val.gpcm=1, g.val=.2, n.1PLM=NULL) {
 
   if(model %in% c("1PLM", "2PLM", "3PLM")) {
 
     # (1) compute the negative hessian matrix of log likelihood for a dichotomous model
-    hess <- hess_item_drm2(item_par=item_par, f_i=f_i, r_i=r_i, theta=quadpt, model=model, D=D,
-                           fix.a=fix.a.1pl, fix.g=fix.g, a.val=a.val.1pl, g.val=g.val, n.1PLM=n.1PLM,
-                           use.aprior=FALSE, use.gprior=FALSE, FUN.hess=FUN.gh)
+    hess <- hess_item_drm(item_par=item_par, f_i=f_i, r_i=r_i, theta=quadpt, model=model, D=D,
+                          fix.a=fix.a.1pl, fix.g=fix.g, a.val=a.val.1pl, g.val=g.val, n.1PLM=n.1PLM,
+                          use.aprior=FALSE, use.bprior=FALSE, use.gprior=FALSE)
 
   } else {
 
     # (2) compute the negative hessian matrix of log likelihood for a polytomous model
-    hess <- hess_item_plm2(item_par=item_par, r_i=r_i, theta=quadpt, pmodel=model, D=D,
-                           fix.a=fix.a.gpcm, a.val=a.val.gpcm, use.aprior=FALSE, FUN.hess=FUN.gh)
+    hess <- hess_item_plm(item_par=item_par, r_i=r_i, theta=quadpt, pmodel=model, D=D,
+                          fix.a=fix.a.gpcm, a.val=a.val.gpcm, use.aprior=FALSE, use.bprior=FALSE)
 
   }
 
@@ -44,8 +43,9 @@ info_mstep <- function(item_par, f_i, r_i, quadpt, model=c("1PLM", "2PLM", "3PLM
 
 }
 
+
 # This function computes the information matrix of the item parameter estimates using the cross-product method
-info_xpd <- function(meta, freq.cat, post_dist, cats, model, quadpt, equation, D=1, loc_1p_const, loc_else, nstd,
+info_xpd <- function(meta, freq.cat, post_dist, cats, model, quadpt, D=1, loc_1p_const, loc_else, nstd,
                      fix.a.1pl, fix.a.gpcm, fix.g, a.val.1pl, a.val.gpcm, g.val, reloc.par) {
 
   # a create empty matrix to contain the kernel of fishre identify equation
@@ -65,9 +65,15 @@ info_xpd <- function(meta, freq.cat, post_dist, cats, model, quadpt, equation, D
       n.1PLM <- length(loc_1p_const)
 
       # prepare input files to estimate the 1PLM item parameters
-      theta_val <- purrr::map(.x=1:n.1PLM, .f=function(x) rep(quadpt[r], nstd))
-      f_i <- purrr::map(.x=freq.cat[loc_1p_const], .f=function(k) rowSums(k))
-      r_i <- purrr::map(.x=freq.cat[loc_1p_const], .f=function(k) k[, 2])
+      # theta_val <- purrr::map(.x=1:n.1PLM, .f=function(x) rep(quadpt[r], nstd))
+      # f_i <- purrr::map(.x=freq.cat[loc_1p_const], .f=function(k) rowSums(k))
+      # r_i <- purrr::map(.x=freq.cat[loc_1p_const], .f=function(k) k[, 2])
+      theta_val <- rep(quadpt[r], nstd)
+      f_i <- r_i <- array(0, c(nstd, n.1PLM))
+      for(k in 1:n.1PLM) {
+        f_i[, k] <- rowSums(freq.cat[loc_1p_const][[k]])
+        r_i[, k] <- freq.cat[loc_1p_const][[k]][, 2]
+      }
 
       # use the final item parameter estimates
       pos_1p_const <- which(meta$drm$loc %in% loc_1p_const)
@@ -75,14 +81,10 @@ info_xpd <- function(meta, freq.cat, post_dist, cats, model, quadpt, equation, D
       b.val <- meta$drm$b[pos_1p_const]
       item_par <- c(a.val, b.val)
 
-      # extract the equations
-      FUN.gh <- equation[[loc_1p_const[1]]]
-
       # compute the gradient vectors
       grad <-
-        grad_llike(item_par=item_par, f_i=f_i, r_i=r_i, quadpt=theta_val, model="1PLM", D=D,
-                   fix.a.1pl=fix.a.1pl, n.1PLM=n.1PLM, use.aprior=FALSE, FUN.grad=FUN.gh) %>%
-        unname()
+        unname(grad_llike(item_par=item_par, f_i=f_i, r_i=r_i, quadpt=theta_val, model="1PLM", D=D,
+                          fix.a.1pl=fix.a.1pl, n.1PLM=n.1PLM))
 
       # cbind the gradient matrix
       grad_mat <- cbind(grad_mat, grad)
@@ -99,9 +101,7 @@ info_xpd <- function(meta, freq.cat, post_dist, cats, model, quadpt, equation, D
 
         # in case of a dichotomous item
         if(score.cat == 2) {
-          f_i <-
-            freq.cat[loc_else][[i]] %>%
-            rowSums()
+          f_i <- rowSums(freq.cat[loc_else][[i]])
           r_i <- freq.cat[loc_else][[i]][, 2]
 
           # use the final item parameter estimates
@@ -123,16 +123,12 @@ info_xpd <- function(meta, freq.cat, post_dist, cats, model, quadpt, equation, D
             }
           }
 
-          # extract the equations
-          FUN.gh <- equation[[loc_else[i]]]
-
           # compute the gradient vectors
           theta_val <- rep(quadpt[r], nstd)
           grad <-
-            grad_llike(item_par=item_par, f_i=f_i, r_i=r_i, quadpt=theta_val, model=mod, D=D,
-                       fix.a.1pl=ifelse(mod == "1PLM", TRUE, FALSE), fix.g=fix.g, a.val.1pl=a.val.1pl,
-                       g.val=.2, n.1PLM=NULL, use.aprior=FALSE, use.gprior=FALSE, FUN.grad=FUN.gh) %>%
-            unname()
+            unname(grad_llike(item_par=item_par, f_i=f_i, r_i=r_i, quadpt=theta_val, model=mod, D=D,
+                              fix.a.1pl=ifelse(mod == "1PLM", TRUE, FALSE), fix.g=fix.g, a.val.1pl=a.val.1pl,
+                              g.val=.2, n.1PLM=NULL))
 
           # cbind the gradient matrix
           grad_mat <- cbind(grad_mat, grad)
@@ -158,16 +154,12 @@ info_xpd <- function(meta, freq.cat, post_dist, cats, model, quadpt, equation, D
             }
           }
 
-          # extract the equations
-          FUN.gh <- equation[[loc_else[i]]]
-
           # compute the gradient vectors
           theta_val <- rep(quadpt[r], nstd)
           grad <-
-            grad_llike(item_par=item_par, f_i=f_i, r_i=r_i, quadpt=theta_val, model=mod, D=1,
-                       fix.a.gpcm=ifelse(mod == "GPCM", fix.a.gpcm, FALSE), a.val.gpcm=a.val.gpcm,
-                       n.1PLM=NULL, use.aprior=FALSE, FUN.grad=FUN.gh) %>%
-            unname()
+            unname(grad_llike(item_par=item_par, f_i=f_i, r_i=r_i, quadpt=theta_val, model=mod, D=1,
+                              fix.a.gpcm=ifelse(mod == "GPCM", fix.a.gpcm, FALSE), a.val.gpcm=a.val.gpcm,
+                              n.1PLM=NULL))
 
           # cbind the gradient matrix
           grad_mat <- cbind(grad_mat, grad)
@@ -195,12 +187,11 @@ info_xpd <- function(meta, freq.cat, post_dist, cats, model, quadpt, equation, D
 
 }
 
-
 # This function computes the information matrix of priors using the second derivatives of item parameter estimates
 #' @importFrom Matrix bdiag
-info_prior <- function(meta, cats, model, equation, D=1, loc_1p_const, loc_else, nstd,
-                       fix.a.1pl, fix.a.gpcm, fix.g, a.val.1pl, a.val.gpcm, g.val, aprior, gprior,
-                       use.aprior, use.gprior, reloc.par) {
+info_prior <- function(meta, cats, model, D=1, loc_1p_const, loc_else, nstd,
+                       fix.a.1pl, fix.a.gpcm, fix.g, a.val.1pl, a.val.gpcm, g.val,
+                       aprior, bprior, gprior, use.aprior, use.bprior, use.gprior, reloc.par) {
 
   # a create a vector containing the gradient values of priors
   # a create empty matrix to contain the gradient
@@ -215,12 +206,9 @@ info_prior <- function(meta, cats, model, equation, D=1, loc_1p_const, loc_else,
     b.val <- meta$drm$b[pos_1p_const]
     item_par <- c(a.val, b.val)
 
-    # extract the equations
-    FUN.gh <- equation[[loc_1p_const[1]]]
-
     # compute the hessian matrix
-    hess <- hess_prior(item_par=item_par, model="1PLM", D=D, fix.a.1pl=fix.a.1pl, aprior=aprior,
-                       use.aprior=use.aprior, FUN.hess=FUN.gh)
+    hess <- hess_prior(item_par=item_par, model="1PLM", D=D, fix.a.1pl=fix.a.1pl,
+                       aprior=aprior, bprior=bprior, use.aprior=use.aprior, use.bprior=use.bprior)
     hess_list <- c(hess_list, list(hess))
   }
 
@@ -254,13 +242,10 @@ info_prior <- function(meta, cats, model, equation, D=1, loc_1p_const, loc_else,
           }
         }
 
-        # extract the equations
-        FUN.gh <- equation[[loc_else[i]]]
-
         # compute the gradient vectors
         hess <- hess_prior(item_par=item_par, model=mod, D=D, fix.a.1pl=ifelse(mod == "1PLM", TRUE, FALSE),
-                           fix.g=fix.g, aprior=aprior, gprior=gprior, use.aprior=use.aprior, use.gprior=use.gprior,
-                           FUN.hess=FUN.gh)
+                           fix.g=fix.g, aprior=aprior, bprior=bprior, gprior=gprior,
+                           use.aprior=use.aprior, use.bprior=use.bprior, use.gprior=use.gprior)
         hess_list <- c(hess_list, list(hess))
 
       }
@@ -283,12 +268,9 @@ info_prior <- function(meta, cats, model, equation, D=1, loc_1p_const, loc_else,
           }
         }
 
-        # extract the equations
-        FUN.gh <- equation[[loc_else[i]]]
-
         # compute the gradient vectors
         hess <- hess_prior(item_par=item_par, model=mod, D=D, fix.a.gpcm=ifelse(mod == "GPCM", fix.a.gpcm, FALSE),
-                           aprior=aprior, use.aprior=use.aprior, FUN.hess=FUN.gh)
+                           aprior=aprior, bprior=bprior, use.aprior=use.aprior, use.bprior=use.bprior)
         hess_list <- c(hess_list, list(hess))
       }
     }
@@ -304,3 +286,5 @@ info_prior <- function(meta, cats, model, equation, D=1, loc_1p_const, loc_else,
   info_mat
 
 }
+
+

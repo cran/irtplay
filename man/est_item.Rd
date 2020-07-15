@@ -7,9 +7,11 @@
 est_item(x = NULL, data, score, D = 1, model = NULL, cats = NULL,
   fix.a.1pl = FALSE, fix.a.gpcm = FALSE, fix.g = FALSE,
   a.val.1pl = 1, a.val.gpcm = 1, g.val = 0.2, use.aprior = FALSE,
-  use.gprior = TRUE, aprior = list(dist = "lnorm", params = c(0, 0.5)),
-  gprior = list(dist = "beta", params = c(5, 17)), missing = NA,
-  use.startval = FALSE, control = list(eval.max = 500, iter.max = 500))
+  use.bprior = FALSE, use.gprior = TRUE, aprior = list(dist =
+  "lnorm", params = c(0, 0.5)), bprior = list(dist = "norm", params =
+  c(0, 1)), gprior = list(dist = "beta", params = c(5, 17)),
+  missing = NA, use.startval = FALSE, control = list(eval.max = 500,
+  iter.max = 500))
 }
 \arguments{
 \item{x}{A data.frame containing the item meta data. This meta data is necessary to obtain the information of
@@ -58,10 +60,21 @@ is estimated. Default is FALSE.}
 \item{use.aprior}{A logical value. If TRUE, a prior distribution for the slope parameters is used for the parameter calibration
 across all items. Default is FALSE.}
 
+\item{use.bprior}{A logical value. If TRUE, a prior distribution for the difficulty (or threshold) parameters is used for the parameter calibration
+across all items. Default is FALSE.}
+
 \item{use.gprior}{A logical value. If TRUE, a prior distribution for the guessing parameters is used for the parameter calibration
 across all 3PLM items. Default is TRUE.}
 
 \item{aprior}{A list containing the information of the prior distribution for item slope parameters. Three probability distributions
+of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
+in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
+second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
+distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
+in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()},
+and \code{dnorm()} in the \pkg{stats} package for more details.}
+
+\item{bprior}{A list containing the information of the prior distribution for item difficulty (or threshold) parameters. Three probability distributions
 of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
 in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
@@ -98,6 +111,7 @@ observed information functions.}
 \item{convergence}{A string indicating the convergence status of the item parameter estimation.}
 \item{nitem}{A total number of items included in the response data.}
 \item{deleted.item}{The items which have no item response data. Those items are excluded from the item parameter estimation.}
+\item{npar.est}{A total number of the estimated item parameters.}
 \item{n.response}{An integer vector indicating the number of item responses for each item used to estimate the item parameters.}
 \item{TotalTime}{Time (in seconds) spent for total compuatation.}
 

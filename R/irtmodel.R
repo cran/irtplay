@@ -113,20 +113,17 @@ gpcm <- function (theta, a, d, D = 1) {
   # check the numbers of examinees and items
   nstd <- length(theta)
 
-  # replicate a parameters
-  a <- rep(a, nstd)
-
   # create a matrix for step parameters
   d <- matrix(d, nrow=nstd, ncol=length(d), byrow=TRUE)
 
   # calculate category probabilities
   z <- D * a * (theta - d)
   numer <- exp(t(apply(z, 1, cumsum))) # numerator
-  denom <- rowSums(exp(t(apply(z, 1, cumsum)))) # denominator
+  denom <- rowSums(numer) # denominator
   P <- numer / denom
-
   if(nstd == 1) P <- as.numeric(P)
 
+  # return
   P
 
 }
@@ -138,27 +135,21 @@ grm <- function(theta, a, d, D = 1) {
   # check the number of step parameters
   m <- length(d)
 
-  # check the numbers of examinees and items
+  # check the numbers of examinees
   nstd <- length(theta)
 
   # calculate all the probabilities greater than equal to each threshold
-  allP <- purrr::map_dfc(d, drm, theta=theta, a=a, g=0, D=D)
-
-  # all possible scores
-  allScores <- seq(0, m)
-
-  # calculate category probabilities
-  p1 <- 1 - allP[, 1]
-  p2 <- allP[, 1:(max(allScores)-1)] - allP[, (1:(max(allScores)-1))+1]
-  p3 <- allP[, max(allScores)]
-  P <- as.matrix(cbind(p1, p2, p3))
-
-  if(nstd == 1) {
-    P <- as.numeric(P)
-  } else {
-    P <- unname(P)
+  # allP <- purrr::map_dfc(d, drm, theta=1, a=a, g=0, D=D)
+  allP <- drm(theta=theta, a=rep(a, m), b=d, g=0, D=D)
+  if(nstd == 1L) {
+    allP <- matrix(allP, nrow=1)
   }
 
+  # calculate category probabilities
+  P <- cbind(1, allP) - cbind(allP, 0)
+  if(nstd == 1) P <- as.numeric(P)
+
+  # return
   P
 
 }

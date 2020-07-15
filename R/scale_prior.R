@@ -42,17 +42,21 @@ scale_prior <- function(prior_freq, prior_dense, quadpt, scale.par=c(0, 1), Quad
   quad_tmp2 <- quadpt[quadpt > qstar_0 & quadpt < qstar_Q]
   if(length(quad_tmp2) > 0) {
     interval <- c(-Inf, quadpt_star, Inf)
-    group <-
-      cut(x=quad_tmp2, breaks=interval, dig.lab=8, labels=1:(length(interval)-1)) %>%
-      as.numeric()
-    freq_2 <-
-      data.frame(Q_O=quad_tmp2,
-                 Q_S=interval[group],
-                 N_S=prior_freq[group - 1],
-                 N_S2=prior_freq[group]) %>%
-      dplyr::transmute(freq_2=(((.data$Q_O - .data$Q_S) / delta) * (.data$N_S2 - .data$N_S)) + .data$N_S) %>%
-      unlist() %>%
-      unname()
+    group <- as.numeric(cut(x=quad_tmp2, breaks=interval, dig.lab=8, labels=1:(length(interval)-1)))
+    # freq_2 <-
+    #   data.frame(Q_O=quad_tmp2,
+    #              Q_S=interval[group],
+    #              N_S=prior_freq[group - 1],
+    #              N_S2=prior_freq[group]) %>%
+    #   dplyr::transmute(freq_2=(((.data$Q_O - .data$Q_S) / delta) * (.data$N_S2 - .data$N_S)) + .data$N_S) %>%
+    #   unlist() %>%
+    #   unname()
+    Q_O <- quad_tmp2
+    Q_S <- interval[group]
+    N_S <- prior_freq[group - 1]
+    N_S2 <- prior_freq[group]
+    freq_2 <- (((Q_O - Q_S) / delta) * (N_S2 - N_S)) + N_S
+
   } else {
     freq_2 <- NULL
   }

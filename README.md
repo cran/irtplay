@@ -297,11 +297,6 @@ correction (Newcombe,
 ``` r
 
 library(irtplay)
-#> 
-#> Attaching package: 'irtplay'
-#> The following object is masked from 'package:base':
-#> 
-#>     summary
 
 ##----------------------------------------------------------------------------
 # 1. The example code below shows how to prepare the data sets and how to 
@@ -336,7 +331,7 @@ fix.loc <- c(1:5, 53:55)
 #> Estimating item parameters... 
 #>  EM iteration: 1, Loglike: -28912.3526, Max-Change: 3.22265 EM iteration: 2, Loglike: -25094.9221, Max-Change: 0.86707 EM iteration: 3, Loglike: -24854.5695, Max-Change: 0.23789 EM iteration: 4, Loglike: -24847.9987, Max-Change: 0.09966 EM iteration: 5, Loglike: -24846.7185, Max-Change: 0.0740 EM iteration: 6, Loglike: -24846.1673, Max-Change: 0.05455 EM iteration: 7, Loglike: -24845.8645, Max-Change: 0.04023 EM iteration: 8, Loglike: -24845.6791, Max-Change: 0.02986 EM iteration: 9, Loglike: -24845.5582, Max-Change: 0.02239 EM iteration: 10, Loglike: -24845.4763, Max-Change: 0.01698 EM iteration: 11, Loglike: -24845.4193, Max-Change: 0.01302 EM iteration: 12, Loglike: -24845.3793, Max-Change: 0.01048 EM iteration: 13, Loglike: -24845.3513, Max-Change: 0.00898 EM iteration: 14, Loglike: -24845.3319, Max-Change: 0.0083 EM iteration: 15, Loglike: -24845.3191, Max-Change: 0.00759 EM iteration: 16, Loglike: -24845.3112, Max-Change: 0.00689 EM iteration: 17, Loglike: -24845.3072, Max-Change: 0.00623 EM iteration: 18, Loglike: -24845.3061, Max-Change: 0.00562 EM iteration: 19, Loglike: -24845.3075, Max-Change: 0.00506 EM iteration: 20, Loglike: -24845.3108, Max-Change: 0.00455 EM iteration: 21, Loglike: -24845.3156, Max-Change: 0.00409 EM iteration: 22, Loglike: -24845.3217, Max-Change: 0.00369 EM iteration: 23, Loglike: -24845.3288, Max-Change: 0.00332 EM iteration: 24, Loglike: -24845.3367, Max-Change: 0.00299 EM iteration: 25, Loglike: -24845.3453, Max-Change: 0.0027 EM iteration: 26, Loglike: -24845.3544, Max-Change: 0.00244 EM iteration: 27, Loglike: -24845.3641, Max-Change: 0.00221 EM iteration: 28, Loglike: -24845.3740, Max-Change: 0.0020 EM iteration: 29, Loglike: -24845.3843, Max-Change: 0.00181 EM iteration: 30, Loglike: -24845.3948, Max-Change: 0.00164 EM iteration: 31, Loglike: -24845.4055, Max-Change: 0.00149 EM iteration: 32, Loglike: -24845.4163, Max-Change: 0.00135 EM iteration: 33, Loglike: -24845.4273, Max-Change: 0.00123 EM iteration: 34, Loglike: -24845.4383, Max-Change: 0.00111 EM iteration: 35, Loglike: -24845.4493, Max-Change: 0.00101 EM iteration: 36, Loglike: -24845.4604, Max-Change: 0.00092 
 #> Computing item parameter var-covariance matrix... 
-#> Estimation is finished in 14.11 seconds.
+#> Estimation is finished in 6.79 seconds.
 #> 
 #> Call:
 #> est_irt(x = x, data = sim.dat, D = 1, use.gprior = TRUE, gprior = list(dist = "beta", 
@@ -370,12 +365,12 @@ summary(mod.fix1)
 #>  Number of free parameters: 145
 #>  Number of fixed items: 8
 #>  Number of E-step cycles completed: 36
-#>  Maximum parameter change: 0.0009203781
+#>  Maximum parameter change: 0.0009203804
 #> 
 #> Processing time (in seconds) 
-#>  EM algorithm: 11.37
-#>  Standard error computation: 2.25
-#>  Total computation: 14.11
+#>  EM algorithm: 4.62
+#>  Standard error computation: 1.7
+#>  Total computation: 6.79
 #> 
 #> Convergence and Stability of Solution 
 #>  First-order test: Convergence criteria are satisfied.
@@ -558,7 +553,7 @@ summary(mod.fix1)
 plot(emphist$weight ~ emphist$theta, xlab="Theta", ylab="Density")
 ```
 
-<img src="man/figures/README-example-1.png" width="100%" />
+<img src="man/figures/README-example-1.png" width="70%" height="50%" />
 
 ``` r
 
@@ -623,6 +618,7 @@ summary(mod1)
 #> Summary of the Data 
 #>  Number of Items in Response Data: 55
 #>  Number of Excluded Items: 0
+#>  Number of free parameters: 162
 #>  Number of Responses for Each Item: 
 #>        id    n
 #> 1    CMC1  500
@@ -682,7 +678,7 @@ summary(mod1)
 #> 55   AFR3  500
 #> 
 #> Processing time (in seconds) 
-#>  Total computation: 2.99
+#>  Total computation: 1.36
 #> 
 #> Convergence of Solution 
 #>  All item parameters were successfully converged.
@@ -692,10 +688,10 @@ summary(mod1)
 #>  Item Parameters: 
 #>        id  cats  model  par.1  se.1  par.2  se.2  par.3  se.3  par.4  se.4
 #> 1    CMC1     2   1PLM   1.02  0.06   1.60  0.13     NA    NA     NA    NA
-#> 2    CMC2     2   1PLM   1.02  0.06  -1.06  0.12     NA    NA     NA    NA
-#> 3    CMC3     2   1PLM   1.02  0.06   0.40  0.10     NA    NA     NA    NA
+#> 2    CMC2     2   1PLM   1.02    NA  -1.06  0.12     NA    NA     NA    NA
+#> 3    CMC3     2   1PLM   1.02    NA   0.40  0.10     NA    NA     NA    NA
 #> 4    CMC4     2   2PLM   0.96  0.12  -0.43  0.11     NA    NA     NA    NA
-#> 5    CMC5     2   1PLM   1.02  0.06  -0.25  0.10     NA    NA     NA    NA
+#> 5    CMC5     2   1PLM   1.02    NA  -0.25  0.10     NA    NA     NA    NA
 #> 6    CMC6     2   3PLM   1.88  0.27   0.67  0.09   0.10  0.03     NA    NA
 #> 7    CMC7     2   3PLM   0.88  0.17   1.03  0.23   0.13  0.05     NA    NA
 #> 8    CMC8     2   2PLM   0.92  0.12   0.87  0.13     NA    NA     NA    NA
@@ -834,6 +830,7 @@ summary(mod2)
 #> Summary of the Data 
 #>  Number of Items in Response Data: 55
 #>  Number of Excluded Items: 0
+#>  Number of free parameters: 161
 #>  Number of Responses for Each Item: 
 #>        id    n
 #> 1    CMC1  500
@@ -893,7 +890,7 @@ summary(mod2)
 #> 55   AFR3  500
 #> 
 #> Processing time (in seconds) 
-#>  Total computation: 2.17
+#>  Total computation: 2.05
 #> 
 #> Convergence of Solution 
 #>  All item parameters were successfully converged.
@@ -1043,6 +1040,7 @@ summary(mod3)
 #> Summary of the Data 
 #>  Number of Items in Response Data: 55
 #>  Number of Excluded Items: 0
+#>  Number of free parameters: 121
 #>  Number of Responses for Each Item: 
 #>        id    n
 #> 1    CMC1  500
@@ -1102,7 +1100,7 @@ summary(mod3)
 #> 55   AFR3  500
 #> 
 #> Processing time (in seconds) 
-#>  Total computation: 1.7
+#>  Total computation: 1.18
 #> 
 #> Convergence of Solution 
 #>  All item parameters were successfully converged.
@@ -1433,7 +1431,7 @@ fit2$contingency.fitstat[[4]]
 plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE)
 ```
 
-<img src="man/figures/README-example-2.png" width="100%" />
+<img src="man/figures/README-example-2.png" width="70%" height="50%" />
 
     #>                               theta   N freq.0 freq.1 obs.prop.0 obs.prop.1
     #> [-0.1218815,0.08512996] -0.02529272   3      3      0  1.0000000  0.0000000
@@ -1499,7 +1497,7 @@ plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE
     # (2) the raw residual plots using the object "fit1"  
     plot(x=fit1, item.loc=1, type = "icc", ci.method = "wald",  ylim.sr.adjust=TRUE)
 
-<img src="man/figures/README-example-3.png" width="100%" />
+<img src="man/figures/README-example-3.png" width="70%" height="50%" />
 
     #>                               theta   N freq.0 freq.1 obs.prop.0 obs.prop.1
     #> [-0.1218815,0.08512996] -0.02529272   3      3      0  1.0000000  0.0000000
@@ -1565,7 +1563,7 @@ plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE
     # (3) the standardized residual plots using the object "fit1"  
     plot(x=fit1, item.loc=113, type = "sr", ci.method = "wald",  ylim.sr.adjust=TRUE)
 
-<img src="man/figures/README-example-4.png" width="100%" />
+<img src="man/figures/README-example-4.png" width="70%" height="50%" />
 
     #>                           theta   N freq.0 freq.1 freq.2 freq.3 obs.prop.0
     #> [0.3564295,0.5199582] 0.3564295   1      1      0      0      0 1.00000000
@@ -1668,7 +1666,7 @@ plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE
     # (1) both raw and standardized residual plots using the object "fit1"  
     plot(x=fit1, item.loc=113, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE)
 
-<img src="man/figures/README-example-5.png" width="100%" />
+<img src="man/figures/README-example-5.png" width="70%" height="50%" />
 
     #>                           theta   N freq.0 freq.1 freq.2 freq.3 obs.prop.0
     #> [0.3564295,0.5199582] 0.3564295   1      1      0      0      0 1.00000000
@@ -1770,7 +1768,7 @@ plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE
     # (2) the raw residual plots using the object "fit1"  
     plot(x=fit1, item.loc=113, type = "icc", ci.method = "wald", layout.col=2, ylim.sr.adjust=TRUE)
 
-<img src="man/figures/README-example-6.png" width="100%" />
+<img src="man/figures/README-example-6.png" width="70%" height="50%" />
 
     #>                           theta   N freq.0 freq.1 freq.2 freq.3 obs.prop.0
     #> [0.3564295,0.5199582] 0.3564295   1      1      0      0      0 1.00000000
@@ -1872,7 +1870,7 @@ plot(x=fit1, item.loc=1, type = "both", ci.method = "wald",  ylim.sr.adjust=TRUE
     # (3) the standardized residual plots using the object "fit1"  
     plot(x=fit1, item.loc=113, type = "sr", ci.method = "wald", layout.col=4, ylim.sr.adjust=TRUE)
 
-<img src="man/figures/README-example-7.png" width="100%" />
+<img src="man/figures/README-example-7.png" width="70%" height="50%" />
 
     #>                           theta   N freq.0 freq.1 freq.2 freq.3 obs.prop.0
     #> [0.3564295,0.5199582] 0.3564295   1      1      0      0      0 1.00000000

@@ -37,8 +37,8 @@ automatically set. See below for details. Default is NULL.}
 \item{missing}{A value indicating missing values in the response data set. Default is NA.}
 }
 \value{
-A data.frame of loglikelihood values. Unlike the item response data in the argument \code{data}, a row and column indicate the ability points where
-the loglikelihood values are computed and examinees.
+A data.frame of loglikelihood values. A row indicates the ability value where the loglikelihood is computed and
+a column represents a response pattern, respectively.
 }
 \description{
 This function computes the loglikelihood of abilities for examinees given the item parameters and response data.

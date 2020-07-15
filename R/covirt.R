@@ -59,6 +59,18 @@
 covirt <- function(x, D=1, nstd=1000, pcm.loc=NULL, norm.prior=c(0, 1), nquad=41, weights=NULL) {
 
 
+  # give column names
+  x <- data.frame(x)
+  colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
+
+  # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
+  if(ncol(x[, -c(1, 2, 3)]) == 2) {
+    x <- data.frame(x, par.3=NA)
+  }
+
+  # clear the item meta data set
+  x <- back2df(metalist2(x))
+
   # consider DRM as 3PLM
   x[, 3] <- as.character(x[, 3])
   # consider DRM as 3PLM

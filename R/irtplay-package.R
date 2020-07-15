@@ -20,8 +20,8 @@
 #' individual items, computing the loglikelihood of abilities, computing item and test information functions, computing item and test
 #' characteristic curve functions, and plotting item and test characteristic curves and item and test information functions.
 #'
-#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.5.1\cr Date: \tab
-#' 2020-06-16\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
+#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.6.0\cr Date: \tab
+#' 2020-07-14\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
 #'
 #' @details
 #' Following five sections describe a) how to implement the online item calibration using FIPC, a) how to implement the online item
@@ -468,6 +468,9 @@
 #'
 #' Li, Y. & Lissitz, R. (2004). Applications of the analytically derived asymptotic standard errors of item response theory
 #' item parameter estimates. \emph{Journal of educational measurement, 41}(2), 85-117.
+#'
+#' Lim, H., Davey, T., & Wells, C. S. (2020). A recursion-based analytical approach to evaluate the performance of MST.
+#' \emph{Journal of Educational Measurement}. DOI: 10.1111/jedm.12276.
 #'
 #' Lord, F. & Wingersky, M. (1984). Comparison of IRT true score and equipercentile observed score equatings.
 #' \emph{Applied Psychological Measurement, 8}(4), 453-461.

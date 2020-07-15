@@ -29,8 +29,8 @@
 #' specified in the argument \code{x}, then you should provide the item response data matrix with one row (or a vector of item response data) in the argument
 #' \code{data} and a vector of ability points where the loglikelihood values need to be computed in the argument \code{theta}.
 #'
-#' @return A data.frame of loglikelihood values. Unlike the item response data in the argument \code{data}, a row and column indicate the ability points where
-#' the loglikelihood values are computed and examinees.
+#' @return A data.frame of loglikelihood values. A row indicates the ability value where the loglikelihood is computed and
+#' a column represents a response pattern, respectively.
 #'
 #' @author Hwanggyu Lim \email{hglim83@@gmail.com}
 #'
@@ -84,6 +84,9 @@ llike_score <- function(x, data, theta, D = 1, method = "MLE", norm.prior = c(0,
     x <- data.frame(x, par.3=NA)
   }
 
+  # clear the item meta data set
+  x <- back2df(metalist2(x))
+
   # add two more items and data responses when "MLE" with Fences method is used
   if(method == "MLEF") {
     if(is.null(fence.b)) {
@@ -136,8 +139,7 @@ llike_score <- function(x, data, theta, D = 1, method = "MLE", norm.prior = c(0,
         meta$drm <- purrr::map(.x=meta$drm, .f=function(x) x[!meta$drm$loc %in% loc.miss])
       }
       if(!is.null(meta$plm)) {
-        tmp <- purrr::map(.x=meta$plm, .f=function(x) x[!meta$plm$loc %in% loc.miss])
-        meta$plm <- tmp
+        meta$plm <- purrr::map(.x=meta$plm, .f=function(x) x[!meta$plm$loc %in% loc.miss])
       }
     }
 
@@ -147,25 +149,20 @@ llike_score <- function(x, data, theta, D = 1, method = "MLE", norm.prior = c(0,
 
     # calculate the score categories
     tmp.id <- 1:length(resp.f)
-    freq.cat <-
-      stats::xtabs(~ tmp.id + resp.f, addNA=TRUE) %>%
-      data.matrix()
-    if(any(is.na(resp))) freq.cat <- freq.cat[, -ncol(freq.cat)]
+    if(length(resp.f) > 1L) {
+      freq.cat <- data.matrix(stats::xtabs(~ tmp.id + resp.f, addNA=TRUE))
+    } else {
+      freq.cat <- rbind(stats::xtabs(~ tmp.id + resp.f, addNA=TRUE))
+    }
+
+    if(any(is.na(resp))) freq.cat <- freq.cat[, -ncol(freq.cat), drop=FALSE]
     if(!is.null(meta$drm)) {
-      if(length(meta$drm$id) == 1L) {
-        freq.cat_drm <- rbind(freq.cat[meta$drm$loc, 1:2])
-      } else {
-        freq.cat_drm <- freq.cat[meta$drm$loc, 1:2]
-      }
+      freq.cat_drm <- freq.cat[meta$drm$loc, 1:2, drop=FALSE]
     } else {
       freq.cat_drm <- NULL
     }
     if(!is.null(meta$plm)) {
-      if(length(meta$plm$id) == 1L) {
-        freq.cat_plm <- rbind(freq.cat[meta$plm$loc, ])
-      } else {
-        freq.cat_plm <- freq.cat[meta$plm$loc, ]
-      }
+      freq.cat_plm <- freq.cat[meta$plm$loc, , drop=FALSE]
     } else {
       freq.cat_plm <- NULL
     }
@@ -190,11 +187,8 @@ llike_score <- function(x, data, theta, D = 1, method = "MLE", norm.prior = c(0,
 
 # This function computes a negative log likelihood or likelihood value
 # This function is used for scoring
-#' @import dplyr
-loglike_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL), method=c("MLE", "MAP", "MLEF"),
-                          D=1, norm.prior=c(0, 1), logL=TRUE,
-                          FUN.grad=list(drm=NULL, plm=NULL, prior=NULL),
-                          FUN.hess=list(drm=NULL, plm=NULL, prior=NULL)) {
+loglike_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL),
+                          method=c("MLE", "MAP", "MLEF"), D=1, norm.prior=c(0, 1), logL=TRUE) {
 
 
   method <- match.arg(method)
@@ -202,66 +196,115 @@ loglike_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat
   # make the empty vector to contain probabilities
   prob <- c()
 
-  # when there are dichotomous items
-  if(!is.null(meta$drm)) {
+  # check the number of thetas
+  nstd <- length(theta)
 
-    # compute the probabilities
-    prob.1 <- drm(theta=theta, a=meta$drm$a, b=meta$drm$b, g=meta$drm$g, D=D)
-    prob.0 <- 1 - prob.1
-    freq.cat_drm <- freq.cat$freq.cat_drm
-    prob.drm <-
-      data.frame(prob.0 * freq.cat_drm[, 1], prob.1 * freq.cat_drm[, 2]) %>%
-      rowSums()
-    prob <- c(prob, prob.drm)
+  if(nstd == 1L) {
+
+    # when there are dichotomous items
+    if(!is.null(meta$drm)) {
+
+      # compute the probabilities
+      prob.1 <- drm(theta=theta, a=meta$drm$a, b=meta$drm$b, g=meta$drm$g, D=D)
+      prob.0 <- 1 - prob.1
+      freq.cat_drm <- freq.cat$freq.cat_drm
+      prob.drm <- prob.0 * freq.cat_drm[, 1] + prob.1 * freq.cat_drm[, 2]
+      prob <- c(prob, prob.drm)
+
+    }
+
+    # when there are polytomous items
+    if(!is.null(meta$plm)) {
+
+      # extract polytomous model info
+      model <- meta$plm$model
+
+      # compute the category probabilities of items
+      prob.plm <- c()
+      for(i in 1:length(model)) {
+        r_i <- freq.cat$freq.cat_plm[i, 1:meta$plm$cats[i]]
+        prob.tmp <- plm(theta=theta, a=meta$plm$a[i], d=meta$plm$d[[i]], D=D, pmodel=model[i])
+        prob.plm[i] <- sum(prob.tmp * r_i)
+      }
+      prob <- c(prob, prob.plm)
+
+    }
+
+    # negative log-likelihood
+    if(logL) {
+
+      # loglikelihood
+      log_prob <- suppressWarnings(log(prob))
+
+      # to prevent that log(prob) has -Inf values
+      log_prob <- ifelse(is.infinite(log_prob), log(1e-20), log_prob)
+
+      # sum of loglikelihood
+      rst <- sum(log_prob)
+
+      # return a negative loglikelihood value
+      rst <- switch(method,
+                    MLE = -rst,
+                    MLEF = -rst,
+                    MAP = -(rst + stats::dnorm(theta, mean=norm.prior[1], sd=norm.prior[2], log=TRUE)))
+
+    } else {
+
+      # likelihood
+      rst <- prod(prob)
+
+    }
 
   }
 
-  # when there are polytomous items
-  if(!is.null(meta$plm)) {
+  if(nstd > 1L) {
 
-    # extract polytomous model info
-    model <- meta$plm$model
+    # when there are dichotomous items
+    if(!is.null(meta$drm)) {
 
-    # make a list of arguments
-    args <- list(meta$plm$a, meta$plm$d, model)
+      # check the number of items
+      nitem <- length(meta$drm$a)
 
-    # compute the category probabilities of items
-    freq.cat_plm <- freq.cat$freq.cat_plm
-    prob.plm <- purrr::pmap(.l=args, .f=plm, theta=theta, D=D)
-    prob.plm <- purrr::map_dbl(.x=1:length(meta$plm$cats),
-                               .f=function(i)
-                                 sum(prob.plm[[i]] * freq.cat_plm[i, 1:(meta$plm$cats[i])]))
-    prob <- c(prob, prob.plm)
+      # compute the probabilities
+      prob.1 <- drm(theta=theta, a=meta$drm$a, b=meta$drm$b, g=meta$drm$g, D=D)
+      if(nitem == 1L) {
+        prob.1 <- rbind(prob.1)
+      } else {
+        prob.1 <- t(prob.1)
+      }
+      prob.0 <- 1 - prob.1
+      freq.cat_drm <- freq.cat$freq.cat_drm
+      prob.drm <- prob.0 * freq.cat_drm[, 1] + prob.1 * freq.cat_drm[, 2]
 
-  }
+      prob <- rbind(prob, prob.drm)
 
-  # negative log-likelihood
-  if(logL) {
+    }
 
-    # loglikelihood
-    log_prob <- suppressWarnings(log(prob))
+    # when there are polytomous items
+    if(!is.null(meta$plm)) {
 
-    # to prevent that log(prob) has -Inf values
-    log_prob <- ifelse(is.infinite(log_prob), log(1e-20), log_prob)
+      # extract polytomous model info
+      model <- meta$plm$model
 
-    # sume of loglikelihood
-    logL <- sum(log_prob)
+      # compute the category probabilities of items
+      prob.plm <- array(0, c(length(model), nstd))
+      for(i in 1:length(model)) {
+        r_i <- freq.cat$freq.cat_plm[i, 1:meta$plm$cats[i]]
+        prob.tmp <- t(plm(theta=theta, a=meta$plm$a[i], d=meta$plm$d[[i]], D=D, pmodel=model[i]))
+        prob.plm[i, ] <- colSums(prob.tmp * r_i)
+      }
 
-    # return a negative loglikelihood value
-    switch(method,
-           MLE = -logL,
-           MLEF = -logL,
-           MAP = -(logL + stats::dnorm(theta, mean=norm.prior[1], sd=norm.prior[2], log=TRUE))
-    )
+      prob <- rbind(prob, prob.plm)
 
-  } else {
+    }
 
     # likelihood
-    L <- prod(prob)
-
-    L
+    rst <- apply(prob, 2, prod)
 
   }
+
+  # return
+  rst
 
 }
 
@@ -269,26 +312,34 @@ loglike_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat
 # This function computes a negative log likelihood for scoring
 # This function is used only to find an ability estimate in brute force way
 # when MLE or MAP fails to find the ability estimates
-#' @import dplyr
-#' @import purrr
 ll_brute <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL),
                      method=c("MLE", "MAP", "MLEF"), D=1, norm.prior=c(0, 1)) {
 
 
   method <- match.arg(method)
 
+  # the number of examinee
+  nstd <- length(theta)
+
   # when there are dichotomous items
   if(!is.null(meta$drm)) {
 
+    # the number of dichotomous items
+    nitem <- length(meta$drm$a)
+
     # compute the probabilities
     prob.1 <- drm(theta=theta, a=meta$drm$a, b=meta$drm$b, g=meta$drm$g, D=D)
-    if(length(theta) == 1L) {
+    if(nstd == 1L) {
       prob.1 <- rbind(prob.1)
+    }
+    if(nitem == 1L & nstd > 1L) {
+      prob.1 <- cbind(prob.1)
     }
     prob.0 <- 1 - prob.1
     freq.cat_drm <- freq.cat$freq.cat_drm
     prob.drm <-
-      cbind(prob.0[, which(freq.cat_drm[, 1] == 1)], prob.1[, which(freq.cat_drm[, 2] == 1)])
+      cbind(prob.0[, which(freq.cat_drm[, 1] == 1), drop=FALSE], prob.1[, which(freq.cat_drm[, 2] == 1), drop=FALSE])
+
   } else {
     prob.drm <- NULL
   }
@@ -299,20 +350,17 @@ ll_brute <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=
     # extract polytomous model info
     model <- meta$plm$model
 
-    # make a list of arguments
-    args <- list(meta$plm$a, meta$plm$d, model)
-
     # compute the category probabilities of items
     freq.cat_plm <- freq.cat$freq.cat_plm
-    prob.plm <- purrr::pmap(.l=args, .f=plm, theta=theta, D=D)
-    if(length(theta) == 1L) {
-      prob.plm <- purrr::map(.x=prob.plm, .f=function(x) rbind(x))
+    prob.plm <- matrix(0, nrow=nstd, ncol=length(model))
+    for(i in 1:length(model)) {
+      prob.tmp <- plm(theta=theta, a=meta$plm$a[i], d=meta$plm$d[[i]], D=D, pmodel=model[i])
+      if(nstd == 1L) {
+        prob.tmp <- rbind(prob.tmp)
+      }
+      prob.plm[, i] <- prob.tmp[, which(freq.cat_plm[i, 1:(meta$plm$cats[i])] == 1)]
     }
-    prob.plm <-
-      purrr::map_dfc(.x=1:length(meta$plm$cats),
-                     .f=function(i)
-                       prob.plm[[i]][, which(freq.cat_plm[i, 1:(meta$plm$cats[i])] == 1)]) %>%
-      data.matrix()
+
   } else {
     prob.plm <- NULL
   }
@@ -337,4 +385,3 @@ ll_brute <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=
   )
 
 }
-

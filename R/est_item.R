@@ -42,9 +42,18 @@
 #' @param g.val A numeric value. This value is used to fixed the guessing parameters of the 3PLM items.
 #' @param use.aprior A logical value. If TRUE, a prior distribution for the slope parameters is used for the parameter calibration
 #' across all items. Default is FALSE.
+#' @param use.bprior A logical value. If TRUE, a prior distribution for the difficulty (or threshold) parameters is used for the parameter calibration
+#' across all items. Default is FALSE.
 #' @param use.gprior A logical value. If TRUE, a prior distribution for the guessing parameters is used for the parameter calibration
 #' across all 3PLM items. Default is TRUE.
 #' @param aprior A list containing the information of the prior distribution for item slope parameters. Three probability distributions
+#' of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
+#' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
+#' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
+#' distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
+#' in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()},
+#' and \code{dnorm()} in the \pkg{stats} package for more details.
+#' @param bprior A list containing the information of the prior distribution for item difficulty (or threshold) parameters. Three probability distributions
 #' of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
 #' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 #' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
@@ -81,6 +90,7 @@
 #' \item{convergence}{A string indicating the convergence status of the item parameter estimation.}
 #' \item{nitem}{A total number of items included in the response data.}
 #' \item{deleted.item}{The items which have no item response data. Those items are excluded from the item parameter estimation.}
+#' \item{npar.est}{A total number of the estimated item parameters.}
 #' \item{n.response}{An integer vector indicating the number of item responses for each item used to estimate the item parameters.}
 #' \item{TotalTime}{Time (in seconds) spent for total compuatation.}
 #'
@@ -160,9 +170,10 @@
 #' @export
 #'
 est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, fix.g=FALSE,
-                     a.val.1pl=1, a.val.gpcm=1, g.val=.2, use.aprior=FALSE, use.gprior=TRUE,
-                     aprior=list(dist="lnorm", params=c(0, 0.5)), gprior=list(dist="beta", params=c(5, 17)),
-                     missing=NA, use.startval=FALSE, control=list(eval.max=500, iter.max=500)) {
+                     a.val.1pl=1, a.val.gpcm=1, g.val=.2, use.aprior=FALSE, use.bprior=FALSE, use.gprior=TRUE,
+                     aprior=list(dist="lnorm", params=c(0, 0.5)), bprior=list(dist="norm", params=c(0.0, 1.0)),
+                     gprior=list(dist="beta", params=c(5, 17)), missing=NA, use.startval=FALSE,
+                     control=list(eval.max=500, iter.max=500)) {
 
   # check start time
   start.time <- Sys.time()
@@ -233,11 +244,7 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   }
 
   # transform a data set to data.frame
-  if(nrow(data) == 1L) {
-    data <- list(data)
-  } else {
-    data <- data.frame(data)
-  }
+  data <- data.frame(data)
 
   # check the total number of item in the response data set
   nitem <- ncol(data)
@@ -271,51 +278,45 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
     score <- as.numeric(data.matrix(score))
   }
 
-  # copy scores
-  score2 <- score
+  # copy scores to theta values
+  theta <- score
 
   # find the location of 1PLM items in which slope parameters should be constrained to be equal
   # also, find the location of other items
   if("1PLM" %in% model & !fix.a.1pl) {
     loc_1p_const <- which(model == "1PLM")
     loc_else <- which(model != "1PLM")
-
-    # check the location of missing values for each of the constrained 1PLM items
-    na_1p_const <- purrr::map(.x=1:length(loc_1p_const), .f=function(k) which(is.na(data[, loc_1p_const[k]])))
-
-    # replace the missing value with zero value
-    data[, loc_1p_const][is.na(data[, loc_1p_const])] <- 0L
   } else {
     loc_1p_const <- NULL
     loc_else <- 1:nrow(x)
   }
 
+  # record the original location of item parameters to be estimated, and
+  # the relocated position of item parameters when computing
+  # the variance-covariance matrix of item parameter estimates
+  param_loc <- parloc(x=x, loc_1p_const=loc_1p_const, loc_else=loc_else,
+                      fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g)
+
   # factorize the response values
   resp <- purrr::map2(.x=data, .y=cats, .f=function(k, m) factor(k, levels=(seq_len(m) - 1)))
 
+  # check the total number of examinees
+  nstd <- nrow(data)
+
   # calculate the score categories for each examinee
-  freq.cat <- purrr::map(.x=resp, .f=function(k) stats::xtabs(~ score + k, addNA = FALSE))
+  std.id <- 1:nstd
+  freq.cat <- purrr::map(.x=resp,
+                         .f=function(k) stats::xtabs(~ std.id + k, na.action=stats::na.pass, addNA = FALSE))
+
+  # transform the score category data.frame to a matrix
+  freq.cat <- purrr::map(.x=freq.cat,
+                         .f=function(k) unname(data.matrix(k)))
 
   # delete 'resp' object
   rm(resp, envir=environment(), inherits = FALSE)
 
   # extract theta (score) values for each item
-  score <- purrr::map(.x=freq.cat,
-                      .f=function(k) attributes(k)$dimnames$score %>%
-                        as.numeric())
-
-  # transform the score category data.frame to a matrix
-  freq.cat <- purrr::map(.x=freq.cat,
-                         .f=function(k) data.matrix(k) %>%
-                           unname())
-
-  # when the slope parameters of the 1PLM items are constrained to be equal,
-  # the frequency of the item response must be a zero value when the response is missing
-  if("1PLM" %in% model & !fix.a.1pl) {
-    for(i in 1:length(loc_1p_const)) {
-      freq.cat[loc_1p_const][[i]][na_1p_const[[i]], ] <- 0L
-    }
-  }
+  # score <- purrr::map(.x=1:length(freq.cat), ~as.numeric(score))
 
   ##-------------------------------------------------------------------------------------------------------
   ## 2. item parameter estimation
@@ -342,9 +343,11 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
     n.1PLM <- length(loc_1p_const)
 
     # prepare input files to estimate the 1PLM item parameters
-    theta <- score[loc_1p_const]
-    f_i <- purrr::map(.x=freq.cat[loc_1p_const], .f=function(k) rowSums(k))
-    r_i <- purrr::map(.x=freq.cat[loc_1p_const], .f=function(k) k[, 2])
+    f_i <- r_i <- array(0, c(nstd, n.1PLM))
+    for(k in 1:n.1PLM) {
+      f_i[, k] <- rowSums(freq.cat[loc_1p_const][[k]])
+      r_i[, k] <- freq.cat[loc_1p_const][[k]][, 2]
+    }
 
     # check the starting values
     if(use.startval) {
@@ -358,7 +361,8 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
 
     # parameter estimation
     est <- estimation(f_i=f_i, r_i=r_i, theta=theta, model="1PLM", D=D, fix.a.1pl=FALSE, n.1PLM=n.1PLM,
-                      aprior=aprior, use.aprior=use.aprior, control=control, startval=startval)
+                      aprior=aprior, bprior=bprior, use.aprior=use.aprior, use.bprior=use.bprior,
+                      control=control, startval=startval)
 
     # extract the results
     # item parameter estimates
@@ -370,7 +374,8 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
     # standrad errors
     a.se <- est$se[1]
     b.se <- est$se[-1]
-    pars.se <- purrr::map(1:n.1PLM, .f=function(x) c(a.se, b.se[x], NA))
+    pars.se <- purrr::map(1:n.1PLM, .f=function(x) c(NA, b.se[x], NA))
+    pars.se[[1]][1] <- a.se
     est_se <- c(est_se, pars.se)
 
     # convergence indicator
@@ -388,14 +393,11 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
 
       # prepare information to estimate item parameters
       mod <- model[loc_else][i]
-      theta <- score[loc_else][[i]]
       score.cat <- cats[loc_else][i]
 
       # in case of a dichotomous item
       if(score.cat == 2) {
-        f_i <-
-          freq.cat[loc_else][[i]] %>%
-          rowSums()
+        f_i <- rowSums(freq.cat[loc_else][[i]])
         r_i <- freq.cat[loc_else][[i]][, 2]
 
         # check the starting values
@@ -425,7 +427,8 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
         est <- estimation(f_i=f_i, r_i=r_i, theta=theta, model=mod, D=D,
                           fix.a.1pl=ifelse(mod == "1PLM", TRUE, FALSE),
                           fix.g=fix.g, a.val.1pl=a.val.1pl, g.val=g.val, n.1PLM=NULL,
-                          aprior=aprior, gprior=gprior, use.aprior=use.aprior, use.gprior=use.gprior,
+                          aprior=aprior, bprior=bprior, gprior=gprior,
+                          use.aprior=use.aprior, use.bprior=use.bprior, use.gprior=use.gprior,
                           control=control, startval=startval)
 
         # extract the results
@@ -478,7 +481,8 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
         # parameter estimation
         est <- estimation(r_i=r_i, theta=theta, model=mod, cats=score.cat, D=D,
                           fix.a.gpcm=ifelse(mod == "GPCM", fix.a.gpcm, FALSE), a.val.gpcm=a.val.gpcm, n.1PLM=NULL,
-                          aprior=aprior, use.aprior=use.aprior, control=control, startval=startval)
+                          aprior=aprior, bprior=bprior, use.aprior=use.aprior, use.bprior=use.bprior,
+                          control=control, startval=startval)
 
         # extract the results
         # item parameter estimates
@@ -595,8 +599,9 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   est_time <- round(as.numeric(difftime(end.time, start.time, units = "secs")), 2)
 
   # return results
-  rst <- structure(list(estimates=full_all_df, par.est=full_par_df, se.est=full_se_df, loglikelihood=llike, group.par=group.par,
-                        data=data, score=score2, scale.D=D, convergence=note, nitem=nitem, deleted.item=as.numeric(loc_allmiss),
+  rst <- structure(list(estimates=full_all_df, par.est=full_par_df, se.est=full_se_df, loglikelihood=llike,
+                        group.par=group.par, data=data, score=score, scale.D=D, convergence=note, nitem=nitem,
+                        deleted.item=as.numeric(loc_allmiss), npar.est=length(param_loc$reloc.par),
                         n.response=as.numeric(n.resp), TotalTime=est_time),
                    class="est_item")
   rst$call <- cl

@@ -54,9 +54,22 @@
 #
 inv_tcc <- function(x, data, D=1, constant=0.1, constraint=FALSE, range.tcc=c(-7, 7)) {
 
-  # meta <- metalist2(x)
+  # check missing data
+  if(any(is.na(data))) stop("There should be no missing data in the data set.", call.=FALSE)
 
   ##########################################
+  # give column names
+  x <- data.frame(x)
+  colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
+
+  # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
+  if(ncol(x[, -c(1, 2, 3)]) == 2) {
+    x <- data.frame(x, par.3=NA)
+  }
+
+  # clear the item meta data set
+  x <- back2df(metalist2(x))
+
   ## collect all information for the test form
   cats <- x[, 2]
   drm <- any(cats == 2)

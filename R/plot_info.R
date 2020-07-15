@@ -55,7 +55,7 @@
 #' @importFrom rlang .data
 #' @export
 plot.test.info <- function(x, item.loc=NULL, xlab.text, ylab.text, main.text, lab.size=15, main.size=15,
-                         axis.size=15, line.color, line.size=1, layout.col=4, strip.size=12, ...) {
+                           axis.size=15, line.color, line.size=1, layout.col=4, strip.size=12, ...) {
 
 
   # 1. plot test infomation

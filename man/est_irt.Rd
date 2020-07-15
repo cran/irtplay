@@ -7,12 +7,14 @@
 est_irt(x = NULL, data, D = 1, model = NULL, cats = NULL,
   fix.a.1pl = FALSE, fix.a.gpcm = FALSE, fix.g = FALSE,
   a.val.1pl = 1, a.val.gpcm = 1, g.val = 0.2, use.aprior = FALSE,
-  use.gprior = TRUE, aprior = list(dist = "lnorm", params = c(0, 0.5)),
-  gprior = list(dist = "beta", params = c(5, 16)), missing = NA,
-  Quadrature = c(49, 6), weights = NULL, group.mean = 0,
-  group.var = 1, EmpHist = FALSE, use.startval = FALSE,
-  Etol = 1e-04, MaxE = 500, control = list(iter.max = 200),
-  fipc = FALSE, fipc.method = "MEM", fix.loc = NULL)
+  use.bprior = FALSE, use.gprior = TRUE, aprior = list(dist =
+  "lnorm", params = c(0, 0.5)), bprior = list(dist = "norm", params =
+  c(0, 1)), gprior = list(dist = "beta", params = c(5, 16)),
+  missing = NA, Quadrature = c(49, 6), weights = NULL,
+  group.mean = 0, group.var = 1, EmpHist = FALSE,
+  use.startval = FALSE, Etol = 1e-04, MaxE = 500,
+  control = list(iter.max = 200), fipc = FALSE, fipc.method = "MEM",
+  fix.loc = NULL)
 }
 \arguments{
 \item{x}{A data.frame containing the item meta data. This meta data is necessary to obtain the information of
@@ -59,10 +61,21 @@ is estimated. Default is FALSE.}
 \item{use.aprior}{A logical value. If TRUE, a prior distribution for the slope parameters is used for the parameter calibration
 across all items. Default is FALSE.}
 
+\item{use.bprior}{A logical value. If TRUE, a prior distribution for the difficulty (or threshold) parameters is used for the parameter calibration
+across all items. Default is FALSE.}
+
 \item{use.gprior}{A logical value. If TRUE, a prior distribution for the guessing parameters is used for the parameter calibration
 across all 3PLM items. Default is TRUE.}
 
 \item{aprior}{A list containing the information of the prior distribution for item slope parameters. Three probability distributions
+of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
+in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
+second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
+distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
+in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()},
+and \code{dnorm()} in the \pkg{stats} package for more details.}
+
+\item{bprior}{A list containing the information of the prior distribution for item difficulty (or threshold) parameters. Three probability distributions
 of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
 in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
@@ -305,7 +318,8 @@ summary(mod.3pl.f)
 (mod.drm.mix <- est_irt(data=LSAT6, D=1, model=c("1PLM", "1PLM", "1PLM", "2PLM", "3PLM"),
                         cats=2, fix.a.1pl=FALSE, use.gprior=TRUE,
                         gprior=list(dist="beta", params=c(5, 16))))
-
+# summary of the estimation
+summary(mod.drm.mix)
 
 ##------------------------------------------------------------------------------
 # 2. item parameter estimation for the mixed-item format data (simulation data)
@@ -328,13 +342,16 @@ sim.dat1 <- simdat(x=x, theta=score1, D=1)
 
 # fit the 3PL model to all dichotmous items, fit the GPCM model to 39th and 40th items,
 # and fit the GRM model to the 53th, 54th, 55th items.
-# use the Beta prior distribution for the guessing parameters and use the log-normal
-# prior distribution for the slope parameters.
+# use the beta prior distribution for the guessing parameters, use the log-normal
+# prior distribution for the slope parameters, and use the normal prior distribution
+# for the difficulty (or thereshold) parameters.
 # also, specify the argument 'x' to provide the IRT model and score category information
 # for items
 item.meta <- shape_df(item.id=x$id, cats=x$cats, model=x$model, empty.par=TRUE)
-(mod.mix1 <- est_irt(x=item.meta, data=sim.dat1, D=1, use.aprior=TRUE, use.gprior=TRUE,
+(mod.mix1 <- est_irt(x=item.meta, data=sim.dat1, D=1, use.aprior=TRUE, use.bprior=TRUE,
+                     use.gprior=TRUE,
                      aprior=list(dist="lnorm", params=c(0.0, 0.5)),
+                     bprior=list(dist="norm", params=c(0.0, 2.0)),
                      gprior=list(dist="beta", params=c(5, 16))))
 
 # summary of the estimation

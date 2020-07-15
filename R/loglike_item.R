@@ -1,6 +1,6 @@
 #' Loglikelihood of Items
 #'
-#' @description This function computes the loglikelihood of individual items given the item parameters, ability values, and response data.
+#' @description This function computes the loglikelihoods of individual items given the item parameters, ability values, and response data.
 #'
 #' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
 #' See \code{\link{irtfit}}, \code{\link{test.info}} or \code{\link{simdat}} for more details about the item meta data.
@@ -14,9 +14,18 @@
 #' Default is 1.
 #' @param use.aprior A logical value. If TRUE, a prior distribution for the slope parameters is used when computing the loglikelihood values
 #' across all items. Default is FALSE.
+#' @param use.bprior A logical value. If TRUE, a prior distribution for the difficulty (or threshold) parameters is used when computing the loglikelihood values
+#' across all items. Default is FALSE.
 #' @param use.gprior A logical value. If TRUE, a prior distribution for the guessing parameters is used when computing the loglikelihood values
 #' across all 3PLM items. Default is TRUE.
 #' @param aprior A list containing the information of the prior distribution for item slope parameters. Three probability distributions
+#' of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
+#' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
+#' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
+#' distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
+#' in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()}, and \code{dnorm()}
+#' in the \pkg{stats} package for more details.
+#' @param bprior A list containing the information of the prior distribution for item difficulty (or threshold) parameters. Three probability distributions
 #' of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
 #' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 #' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
@@ -32,7 +41,7 @@
 #' in the \pkg{stats} package for more details.
 #' @param missing A value indicating missing values in the response data set. Default is NA.
 #'
-#' @return A vector of loglikelihood values
+#' @return A vector of loglikelihood values. Each element represents a sum of loglikeihoods across all ability values for each item.
 #'
 #' @author Hwanggyu Lim \email{hglim83@@gmail.com}
 #'
@@ -57,12 +66,26 @@
 #' @import dplyr
 #'
 #' @export
-llike_item <- function(x, data, score, D=1, use.aprior=FALSE, use.gprior=FALSE,
-                       aprior=list(dist="lnorm", params=c(0, 0.5)), gprior=list(dist="beta", params=c(5, 17)),
+llike_item <- function(x, data, score, D=1, use.aprior=FALSE, use.bprior=FALSE, use.gprior=FALSE,
+                       aprior=list(dist="lnorm", params=c(0, 0.5)),
+                       bprior=list(dist="norm", params=c(0.0, 1.0)),
+                       gprior=list(dist="beta", params=c(5, 17)),
                        missing=NA) {
 
   ##-------------------------------------------------------------------------------------------------------
   ## 1. preperation of data
+  # give column names
+  x <- data.frame(x)
+  colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
+
+  # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
+  if(ncol(x[, -c(1, 2, 3)]) == 2) {
+    x <- data.frame(x, par.3=NA)
+  }
+
+  # clear the item meta data set
+  x <- back2df(metalist2(x))
+
   # extract information about the number of score cetegories and models
   cats <- x[, 2]
   model <-
@@ -85,38 +108,33 @@ llike_item <- function(x, data, score, D=1, use.aprior=FALSE, use.gprior=FALSE,
   }
 
   # transform a data set to data.frame
-  if(nrow(data) == 1L) {
-    data <- list(data)
-  } else {
-    data <- data.frame(data)
-  }
+  data <- data.frame(data)
 
   # transform scores to a vector form
   if(is.matrix(score) | is.data.frame(score)) {
     score <- as.numeric(data.matrix(score))
   }
 
-  # copy scores
-  score2 <- score
+  # copy scores to theta values
+  theta <- score
 
   # factorize the response values
   resp <- purrr::map2(.x=data, .y=cats, .f=function(k, m) factor(k, levels=(seq_len(m) - 1)))
 
+  # check the total number of examinees
+  nstd <- nrow(data)
+
   # calculate the score categories for each examinee
-  freq.cat <- purrr::map(.x=resp, .f=function(k) stats::xtabs(~ score + k, addNA = FALSE))
+  std.id <- 1:nstd
+  freq.cat <- purrr::map(.x=resp,
+                         .f=function(k) stats::xtabs(~ std.id + k, na.action=stats::na.pass, addNA = FALSE))
 
   # delete 'resp' object
   rm(resp, envir=environment(), inherits = FALSE)
 
-  # extract theta (score) values for each item
-  score <- purrr::map(.x=freq.cat,
-                      .f=function(k) attributes(k)$dimnames$score %>%
-                        as.numeric())
-
   # transform the score category data.frame to a matrix
   freq.cat <- purrr::map(.x=freq.cat,
-                         .f=function(k) data.matrix(k) %>%
-                           unname())
+                         .f=function(k) unname(data.matrix(k)))
 
   ##---------------------------------------------------------------
   ## 2. compute loglikelihood
@@ -132,15 +150,12 @@ llike_item <- function(x, data, score, D=1, use.aprior=FALSE, use.gprior=FALSE,
 
     # prepare information to estimate item parameters
     mod <- model[i]
-    theta <- score[[i]]
     score.cat <- cats[i]
 
     # in case of a dichotomous item
     if(score.cat == 2) {
       # response data
-      f_i <-
-        freq.cat[[i]] %>%
-        rowSums()
+      f_i <- rowSums(freq.cat[[i]])
       r_i <- freq.cat[[i]][, 2]
 
       # item parameters
@@ -151,10 +166,9 @@ llike_item <- function(x, data, score, D=1, use.aprior=FALSE, use.gprior=FALSE,
       item_par <- c(a.val, b.val, g.val)
 
       # negative loglikelihood
-      llike[i] <- loglike_drm(item_par=item_par, f_i=f_i, r_i=r_i, theta=theta, model=mod, D=D,
-                              fix.a=FALSE, fix.g=FALSE, aprior=aprior, gprior=gprior,
-                              use.aprior=use.aprior,
-                              use.gprior=use.gprior)
+      llike[i] <- loglike_drm(item_par=item_par, f_i=f_i, r_i=r_i, theta=theta, model="3PLM", D=D,
+                              fix.a=FALSE, fix.g=FALSE, aprior=aprior, bprior=bprior, gprior=gprior,
+                              use.aprior=use.aprior, use.bprior=use.bprior, use.gprior=use.gprior)
     }
 
     # in case of a polytomous item
@@ -170,7 +184,7 @@ llike_item <- function(x, data, score, D=1, use.aprior=FALSE, use.gprior=FALSE,
 
       # negative loglikelihood
       llike[i] <- loglike_plm(item_par=item_par, r_i=r_i, theta=theta, pmodel=mod, D=D, fix.a=FALSE,
-                              aprior=aprior, use.aprior=use.aprior)
+                              aprior=aprior, bprior=bprior, use.aprior=use.aprior, use.bprior=use.bprior)
     }
 
   }
@@ -202,8 +216,8 @@ llike_item <- function(x, data, score, D=1, use.aprior=FALSE, use.gprior=FALSE,
 # @return A numeric value
 loglike_plm <- function(item_par, r_i, theta, pmodel=c("GRM", "GPCM"), D=1, fix.a=FALSE, a.val=1,
                         aprior=list(dist="lnorm", params=c(1, 0.5)),
-                        use.aprior=FALSE,
-                        FUN.grad, FUN.hess) {
+                        bprior=list(dist="norm", params=c(0.0, 1.0)),
+                        use.aprior=FALSE, use.bprior=FALSE) {
 
   if(pmodel == "GRM" & fix.a) {
     stop("The slope parameter can't be fixed for GRM.", call.=FALSE)
@@ -229,11 +243,17 @@ loglike_plm <- function(item_par, r_i, theta, pmodel=c("GRM", "GPCM"), D=1, fix.
 
     # when the slope parameter prior is used
     if(use.aprior) {
-      aprior_call <- paste0("stats::d", aprior$dist, "(", item_par[1], ", ", aprior$params[1], ", ", aprior$params[2], ", log=TRUE)")
-      ln.aprior <- eval(expr=parse(text=aprior_call), envir=environment())
+      ln.aprior <- logprior(val=item_par[1], is.aprior=TRUE, D=D, dist=aprior$dist,
+                            par.1=aprior$params[1], par.2=aprior$params[2])
       llike <- llike + ln.aprior
     }
 
+    # when the difficulty parameter prior is used
+    if(use.bprior) {
+      ln.bprior <- logprior(val=item_par[-1], is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                            par.1=bprior$params[1], par.2=bprior$params[2])
+      llike <- llike + sum(ln.bprior)
+    }
 
   } else {
     # compute category probabilities for all thetas
@@ -248,13 +268,19 @@ loglike_plm <- function(item_par, r_i, theta, pmodel=c("GRM", "GPCM"), D=1, fix.
     # log-likelihood
     llike <- sum(r_i * log_ps)
 
+    # when the difficulty parameter prior is used
+    if(use.bprior) {
+      ln.bprior <- logprior(val=item_par, is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                            par.1=bprior$params[1], par.2=bprior$params[2])
+      llike <- llike + sum(ln.bprior)
+    }
+
   }
 
   # return negative loglikelihood
   - llike
 
 }
-
 
 
 # Negetive Loglikelihood of dichotomous item
@@ -276,10 +302,9 @@ loglike_plm <- function(item_par, r_i, theta, pmodel=c("GRM", "GPCM"), D=1, fix.
 loglike_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "DRM"), D=1,
                         fix.a=FALSE, fix.g=FALSE, a.val=1, g.val=.2, n.1PLM=NULL,
                         aprior=list(dist="lnorm", params=c(1, 0.5)),
+                        bprior=list(dist="norm", params=c(0.0, 1.0)),
                         gprior=list(dist="beta", params=c(5, 17)),
-                        use.aprior=FALSE,
-                        use.gprior=TRUE,
-                        FUN.grad, FUN.hess) {
+                        use.aprior=FALSE, use.bprior=FALSE, use.gprior=TRUE) {
 
   # consider DRM as 3PLM
   if(model == "DRM") model <- "3PLM"
@@ -291,23 +316,25 @@ loglike_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM
   # (1) 1PLM: the slope parameters are contrained to be equal across the 1PLM items
   if(!fix.a & model == "1PLM") {
 
-    # make a list of a and b parameters for all 1PLM items
+    # make vectors of a and b parameters for all 1PLM items
     a <- rep(item_par[1], n.1PLM)
     b <- item_par[-1]
 
-    # make a list of all arguments being used in drm function
-    argus <- list(a=a, b=b, f_i=f_i, r_i=r_i, theta=theta)
-
     # compute the negative loglikelihood values for all 1PLM items
-    llike <-
-      purrr::pmap_dbl(argus, .f=llike_drm, g=0, D=D) %>%
-      sum()
+    llike <- llike_drm(a=a, b=b, g=0, f_i=f_i, r_i=r_i, theta=theta, D=D)
 
     # when the slope parameter prior is used
     if(use.aprior) {
-      aprior_call <- paste0("stats::d", aprior$dist, "(", item_par[1], ", ", aprior$params[1], ", ", aprior$params[2], ", log=TRUE)")
-      ln.aprior <- eval(expr=parse(text=aprior_call), envir=environment())
+      ln.aprior <- logprior(val=item_par[1], is.aprior=TRUE, D=D, dist=aprior$dist,
+                            par.1=aprior$params[1], par.2=aprior$params[2])
       llike <- llike + ln.aprior
+    }
+
+    # when the difficulty parameter prior is used
+    if(use.bprior) {
+      ln.bprior <- logprior(val=item_par[-1], is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                            par.1=bprior$params[1], par.2=bprior$params[2])
+      llike <- llike + sum(ln.bprior)
     }
 
   }
@@ -317,6 +344,13 @@ loglike_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM
 
     # sume of loglikelihood
     llike <- llike_drm(a=a.val, b=item_par, g=0, f_i=f_i, r_i=r_i, theta=theta, D=D)
+
+    # when the difficulty parameter prior is used
+    if(use.bprior) {
+      ln.bprior <- logprior(val=item_par, is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                            par.1=bprior$params[1], par.2=bprior$params[2])
+      llike <- llike + ln.bprior
+    }
 
   }
 
@@ -328,9 +362,16 @@ loglike_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM
 
     # when the slope parameter prior is used
     if(use.aprior) {
-      aprior_call <- paste0("stats::d", aprior$dist, "(", item_par[1], ", ", aprior$params[1], ", ", aprior$params[2], ", log=TRUE)")
-      ln.aprior <- eval(expr=parse(text=aprior_call), envir=environment())
+      ln.aprior <- logprior(val=item_par[1], is.aprior=TRUE, D=D, dist=aprior$dist,
+                            par.1=aprior$params[1], par.2=aprior$params[2])
       llike <- llike + ln.aprior
+    }
+
+    # when the difficulty parameter prior is used
+    if(use.bprior) {
+      ln.bprior <- logprior(val=item_par[2], is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                            par.1=bprior$params[1], par.2=bprior$params[2])
+      llike <- llike + ln.bprior
     }
 
   }
@@ -343,15 +384,22 @@ loglike_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM
 
     # when the slope parameter prior is used
     if(use.aprior) {
-      aprior_call <- paste0("stats::d", aprior$dist, "(", item_par[1], ", ", aprior$params[1], ", ", aprior$params[2], ", log=TRUE)")
-      ln.aprior <- eval(expr=parse(text=aprior_call), envir=environment())
+      ln.aprior <- logprior(val=item_par[1], is.aprior=TRUE, D=D, dist=aprior$dist,
+                            par.1=aprior$params[1], par.2=aprior$params[2])
       llike <- llike + ln.aprior
+    }
+
+    # when the difficulty parameter prior is used
+    if(use.bprior) {
+      ln.bprior <- logprior(val=item_par[2], is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                            par.1=bprior$params[1], par.2=bprior$params[2])
+      llike <- llike + ln.bprior
     }
 
     # when the guessing parameter prior is used
     if(use.gprior) {
-      gprior_call <- paste0("stats::d", gprior$dist, "(", item_par[3], ", ", gprior$params[1], ", ", gprior$params[2], ", log=TRUE)")
-      ln.gprior <- eval(expr=parse(text=gprior_call), envir=environment())
+      ln.gprior <- logprior(val=item_par[3], is.aprior=FALSE, D=NULL, dist=gprior$dist,
+                            par.1=gprior$params[1], par.2=gprior$params[2])
       llike <- llike + ln.gprior
     }
 
@@ -365,13 +413,19 @@ loglike_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM
 
     # when the slope parameter prior is used
     if(use.aprior) {
-      aprior_call <- paste0("stats::d", aprior$dist, "(", item_par[1], ", ", aprior$params[1], ", ", aprior$params[2], ", log=TRUE)")
-      ln.aprior <- eval(expr=parse(text=aprior_call), envir=environment())
+      ln.aprior <- logprior(val=item_par[1], is.aprior=TRUE, D=D, dist=aprior$dist,
+                            par.1=aprior$params[1], par.2=aprior$params[2])
       llike <- llike + ln.aprior
     }
 
-  }
+    # when the difficulty parameter prior is used
+    if(use.bprior) {
+      ln.bprior <- logprior(val=item_par[2], is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                            par.1=bprior$params[1], par.2=bprior$params[2])
+      llike <- llike + ln.bprior
+    }
 
+  }
 
   # return a negative loglikelihood value
   - llike

@@ -160,6 +160,7 @@ the \eqn{\chi^{2}} fit statistic.
 }}
 
 \examples{
+\donttest{
 ## example 1
 ## use the simulated CAT data
 # find the location of items that have more than 10,000 responses
@@ -174,7 +175,6 @@ data <- simCAT_MX$res.dat[, over10000]
 # select the examinees' abilities
 score <- simCAT_MX$score
 
-\donttest{
 # compute fit statistics
 fit1 <- irtfit(x=x, score=score, data=data, group.method="equal.width",
                n.width=10, loc.theta="average", range.score=NULL, D=1, alpha=0.05,
@@ -185,7 +185,7 @@ fit1$fit_stat
 
 # contingency tables
 fit1$contingency.fitstat
-}
+
 
 ## example 2
 ## import the "-prm.txt" output file from flexMIRT
@@ -201,7 +201,6 @@ score <- rnorm(1000, mean=0, sd=1)
 # simulate the response data
 data <- simdat(x=x, theta=score, D=1)
 
-\donttest{
 # compute fit statistics
 fit2 <- irtfit(x=x, score=score, data=data, group.method="equal.freq",
                n.width=11, loc.theta="average", range.score=c(-4, 4), D=1, alpha=0.05)

@@ -1,7 +1,5 @@
 # Transform a data.frame without anchor information to a list
 #' @import purrr
-#' @import dplyr
-#' @importFrom rlang .data
 metalist2 <- function(x) {
 
   # chagne all factor variables into character variables
@@ -33,10 +31,14 @@ metalist2 <- function(x) {
   # when dichotomous items are included in a test
   if(2 %in% x[, 2]) {
 
-    drm.df <- x %>%
-      dplyr::filter(.data$cats <= 2) %>%
-      dplyr::select(.data$id, .data$cats, .data$model, .data$par.1, .data$par.2, .data$par.3, .data$loc) %>%
-      dplyr::rename(a="par.1", b="par.2", g="par.3")
+    # drm.df <-
+    #   x %>%
+    #   dplyr::filter(.data$cats <= 2) %>%
+    #   dplyr::select(.data$id, .data$cats, .data$model, .data$par.1, .data$par.2, .data$par.3, .data$loc) %>%
+    #   dplyr::rename(a="par.1", b="par.2", g="par.3")
+    drm.df <- x[x$cats <= 2, ]
+    drm.df <- drm.df[, c(1:6, ncol(drm.df))]
+    colnames(drm.df) <- c("id", "cats", "model", "a", "b", "g", "loc")
 
     # give zero values to NA in the guessing parameter column
     drm.df$g[is.na(drm.df$g)] <- 0
@@ -55,21 +57,29 @@ metalist2 <- function(x) {
   # when polytomous items are included in a test
   if(max.cat > 2) {
 
-    plm.df <- x %>%
-      dplyr::filter(.data$cats > 2) %>%
-      dplyr::select(.data$id, .data$cats, .data$model, .data$par.1, .data$loc) %>%
-      dplyr::rename(a="par.1")
+    # plm.df <-
+    #   x %>%
+    #   dplyr::filter(.data$cats > 2) %>%
+    #   dplyr::select(.data$id, .data$cats, .data$model, .data$par.1, .data$loc) %>%
+    #   dplyr::rename(a="par.1")
+    plm.df <- x[x$cats > 2, ]
+    plm.df.a <- plm.df[, c(1:4, ncol(plm.df))]
+    colnames(plm.df.a) <- c("id", "cats", "model", "a", "loc")
 
     # manipulate step parameters to make them as a list
-    d <- x %>%
-      dplyr::filter(.data$cats > 2) %>%
-      dplyr::select(paste0("par.", 2:max.cat)) %>%
-      t() %>%
-      data.frame() %>%
-      purrr::map(data.frame) %>%
-      purrr::map(tidyr::drop_na) %>%
-      purrr::map(unlist) %>%
-      purrr::map(unname)
+    # d <-
+    #   x %>%
+    #   dplyr::filter(.data$cats > 2) %>%
+    #   dplyr::select(paste0("par.", 2:max.cat)) %>%
+    #   t() %>%
+    #   data.frame() %>%
+    #   purrr::map(data.frame) %>%
+    #   purrr::map(tidyr::drop_na) %>%
+    #   purrr::map(unlist) %>%
+    #   purrr::map(unname)
+    d <- t(plm.df[, paste0("par.", 2:max.cat)])
+    d <- data.frame(d)
+    d <- purrr::map(.x=d, .f=function(x) x[!is.na(x)])
     names(d) <- paste0("d", 1:nrow(plm.df))
 
     # compare the number of score categories and the number of item parameters
@@ -79,7 +89,7 @@ metalist2 <- function(x) {
     }
 
     # listrize a dafa.frame
-    plm.list <- as.list(plm.df)
+    plm.list <- as.list(plm.df.a)
     plm.list <- c(plm.list, d=list(d))
     plm.list <- plm.list[c("id","cats", "model", "a", "d", "loc")]
 
@@ -90,3 +100,4 @@ metalist2 <- function(x) {
   meta
 
 }
+

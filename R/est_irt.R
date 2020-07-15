@@ -40,9 +40,18 @@
 #' @param g.val A numeric value. This value is used to fixed the guessing parameters of the 3PLM items.
 #' @param use.aprior A logical value. If TRUE, a prior distribution for the slope parameters is used for the parameter calibration
 #' across all items. Default is FALSE.
+#' @param use.bprior A logical value. If TRUE, a prior distribution for the difficulty (or threshold) parameters is used for the parameter calibration
+#' across all items. Default is FALSE.
 #' @param use.gprior A logical value. If TRUE, a prior distribution for the guessing parameters is used for the parameter calibration
 #' across all 3PLM items. Default is TRUE.
 #' @param aprior A list containing the information of the prior distribution for item slope parameters. Three probability distributions
+#' of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
+#' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
+#' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
+#' distribution is used, "lnorm" should be specified in the first argument. When Normal distribution is used, "norm" should be specified
+#' in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()},
+#' and \code{dnorm()} in the \pkg{stats} package for more details.
+#' @param bprior A list containing the information of the prior distribution for item difficulty (or threshold) parameters. Three probability distributions
 #' of Beta, Log-normal, and Normal distributions are available. In the list, a character string of the distribution name must be specified
 #' in the first internal argument and a vector of two numeric values for the two parameters of the distribution must be specified in the
 #' second internal argument. Specifically, when Beta distribution is used, "beta" should be specified in the first argument. When Log-normal
@@ -285,7 +294,8 @@
 #' (mod.drm.mix <- est_irt(data=LSAT6, D=1, model=c("1PLM", "1PLM", "1PLM", "2PLM", "3PLM"),
 #'                         cats=2, fix.a.1pl=FALSE, use.gprior=TRUE,
 #'                         gprior=list(dist="beta", params=c(5, 16))))
-#'
+#' # summary of the estimation
+#' summary(mod.drm.mix)
 #'
 #' ##------------------------------------------------------------------------------
 #' # 2. item parameter estimation for the mixed-item format data (simulation data)
@@ -308,13 +318,16 @@
 #'
 #' # fit the 3PL model to all dichotmous items, fit the GPCM model to 39th and 40th items,
 #' # and fit the GRM model to the 53th, 54th, 55th items.
-#' # use the Beta prior distribution for the guessing parameters and use the log-normal
-#' # prior distribution for the slope parameters.
+#' # use the beta prior distribution for the guessing parameters, use the log-normal
+#' # prior distribution for the slope parameters, and use the normal prior distribution
+#' # for the difficulty (or thereshold) parameters.
 #' # also, specify the argument 'x' to provide the IRT model and score category information
 #' # for items
 #' item.meta <- shape_df(item.id=x$id, cats=x$cats, model=x$model, empty.par=TRUE)
-#' (mod.mix1 <- est_irt(x=item.meta, data=sim.dat1, D=1, use.aprior=TRUE, use.gprior=TRUE,
+#' (mod.mix1 <- est_irt(x=item.meta, data=sim.dat1, D=1, use.aprior=TRUE, use.bprior=TRUE,
+#'                      use.gprior=TRUE,
 #'                      aprior=list(dist="lnorm", params=c(0.0, 0.5)),
+#'                      bprior=list(dist="norm", params=c(0.0, 2.0)),
 #'                      gprior=list(dist="beta", params=c(5, 16))))
 #'
 #' # summary of the estimation
@@ -438,9 +451,10 @@
 #' @export
 #'
 est_irt <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, fix.g=FALSE,
-                    a.val.1pl=1, a.val.gpcm=1, g.val=.2, use.aprior=FALSE, use.gprior=TRUE,
-                    aprior=list(dist="lnorm", params=c(0.0, 0.5)), gprior=list(dist="beta", params=c(5, 16)),
-                    missing=NA, Quadrature=c(49, 6.0), weights=NULL, group.mean=0.0, group.var=1.0, EmpHist=FALSE,
+                    a.val.1pl=1, a.val.gpcm=1, g.val=.2, use.aprior=FALSE, use.bprior=FALSE, use.gprior=TRUE,
+                    aprior=list(dist="lnorm", params=c(0.0, 0.5)), bprior=list(dist="norm", params=c(0.0, 1.0)),
+                    gprior=list(dist="beta", params=c(5, 16)), missing=NA, Quadrature=c(49, 6.0), weights=NULL,
+                    group.mean=0.0, group.var=1.0, EmpHist=FALSE,
                     use.startval=FALSE, Etol=1e-04, MaxE=500, control=list(iter.max=200),
                     fipc=FALSE, fipc.method="MEM", fix.loc=NULL) {
 
@@ -451,19 +465,18 @@ est_irt <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE, f
   if(!fipc) {
     # item parameter estimation using MMLE-EM algorithm
     est_par <- est_irt_em(x=x, data=data, D=D, model=model, cats=cats, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g,
-                          a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, use.aprior=use.aprior, use.gprior=use.gprior,
-                          aprior=aprior, gprior=gprior,
-                          missing=missing, Quadrature=Quadrature, weights=weights, group.mean=group.mean, group.var=group.var, EmpHist=EmpHist,
-                          use.startval=use.startval, Etol=Etol, MaxE=MaxE, control=control)
+                          a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, use.aprior=use.aprior, use.bprior=use.bprior,
+                          use.gprior=use.gprior, aprior=aprior, bprior=bprior, gprior=gprior, missing=missing, Quadrature=Quadrature,
+                          weights=weights, group.mean=group.mean, group.var=group.var, EmpHist=EmpHist, use.startval=use.startval,
+                          Etol=Etol, MaxE=MaxE, control=control)
 
   } else {
     # implement FIPC method
     est_par <- est_irt_fipc(x=x, data=data, D=D, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g,
-                            a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, use.aprior=use.aprior, use.gprior=use.gprior,
-                            aprior=aprior, gprior=gprior,
-                            missing=missing, Quadrature=Quadrature, weights=weights, group.mean=group.mean, group.var=group.var, EmpHist=EmpHist,
-                            use.startval=use.startval, Etol=Etol, MaxE=MaxE, control=control,
-                            fipc=TRUE, fipc.method=fipc.method, fix.loc=fix.loc)
+                            a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, use.aprior=use.aprior, use.bprior=use.bprior,
+                            use.gprior=use.gprior, aprior=aprior, bprior=bprior, gprior=gprior, missing=missing, Quadrature=Quadrature,
+                            weights=weights, group.mean=group.mean, group.var=group.var, EmpHist=EmpHist, use.startval=use.startval,
+                            Etol=Etol, MaxE=MaxE, control=control, fipc=TRUE, fipc.method=fipc.method, fix.loc=fix.loc)
 
   }
 
@@ -477,10 +490,11 @@ est_irt <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE, f
 
 # This function estimates item parameters using MMLE-EM algorithm
 est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, fix.g=FALSE,
-                       a.val.1pl=1, a.val.gpcm=1, g.val=.2, use.aprior=FALSE, use.gprior=TRUE,
-                       aprior=list(dist="lnorm", params=c(0.0, 0.5)), gprior=list(dist="beta", params=c(5, 16)),
-                       missing=NA, Quadrature=c(49, 6.0), weights=NULL, group.mean=0, group.var=1, EmpHist=FALSE,
-                       use.startval=FALSE, Etol=1e-04, MaxE=500, control=list(eval.max=200, iter.max=200)) {
+                       a.val.1pl=1, a.val.gpcm=1, g.val=.2, use.aprior=FALSE, use.bprior=FALSE, use.gprior=TRUE,
+                       aprior=list(dist="lnorm", params=c(0.0, 0.5)), bprior=list(dist="norm", params=c(0.0, 1.0)),
+                       gprior=list(dist="beta", params=c(5, 16)), missing=NA, Quadrature=c(49, 6.0), weights=NULL,
+                       group.mean=0, group.var=1, EmpHist=FALSE, use.startval=FALSE, Etol=1e-04, MaxE=500,
+                       control=list(eval.max=200, iter.max=200)) {
 
   # check start time
   start.time <- Sys.time()
@@ -623,11 +637,6 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   # delete 'datlist' object
   rm(datlist, envir=environment(), inherits = FALSE)
 
-  # create the equations of gradient vectors and hessian matrixs of negative log likelihood across all items
-  equation <- eqlist(model=model, cats=cats, loc_1p_const=loc_1p_const, loc_else=loc_else,
-                     fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val,
-                     use.aprior=use.aprior, use.gprior=use.gprior, aprior=aprior, gprior=gprior)
-
   # estimation
   cat("Estimating item parameters...", '\n')
 
@@ -640,10 +649,10 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
     estep <- Estep(x=x, data1_drm=data1_drm, data2_drm=data2_drm, data_plm=data_plm, freq.cat=freq.cat, weights=weights, D=D)
 
     # implement M-step
-    mstep <- Mstep(estep=estep, id=id, cats=cats, model=model, quadpt=quadpt, equation=equation, D=D, loc_1p_const=loc_1p_const, loc_else=loc_else,
+    mstep <- Mstep(estep=estep, id=id, cats=cats, model=model, quadpt=quadpt, D=D, loc_1p_const=loc_1p_const, loc_else=loc_else,
                    EmpHist=EmpHist, weights=weights, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl,
-                   a.val.gpcm=a.val.gpcm, g.val=g.val, use.aprior=use.aprior, use.gprior=use.gprior,
-                   aprior=aprior, gprior=gprior,  group.mean=group.mean, group.var=group.var, nstd=nstd,
+                   a.val.gpcm=a.val.gpcm, g.val=g.val, use.aprior=use.aprior, use.bprior=use.bprior, use.gprior=use.gprior,
+                   aprior=aprior, bprior=bprior, gprior=gprior,  group.mean=group.mean, group.var=group.var, nstd=nstd,
                    Quadrature=Quadrature, use.startval=TRUE, control=control, iter=r, fipc=FALSE,
                    reloc.par=param_loc$reloc.par, info.mstep=FALSE)
 
@@ -710,33 +719,26 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   # extract the finalized posterior density
   post_dist <- estep$post_dist
 
-  # compute the M step information and SEs
-  # info_m <- Mstep(estep=estep, id=id, cats=cats, model=model, quadpt=quadpt, equation=equation, D=D, loc_1p_const=loc_1p_const, loc_else=loc_else,
-  #                 EmpHist=EmpHist, weights=weights, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl,
-  #                 a.val.gpcm=a.val.gpcm, g.val=g.val, use.aprior=use.aprior, use.gprior=use.gprior,
-  #                 aprior=aprior, gprior=gprior,  group.mean=group.mean, group.var=group.var, nstd=nstd,
-  #                 Quadrature=Quadrature, use.startval=TRUE, control=control, iter=r, fipc=FALSE,
-  #                 reloc.par=param_loc$reloc.par, info.mstep=TRUE)
-
   # compute the infomation matrix of item parameter estimates using the cross-product method
   cat("Computing item parameter var-covariance matrix...", '\n')
   time1 <- Sys.time()
   info.data <- info_xpd(meta=meta, freq.cat=freq.cat, post_dist=post_dist, cats=cats, model=model, quadpt=quadpt,
-                        equation=equation, D=D, loc_1p_const=loc_1p_const, loc_else=loc_else, nstd=nstd,
+                        D=D, loc_1p_const=loc_1p_const, loc_else=loc_else, nstd=nstd,
                         fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl,
                         a.val.gpcm=a.val.gpcm, g.val=g.val, reloc.par=param_loc$reloc.par)
 
   # compute the infomation matrix of item parameter priors
-  info.prior <- info_prior(meta=meta, cats=cats, model=model, equation=equation, D=D, loc_1p_const=loc_1p_const,
+  info.prior <- info_prior(meta=meta, cats=cats, model=model, D=D, loc_1p_const=loc_1p_const,
                            loc_else=loc_else, nstd=nstd, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g,
-                           a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, aprior=aprior, gprior=gprior,
-                           use.aprior=use.aprior, use.gprior=use.gprior, reloc.par=param_loc$reloc.par)
+                           a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, aprior=aprior, bprior=bprior,
+                           gprior=gprior, use.aprior=use.aprior, use.bprior=use.bprior, use.gprior=use.gprior,
+                           reloc.par=param_loc$reloc.par)
 
   # sum of two information matrixs
   info.mat <- info.data + info.prior
 
   # the second-order test: check if the information matrix is positive definite
-  test_2nd <- all(eigen(info.mat, only.values=TRUE)$values > 1e-8)
+  test_2nd <- all(eigen(info.mat, only.values=TRUE)$values > 1e-20)
   if(test_2nd) {
     if(test_1st) {
       memo4 <- "Solution is a possible local maximum."
@@ -758,7 +760,7 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
     memo5 <- "Variance-covariance matrix of item parameter estimates is not obtainable; unstable solution."
     warning(paste0(memo5, " \n"), call.=FALSE)
   } else {
-    se_par <- sqrt(diag(cov_mat))
+    se_par <- suppressWarnings(sqrt(diag(cov_mat)))
     memo5 <- "Variance-covariance matrix of item parameter estimates is obtainable."
   }
 
@@ -815,6 +817,7 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
 
   # prior information
   if(use.aprior) aprior.dist <- aprior else aprior.dist <- NULL
+  if(use.bprior) bprior.dist <- bprior else bprior.dist <- NULL
   if(use.gprior) gprior.dist <- gprior else gprior.dist <- NULL
 
   ##---------------------------------------------------------------
@@ -827,7 +830,7 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   # return results
   rst <- list(estimates=full_all_df, par.est=par_df, se.est=se_df, pos.par=loc_df, covariance=cov_mat, loglikelihood=llike, group.par=group.par,
               weights=weights, posterior.dist=post_dist, data=data, scale.D=D, ncase=nstd, nitem=nrow(par_df), Etol=Etol, MaxE=MaxE,
-              aprior=aprior.dist, gprior=gprior.dist, npar.est=length(param_loc$reloc.par), niter=r, maxpar.diff=max.diff,
+              aprior=aprior.dist, bprior=bprior.dist, gprior=gprior.dist, npar.est=length(param_loc$reloc.par), niter=r, maxpar.diff=max.diff,
               EMtime=est_time1, SEtime=est_time2, TotalTime=est_time3, test.1=memo3, test.2=memo4, var.note=memo5, fipc=FALSE,
               fipc.method=NULL, fix.loc=NULL)
 
@@ -839,11 +842,11 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
 
 # This function implement the fixed item parameter calibration (FIPC) using MMLE-EM algorithm
 est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, fix.g=FALSE,
-                         a.val.1pl=1, a.val.gpcm=1, g.val=.2, use.aprior=FALSE, use.gprior=TRUE,
-                         aprior=list(dist="lnorm", params=c(0.0, 0.5)), gprior=list(dist="beta", params=c(5, 16)),
-                         missing=NA, Quadrature=c(49, 6.0), weights=NULL, group.mean=0.0, group.var=1.0, EmpHist=FALSE,
-                         use.startval=FALSE, Etol=1e-04, MaxE=500, control=list(eval.max=200, iter.max=200),
-                         fipc=TRUE, fipc.method="MEM", fix.loc=NULL) {
+                         a.val.1pl=1, a.val.gpcm=1, g.val=.2, use.aprior=FALSE, use.bprior=FALSE, use.gprior=TRUE,
+                         aprior=list(dist="lnorm", params=c(0.0, 0.5)), bprior=list(dist="norm", params=c(0.0, 1.0)),
+                         gprior=list(dist="beta", params=c(5, 16)), missing=NA, Quadrature=c(49, 6.0), weights=NULL,
+                         group.mean=0.0, group.var=1.0, EmpHist=FALSE, use.startval=FALSE, Etol=1e-04, MaxE=500,
+                         control=list(eval.max=200, iter.max=200), fipc=TRUE, fipc.method="MEM", fix.loc=NULL) {
 
   # check start time
   start.time <- Sys.time()
@@ -1009,11 +1012,6 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   datlist_fix <- divide_data(data=data_fix, cats=x_fix$cats, freq.cat=freq_fix.cat)
   datlist_all <- divide_data(data=data_all, cats=x_all$cats, freq.cat=freq_all.cat)
 
-  # create the equations of gradient vectors and hessian matrixs of negative log likelihood across all items
-  equation <- eqlist(model=model, cats=cats, loc_1p_const=loc_1p_const, loc_else=loc_else,
-                     fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val,
-                     use.aprior=use.aprior, use.gprior=use.gprior, aprior=aprior, gprior=gprior)
-
   # estimation
   cat("Estimating item parameters...", '\n')
 
@@ -1040,10 +1038,10 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
     }
 
     # implement M-step
-    mstep <- Mstep(estep=estep, id=id, cats=cats, model=model, quadpt=quadpt, equation=equation, D=D, loc_1p_const=loc_1p_const, loc_else=loc_else,
+    mstep <- Mstep(estep=estep, id=id, cats=cats, model=model, quadpt=quadpt, D=D, loc_1p_const=loc_1p_const, loc_else=loc_else,
                    EmpHist=EmpHist, weights=weights, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl,
-                   a.val.gpcm=a.val.gpcm, g.val=g.val, use.aprior=use.aprior, use.gprior=use.gprior,
-                   aprior=aprior, gprior=gprior,  group.mean=group.mean, group.var=group.var, nstd=nstd,
+                   a.val.gpcm=a.val.gpcm, g.val=g.val, use.aprior=use.aprior, use.bprior=use.bprior, use.gprior=use.gprior,
+                   aprior=aprior, bprior=bprior, gprior=gprior, group.mean=group.mean, group.var=group.var, nstd=nstd,
                    Quadrature=Quadrature, use.startval=TRUE, control=control, iter=r, fipc=TRUE,
                    reloc.par=param_loc$reloc.par, info.mstep=FALSE)
 
@@ -1122,15 +1120,16 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   cat("Computing item parameter var-covariance matrix...", '\n')
   time1 <- Sys.time()
   info.data <- info_xpd(meta=meta, freq.cat=freq_new.cat, post_dist=post_dist, cats=cats, model=model, quadpt=quadpt,
-                        equation=equation, D=D, loc_1p_const=loc_1p_const, loc_else=loc_else, nstd=nstd,
+                        D=D, loc_1p_const=loc_1p_const, loc_else=loc_else, nstd=nstd,
                         fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl,
                         a.val.gpcm=a.val.gpcm, g.val=g.val, reloc.par=param_loc$reloc.par)
 
   # compute the infomation matrix of item parameter priors
-  info.prior <- info_prior(meta=meta, cats=cats, model=model, equation=equation, D=D, loc_1p_const=loc_1p_const,
+  info.prior <- info_prior(meta=meta, cats=cats, model=model, D=D, loc_1p_const=loc_1p_const,
                            loc_else=loc_else, nstd=nstd, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g,
-                           a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, aprior=aprior, gprior=gprior,
-                           use.aprior=use.aprior, use.gprior=use.gprior, reloc.par=param_loc$reloc.par)
+                           a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, aprior=aprior, bprior=bprior,
+                           gprior=gprior, use.aprior=use.aprior, use.bprior=use.bprior, use.gprior=use.gprior,
+                           reloc.par=param_loc$reloc.par)
 
   # sum of two information matrixs
   info.mat <- info.data + info.prior
@@ -1158,7 +1157,7 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
     memo5 <- "Variance-covariance matrix of item parameter estimates is not obtainable; unstable solution."
     warning(paste0(memo5, " \n"), call.=FALSE)
   } else {
-    se_par <- sqrt(diag(cov_mat))
+    se_par <- suppressWarnings(sqrt(diag(cov_mat)))
     memo5 <- "Variance-covariance matrix of item parameter estimates is obtainable."
   }
 
@@ -1233,6 +1232,7 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
 
   # prior information
   if(use.aprior) aprior.dist <- aprior else aprior.dist <- NULL
+  if(use.bprior) bprior.dist <- bprior else bprior.dist <- NULL
   if(use.gprior) gprior.dist <- gprior else gprior.dist <- NULL
 
   ##---------------------------------------------------------------
@@ -1245,7 +1245,7 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   # return results
   rst <- list(estimates=full_all_df, par.est=x_all, se.est=se_all_df, pos.par=loc_all_df, covariance=cov_mat, loglikelihood=llike, group.par=group.par,
               weights=weights, posterior.dist=post_dist, data=data_all, scale.D=D, ncase=nstd, nitem=nitem, Etol=Etol, MaxE=MaxE,
-              aprior=aprior.dist, gprior=gprior.dist, npar.est=length(param_loc$reloc.par), niter=r, maxpar.diff=max.diff,
+              aprior=aprior.dist, bprior=bprior.dist, gprior=gprior.dist, npar.est=length(param_loc$reloc.par), niter=r, maxpar.diff=max.diff,
               EMtime=est_time1, SEtime=est_time2, TotalTime=est_time3, test.1=memo3, test.2=memo4, var.note=memo5, fipc=TRUE,
               fipc.method=fipc.method, fix.loc=fix.loc)
 
@@ -1253,5 +1253,4 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   return(rst)
 
 }
-
 

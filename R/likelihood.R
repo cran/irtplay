@@ -32,15 +32,22 @@ likelihood <- function(meta, data1_drm=NULL, data2_drm=NULL, data_plm=NULL, thet
   if(!is.null(data_plm)) {
 
     # extract polytomous model info
-    model <- meta$plm$model
+    # model <- meta$plm$model
 
     # make a list of arguments
-    args <- list(meta$plm$a, meta$plm$d, model)
+    # args <- list(meta$plm$a, meta$plm$d, model)
 
     # compute the category probabilities of items
-    prob.plm <-
-      purrr::pmap(.l=args, .f=plm, theta=theta, D=D) %>%
-      do.call(what='cbind')
+    # prob.plm <-
+    #   purrr::pmap(.l=args, .f=plm, theta=theta, D=D) %>%
+    #   do.call(what='cbind')
+    # compute the category probabilities of items
+    prob.plm <- vector('list', length(meta$plm$a))
+    for(k in 1:length(meta$plm$a)) {
+      prob.plm[[k]] <- plm(theta=theta, a=meta$plm$a[k], d=meta$plm$d[[k]], D=D, pmodel=meta$plm$model[k])
+      if(length(theta) == 1L) prob.plm[[k]] <- rbind(prob.plm[[k]])
+    }
+    prob.plm <- do.call(prob.plm, what='cbind')
 
     # to prevent that log(prob.plm) have -Inf values
     log_prob.plm <- log(prob.plm)

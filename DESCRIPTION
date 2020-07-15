@@ -1,7 +1,7 @@
 Package: irtplay
 Type: Package
 Title: Unidimensional Item Response Theory Modeling
-Version: 1.5.1
+Version: 1.6.0
 Description: Fit unidimensional item response theory (IRT) models to mixture 
     of dichotomous and polytomous data, calibrate online item parameters 
     (i.e., pretest and operational items), estimate examinees abilities, 
@@ -46,9 +46,9 @@ Authors@R: c(person("Hwanggyu", "Lim", email="hglim83@gmail.com", role=c("aut", 
 RoxygenNote: 6.1.1
 Suggests: mirt
 NeedsCompilation: no
-Packaged: 2020-06-17 02:27:23 UTC; hlim
+Packaged: 2020-07-15 01:59:27 UTC; hlim
 Author: Hwanggyu Lim [aut, cre],
   Craig S. Wells [ctb]
 Maintainer: Hwanggyu Lim <hglim83@gmail.com>
 Repository: CRAN
-Date/Publication: 2020-06-17 05:00:03 UTC
+Date/Publication: 2020-07-15 13:00:03 UTC

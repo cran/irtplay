@@ -1,39 +1,128 @@
-# This function computes the gradients vectors of the negative log likelihood for an item across all individuals
-# This function is used to compute the standard errors of item parameter estimates using the cross-product method.
-grad_llike <- function(item_par, f_i, r_i, quadpt, model=c("1PLM", "2PLM", "3PLM", "GRM", "GPCM"), D=1,
-                       fix.a.1pl=TRUE, fix.a.gpcm=FALSE, fix.g=FALSE, a.val.1pl=1, a.val.gpcm=1, g.val=.2, n.1PLM=NULL,
-                       aprior=list(dist="lnorm", params=c(1, 0.5)),
-                       gprior=list(dist="beta", params=c(5, 16)),
-                       use.aprior=FALSE, use.gprior=FALSE, FUN.grad) {
+# This function analytically computes a gradient vector for scoring
+grad_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL),
+                       method=c("MLE", "MAP", "MLEF"), D=1, norm.prior=c(0, 1), logL=TRUE) {
 
-  # for dichotomous models
-  if(model %in% c("1PLM", "2PLM", "3PLM")) {
 
-    if(!fix.a.1pl & model == "1PLM") {
+  method <- match.arg(method)
 
-      # 1PLM: when the item slope parameters are not constrained to be equal across all items
-      # compute the gradient vectors
-      grad <- grad_item_drm(item_par=item_par, f_i=f_i, r_i=r_i, theta=quadpt, model=model, D=D,
-                            fix.a=fix.a.1pl, n.1PLM=n.1PLM, aprior=aprior, use.aprior=use.aprior,
-                            FUN.grad=FUN.grad, se=TRUE)
+  # empty vectors
+  grad_drm <- 0
+  grad_plm <- 0
 
-    } else {
+  # when there are dichotomous items
+  if(!is.null(meta$drm)) {
 
-      # for all other dichotomous models
-      # compute the gradient vectors
-      grad <- grad_item_drm(item_par=item_par, f_i=f_i, r_i=r_i, theta=quadpt, model=model, D=D,
-                            fix.a=fix.a.1pl, fix.g=fix.g, a.val=a.val.1pl, g.val=g.val, n.1PLM=NULL,
-                            aprior=aprior, gprior=gprior, use.aprior=use.aprior, use.gprior=use.gprior,
-                            FUN.grad=FUN.grad, se=TRUE)
+    # assign item parameters
+    a <- meta$drm$a
+    b <- meta$drm$b
+    g <- meta$drm$g
+
+    # assign item response for each score category
+    r_i <- freq.cat$freq.cat_drm[, 2]
+
+    # compute the probabilities for each score category
+    p <- drm(theta=theta, a=a, b=b, g=g, D=D)
+    p <- ifelse(p == 0L, 1e-20, p)
+
+    # compute the gradient
+    grad_drm[1] <- - D * sum((a * (p - g) * (r_i - p)) / ((1 - g) * p))
+
+  }
+
+  # when there are polytomous items
+  if(!is.null(meta$plm)) {
+
+    for(i in 1:length(meta$plm$cats)) {
+
+      # check a polytomous model for an item
+      model <- meta$plm$model[i]
+
+      # assign item response for each score category
+      r_i <- freq.cat$freq.cat_plm[i, 1:meta$plm$cats[i]]
+
+      if(model == "GRM") {
+
+        # assign item parameters
+        a <- meta$plm$a[i]
+        d <- meta$plm$d[[i]]
+
+        # check the number of step parameters
+        m <- length(d)
+
+        # calculate all the probabilities greater than equal to each threshold
+        allPst <- drm(theta=theta, a=rep(a, m), b=d, g=0, D=D)
+        allQst <- 1 - allPst
+
+        # calculate category probabilities
+        P <- c(1, allPst) - c(allPst, 0)
+        P <- ifelse(P == 0L, 1e-20, P)
+
+        # compute the component values to get gradients
+        Da <- D * a
+        pq_st <- allPst * allQst
+        deriv_Pstth <- Da * pq_st
+        deriv_Pth <- c(0, deriv_Pstth) - c(deriv_Pstth, 0)
+        frac_rp <- r_i / P
+
+        # compute the gradient
+        grad_plm[i] <- - sum(frac_rp * deriv_Pth)
+
+      }
+
+      if(model == "GPCM") {
+
+        # assign item parameters
+        a <- meta$plm$a[i]
+
+        # include zero for the step parameter of the first category
+        d <- c(0, meta$plm$d[[i]])
+
+        # check the number of step parameters
+        m <- length(d) - 1
+
+        # calculate category probabilities
+        Da <- D * a
+        z <- Da * (theta - d)
+        numer <- exp(cumsum(z)) # numerator
+        denom <- sum(numer) # denominator
+        P <- numer / denom
+        P <- ifelse(P == 0L, 1e-20, P)
+
+        # compute the component values to get a gradient vector
+        frac_rp <- r_i / P
+        denom2 <- denom^2
+        d1th_z <- Da * (1:(m+1))
+        d1th_denom <- sum(numer * d1th_z)
+        deriv_Pth <- (numer / denom2) * (d1th_z * denom - d1th_denom)
+
+        # compute the gradients of a and bs parameters
+        grad_plm[i] <- - sum(frac_rp * deriv_Pth)
+
+      }
 
     }
 
-  } else {
+    # sum of all gradients for polytomous models
+    grad_plm <- sum(grad_plm)
 
-    # for polytomous models
-    # compute the gradient vectors
-    grad <- grad_item_plm(item_par=item_par, r_i=r_i, theta=quadpt, pmodel=model, D=D, fix.a=fix.a.gpcm,
-                          a.val=a.val.gpcm, aprior=aprior, use.aprior=use.aprior, FUN.grad=FUN.grad, se=TRUE)
+  }
+
+  # sum of all gradients across all items
+  grad <- sum(grad_drm, grad_plm)
+
+  # extract the gradient vector when MAP method is used
+  if(method == "MAP") {
+
+    # compute a gradient of prior distribution
+    rst.prior <-
+      logprior_deriv(val=theta, is.aprior=FALSE, D=NULL, dist="norm",
+                     par.1=norm.prior[1], par.2=norm.prior[2])
+
+    # extract the gradient
+    grad.prior <- attributes(rst.prior)$gradient
+
+    # add the gradient
+    grad <- sum(grad, grad.prior)
 
   }
 
@@ -43,69 +132,37 @@ grad_llike <- function(item_par, f_i, r_i, quadpt, model=c("1PLM", "2PLM", "3PLM
 }
 
 
-# This function analytically computes a gradient vector for scoring
-grad_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_plm=NULL), method=c("MLE", "MAP", "MLEF"),
-                       D=1, norm.prior=c(0, 1), logL=TRUE,
-                       FUN.grad=list(drm=NULL, plm=NULL, prior=NULL),
-                       FUN.hess=list(drm=NULL, plm=NULL, prior=NULL)) {
 
+# This function computes the gradients vectors of the negative log likelihood for an item across all individuals
+# This function is used to compute the standard errors of item parameter estimates using the cross-product method.
+grad_llike <- function(item_par, f_i, r_i, quadpt, model=c("1PLM", "2PLM", "3PLM", "GRM", "GPCM"), D=1,
+                       fix.a.1pl=TRUE, fix.a.gpcm=FALSE, fix.g=FALSE, a.val.1pl=1, a.val.gpcm=1, g.val=.2, n.1PLM=NULL) {
 
-  method <- match.arg(method)
+  # for dichotomous models
+  if(model %in% c("1PLM", "2PLM", "3PLM")) {
 
-  # extract the equations
-  eq_grad_drm <- FUN.grad$drm
-  eq_grad_plm <- FUN.grad$plm
+    if(!fix.a.1pl & model == "1PLM") {
 
-  # empty vectors
-  grad <- c()
+      # 1PLM: when the item slope parameters are not constrained to be equal across all items
+      # compute the gradient vectors
+      grad <- grad_item_drm_se(item_par=item_par, f_i=f_i, r_i=r_i, theta=quadpt, model=model, D=D,
+                               fix.a=fix.a.1pl, n.1PLM=n.1PLM)
 
-  # when there are dichotomous items
-  if(!is.null(meta$drm)) {
-    par.1 <- meta$drm$a
-    par.2 <- meta$drm$b
-    par.3 <- meta$drm$g
-    n.1 <- freq.cat$freq.cat_drm[, 2]
-    n.2 <- freq.cat$freq.cat_drm[, 1]
-    rst <- eq_grad_drm(par.1=par.1, par.2=par.2, par.3=par.3, n.1=n.1, n.2=n.2, theta=theta, D=D)
-    grad <- sum(c(grad, attributes(rst)$gradient), na.rm=TRUE)
-  }
+    } else {
 
-  # when there are polytomous items
-  if(!is.null(meta$plm)) {
-
-    freq.cat_plm <- freq.cat$freq.cat_plm
-
-    for(i in 1:length(meta$plm$cats)) {
-
-      # create a list containing the arguments to be used in the equation function
-      args.pars <- list()
-      args.pars[[1]] <- meta$plm$a[i]
-      args.pars <- c(args.pars, as.list(meta$plm$d[[i]])[1:(meta$plm$cats[i] - 1)])
-      args.ns <- as.list(freq.cat_plm[i, ])[1:meta$plm$cats[i]]
-      args.list <- c(args.pars, args.ns)
-      args.list$theta <- theta
-      args.list$D <- D
-      args.list <- unname(args.list)
-
-      # implement the equation function
-      params_fun <- eq_grad_plm[[i]]
-      rst <- do.call("params_fun", args.list, envir=environment())
-      grad <- sum(c(grad, attributes(rst)$gradient[1]), na.rm=TRUE)
+      # for all other dichotomous models
+      # compute the gradient vectors
+      grad <- grad_item_drm_se(item_par=item_par, f_i=f_i, r_i=r_i, theta=quadpt, model=model, D=D,
+                               fix.a=fix.a.1pl, fix.g=fix.g, a.val=a.val.1pl, g.val=g.val, n.1PLM=NULL)
 
     }
 
-  }
+  } else {
 
-
-  # extract the gradient vector when MAP method is used
-  if(method == "MAP") {
-
-    # equation
-    eq_grad_prior <- FUN.grad$prior
-
-    # implement the equation
-    rst.prior <- eq_grad_prior(theta)
-    grad <- sum(c(grad, attributes(rst.prior)$gradient[1]), na.rm=TRUE)
+    # for polytomous models
+    # compute the gradient vectors
+    grad <- grad_item_plm_se(item_par=item_par, r_i=r_i, theta=quadpt, pmodel=model, D=D, fix.a=fix.a.gpcm,
+                             a.val=a.val.gpcm)
 
   }
 
@@ -119,10 +176,11 @@ grad_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_pl
 grad_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "DRM"), D=1,
                           fix.a=FALSE, fix.g=TRUE, a.val=1, g.val=.2, n.1PLM=NULL,
                           aprior=list(dist="lnorm", params=c(1, 0.5)),
+                          bprior=list(dist="norm", params=c(0.0, 1.0)),
                           gprior=list(dist="beta", params=c(5, 17)),
                           use.aprior=FALSE,
-                          use.gprior=TRUE,
-                          FUN.grad, FUN.hess, se=FALSE) {
+                          use.bprior=FALSE,
+                          use.gprior=TRUE) {
 
 
   # consider DRM as 3PLM
@@ -131,215 +189,294 @@ grad_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
   # transform item parameters as numeric values
   item_par <- as.numeric(item_par)
 
+  # count the number of item parameters to be estimated
+  n.par <- length(item_par)
+
   # (1) 1PLM: the slope parameters are contrained to be equal across the 1PLM items
   if(!fix.a & model == "1PLM") {
-    n.par <- length(item_par)
 
-    args.pars <- vector('list', n.par)
-    for(i in 1:n.par) {
-      args.pars[[i]] <- item_par[i]
+    # make vectors of a and b parameters for all 1PLM items
+    a <- rep(item_par[1], n.1PLM)
+    b <- item_par[-1]
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # compute the probabilities of correct and incorrect
+    p <- drm(theta=theta, a=a, b=b, g=0, D=D)
+    if(nstd == 1L) {
+      p <- rbind(p)
     }
-    args.ns <- vector('list', 2 * n.1PLM)
-    for(i in 1:n.1PLM) {
-      args.ns[[(2*i - 1)]] <- r_i[[i]]
+    p <- ifelse(p == 0L, 1e-20, p)
+    q <- 1 - p
+
+    # compute the component values
+    r_p <- r_i  -  f_i * p
+    bmat <- matrix(b, nrow=nstd, ncol=n.1PLM, byrow=TRUE)
+    theta_b <- theta - bmat
+
+    # compute the gradients of a and bs parameters
+    gr_a <- - D * sum(theta_b * r_p)
+    gr_b <- D * a[1] * colSums(r_p)
+
+    # combine all gradients into a vector
+    grad <- c(gr_a, gr_b)
+
+    # create a prior gradient vector
+    grad.prior <- rep(0, n.par)
+
+    # extract the gradient vector when the slope parameter prior is used
+    if(use.aprior) {
+      rst.aprior <-
+        logprior_deriv(val=a[1], is.aprior=TRUE, D=D, dist=aprior$dist,
+                       par.1=aprior$params[1], par.2=aprior$params[2])
+
+      # extract the gradient vector
+      grad.prior[1] <- attributes(rst.aprior)$gradient
     }
-    for(i in 1:n.1PLM) {
-      args.ns[[(2*i)]] <- f_i[[i]] - r_i[[i]]
-    }
-    args.list <- c(args.pars, args.ns)
-    args.theta <- vector('list', n.1PLM)
-    for(i in 1:n.1PLM) {
-      args.theta[[i]] <- theta[[i]]
-    }
-    args.list <- c(args.list, args.theta)
-    args.list$D <- D
 
-    ##-------------------------------------------------------------------------
-    # implement the equation function
-    params_fun <- FUN.grad$params_fun
-    rst <- do.call("params_fun", args.list, envir=environment())
+    # extract the gradient vector when the difficulty parameter prior is used
+    if(use.bprior) {
+      rst.bprior <-
+        logprior_deriv(val=b, is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                       par.1=bprior$params[1], par.2=bprior$params[2])
 
-    # extract the gradient vector
-    grad <- attributes(rst)$gradient
-    grad[is.nan(grad)] <- 0
-
-    # additional steps when the gradients are used for item parameter estimation
-    if(!se) {
-      grad <- colSums(grad)
-
-      # extract the gradient vector when the slope parameter prior is used
-      if(use.aprior) {
-        aprior_fun <- FUN.grad$aprior_fun
-        rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
-
-        # extract the gradient vector
-        grad.aprior <- attributes(rst.aprior)$gradient
-        grad.aprior[is.nan(grad.aprior)] <- 0
-        grad <- grad + colSums(grad.aprior)
-      }
+      # extract the gradient vector
+      grad.prior[-1] <- attributes(rst.bprior)$gradient
     }
 
   }
 
   # (2) 1PLM: the slope parameters are fixed to be a specified value
   if(fix.a & model == "1PLM") {
-    n.par <- length(item_par)
 
-    args.list <- list()
-    for(i in 1:n.par) {
-      args.list[[i]] <- item_par[i]
+    # assign a and b parameters
+    a <- a.val
+    b <- item_par
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # compute the probabilities of correct and incorrect
+    p <- drm(theta=theta, a=a, b=b, g=0, D=D)
+    if(nstd == 1L) {
+      p <- rbind(p)
     }
-    args.list$n.1 <- r_i
-    args.list$n.2 <- f_i - r_i
-    args.list$theta <- theta
-    args.list$D <- D
+    p <- ifelse(p == 0L, 1e-20, p)
+    q <- 1 - p
 
-    ##-------------------------------------------------------------------------
-    # implement the equation function
-    params_fun <- FUN.grad$params_fun
-    rst <- do.call("params_fun", args.list, envir=environment())
+    # compute the component values
+    r_p <- r_i  -  f_i * p
 
-    # extract the gradient vector
-    grad <- attributes(rst)$gradient
-    grad[is.nan(grad)] <- 0
+    # compute the gradients of a and bs parameters
+    gr_b <- - as.numeric(-D * a * sum(r_p))
 
-    # additional steps when the gradients are used for item parameter estimation
-    if(!se) {
-      grad <- colSums(grad)
+    # combine all gradients into a vector
+    grad <- gr_b
+
+    # create a prior gradient vector
+    grad.prior <- rep(0, n.par)
+
+    # extract the gradient vector when the difficulty parameter prior is used
+    if(use.bprior) {
+      rst.bprior <-
+        logprior_deriv(val=b, is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                       par.1=bprior$params[1], par.2=bprior$params[2])
+
+      # extract the gradient vector
+      grad.prior <- attributes(rst.bprior)$gradient
     }
 
   }
 
   # (3) 2PLM
   if(model == "2PLM") {
-    n.par <- length(item_par)
 
-    args.list <- list()
-    for(i in 1:n.par) {
-      args.list[[i]] <- item_par[i]
+    # assign a and b parameters
+    a <- item_par[1]
+    b <- item_par[2]
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # compute the probabilities of correct and incorrect
+    p <- drm(theta=theta, a=a, b=b, g=0, D=D)
+    if(nstd == 1L) {
+      p <- rbind(p)
     }
-    args.list$n.1 <- r_i
-    args.list$n.2 <- f_i - r_i
-    args.list$theta <- theta
-    args.list$D <- D
+    p <- ifelse(p == 0L, 1e-20, p)
+    q <- 1 - p
 
-    ##-------------------------------------------------------------------------
-    # implement the equation function
-    params_fun <- FUN.grad$params_fun
-    rst <- do.call("params_fun", args.list, envir=environment())
+    # compute the component values
+    Da <- D * a
+    r_p <- r_i  -  f_i * p
+    theta_b <- theta - b
 
-    # extract the gradient vector
-    grad <- attributes(rst)$gradient
-    grad[is.nan(grad)] <- 0
+    # compute the gradients of a and bs parameters
+    gr_a <- - D * sum(theta_b * r_p)
+    gr_b <- Da * sum(r_p)
 
-    # additional steps when the gradients are used for item parameter estimation
-    if(!se) {
-      grad <- colSums(grad)
+    # combine all gradients into a vector
+    grad <- c(gr_a, gr_b)
 
-      # extract the gradient vector when the slope parameter prior is used
-      if(use.aprior) {
-        aprior_fun <- FUN.grad$aprior_fun
-        rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+    # create a prior gradient vector
+    grad.prior <- rep(0, n.par)
 
-        # extract the gradient vector
-        grad.aprior <- attributes(rst.aprior)$gradient
-        grad.aprior[is.nan(grad.aprior)] <- 0
-        grad <- grad + colSums(grad.aprior)
-      }
+    # extract the gradient vector when the slope parameter prior is used
+    if(use.aprior) {
+      rst.aprior <-
+        logprior_deriv(val=a, is.aprior=TRUE, D=D, dist=aprior$dist,
+                       par.1=aprior$params[1], par.2=aprior$params[2])
+
+      # extract the gradient vector
+      grad.prior[1] <- attributes(rst.aprior)$gradient
+    }
+
+    # extract the gradient vector when the difficulty parameter prior is used
+    if(use.bprior) {
+      rst.bprior <-
+        logprior_deriv(val=b, is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                       par.1=bprior$params[1], par.2=bprior$params[2])
+
+      # extract the gradient vector
+      grad.prior[2] <- attributes(rst.bprior)$gradient
     }
 
   }
 
   # (4) 3PLM
   if(!fix.g & model == "3PLM") {
-    n.par <- length(item_par)
 
-    args.list <- list()
-    for(i in 1:n.par) {
-      args.list[[i]] <- item_par[i]
+    # assign a, b, g parameters
+    a <- item_par[1]
+    b <- item_par[2]
+    g <- item_par[3]
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # compute the probabilities of correct and incorrect
+    p <- drm(theta=theta, a=a, b=b, g=g, D=D)
+    if(nstd == 1L) {
+      p <- rbind(p)
     }
-    args.list$n.1 <- r_i
-    args.list$n.2 <- f_i - r_i
-    args.list$theta <- theta
-    args.list$D <- D
+    p <- ifelse(p == 0L, 1e-20, p)
+    q <- 1 - p
 
-    ##-------------------------------------------------------------------------
-    # implement the equation function
-    params_fun <- FUN.grad$params_fun
-    rst <- do.call("params_fun", args.list, envir=environment())
+    # compute the component values
+    g_1 <- 1 - g
+    p_g <- p - g
+    r_p <- r_i  -  f_i * p
+    theta_b <- theta - b
+    u1 <- p_g * r_p / p
+    u2 <- D / g_1
+    u3 <- a * u2
 
-    # extract the gradient vector
-    grad <- attributes(rst)$gradient
-    grad[is.nan(grad)] <- 0
+    # compute the gradients of a and bs parameters
+    gr_a <- - u2 * sum(theta_b * u1)
+    gr_b <- u3 * sum(u1)
+    gr_g <- - (1 / g_1) * sum(r_p / p)
 
-    # additional steps when the gradients are used for item parameter estimation
-    if(!se) {
-      grad <- colSums(grad)
+    # combine all gradients into a vector
+    grad <- c(gr_a, gr_b, gr_g)
 
-      # extract the gradient vector when the slope parameter prior is used
-      if(use.aprior) {
-        aprior_fun <- FUN.grad$aprior_fun
-        rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+    # create a prior gradient vector
+    grad.prior <- rep(0, n.par)
 
-        # extract the gradient vector
-        grad.aprior <- attributes(rst.aprior)$gradient
-        grad.aprior[is.nan(grad.aprior)] <- 0
-        grad <- grad + colSums(grad.aprior)
-      }
+    # extract the gradient vector when the slope parameter prior is used
+    if(use.aprior) {
+      rst.aprior <-
+        logprior_deriv(val=a, is.aprior=TRUE, D=D, dist=aprior$dist,
+                       par.1=aprior$params[1], par.2=aprior$params[2])
 
-      # extract the gradient vector when the guessing parameter prior is used
-      if(use.gprior) {
-        gprior_fun <- FUN.grad$gprior_fun
-        rst.gprior <- do.call("gprior_fun", list(item_par[3]), envir=environment())
+      # extract the gradient vector
+      grad.prior[1] <- attributes(rst.aprior)$gradient
+    }
 
-        # extract the gradient vector
-        grad.gprior <- attributes(rst.gprior)$gradient
-        grad.gprior[is.nan(grad.gprior)] <- 0
-        grad <- grad + colSums(grad.gprior)
-      }
+    # extract the gradient vector when the difficulty parameter prior is used
+    if(use.bprior) {
+      rst.bprior <-
+        logprior_deriv(val=b, is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                       par.1=bprior$params[1], par.2=bprior$params[2])
+
+      # extract the gradient vector
+      grad.prior[2] <- attributes(rst.bprior)$gradient
+    }
+
+    # extract the gradient vector when the guessing parameter prior is used
+    if(use.gprior) {
+      rst.gprior <-
+        logprior_deriv(val=g, is.aprior=FALSE, D=NULL, dist=gprior$dist,
+                       par.1=gprior$params[1], par.2=gprior$params[2])
+
+      # extract the gradient vector
+      grad.prior[3] <- attributes(rst.gprior)$gradient
     }
 
   }
 
   # (5) 3PLM: the guessing parameters are fixed to be specified value
   if(fix.g & model == "3PLM") {
-    n.par <- length(item_par)
 
-    args.list <- list()
-    for(i in 1:n.par) {
-      args.list[[i]] <- item_par[i]
+    # assign a, b, g parameters
+    a <- item_par[1]
+    b <- item_par[2]
+    g <- g.val
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # compute the probabilities of correct and incorrect
+    p <- drm(theta=theta, a=a, b=b, g=g, D=D)
+    if(nstd == 1L) {
+      p <- rbind(p)
     }
-    args.list$n.1 <- r_i
-    args.list$n.2 <- f_i - r_i
-    args.list$theta <- theta
-    args.list$D <- D
+    p <- ifelse(p == 0L, 1e-20, p)
+    q <- 1 - p
 
-    ##-------------------------------------------------------------------------
-    # implement the equation function
-    params_fun <- FUN.grad$params_fun
-    rst <- do.call("params_fun", args.list, envir=environment())
+    # compute the component values
+    g_1 <- 1 - g
+    p_g <- p - g
+    r_p <- r_i  -  f_i * p
+    theta_b <- theta - b
+    u1 <- p_g * r_p / p
+    u2 <- D / g_1
+    u3 <- a * u2
 
-    # extract the gradient vector
-    grad <- attributes(rst)$gradient
-    grad[is.nan(grad)] <- 0
+    # compute the gradients of a and bs parameters
+    gr_a <- - u2 * sum(theta_b * u1)
+    gr_b <- u3 * sum(u1)
 
-    # additional steps when the gradients are used for item parameter estimation
-    if(!se) {
-      grad <- colSums(grad)
+    # combine all gradients into a vector
+    grad <- c(gr_a, gr_b)
 
-      # extract the gradient vector when the slope parameter prior is used
-      if(use.aprior) {
-        aprior_fun <- FUN.grad$aprior_fun
-        rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+    # create a prior gradient vector
+    grad.prior <- rep(0, n.par)
 
-        # extract the gradient vector
-        grad.aprior <- attributes(rst.aprior)$gradient
-        grad.aprior[is.nan(grad.aprior)] <- 0
-        grad <- grad + colSums(grad.aprior)
-      }
+    # extract the gradient vector when the slope parameter prior is used
+    if(use.aprior) {
+      rst.aprior <-
+        logprior_deriv(val=a, is.aprior=TRUE, D=D, dist=aprior$dist,
+                       par.1=aprior$params[1], par.2=aprior$params[2])
+
+      # extract the gradient vector
+      grad.prior[1] <- attributes(rst.aprior)$gradient
+    }
+
+    # extract the gradient vector when the difficulty parameter prior is used
+    if(use.bprior) {
+      rst.bprior <-
+        logprior_deriv(val=b, is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                       par.1=bprior$params[1], par.2=bprior$params[2])
+
+      # extract the gradient vector
+      grad.prior[2] <- attributes(rst.bprior)$gradient
     }
 
   }
+
+  # add the prior gradient vector
+  grad <- grad + grad.prior
 
   # return results
   grad
@@ -350,8 +487,9 @@ grad_item_drm <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3P
 # This function analytically computes a gradient vector of polytomous item parameters
 grad_item_plm <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=1,
                           aprior=list(dist="lnorm", params=c(1, 0.5)),
+                          bprior=list(dist="norm", params=c(0.0, 1.0)),
                           use.aprior=FALSE,
-                          FUN.grad, FUN.hess, se=FALSE) {
+                          use.bprior=FALSE) {
 
 
   if(pmodel == "GRM" & fix.a) {
@@ -361,80 +499,591 @@ grad_item_plm <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=
   # transform item parameters as numeric values
   item_par <- as.numeric(item_par)
 
+  # count the number of item parameters to be estimated
+  n.par <- length(item_par)
+
   ##-------------------------------------------------------------------------
-  # check the number of categories and parameters to be estimated
-  if(!fix.a) {
-    cats <- length(item_par)
-    n.par <- length(item_par)
+  # compute the gradients
+  # (1) GRM
+  if(pmodel == "GRM") {
 
-    # create a list containing the arguments to be used in the equation function
-    args.pars <- list()
-    for(i in 1:n.par) {
-      args.pars[[i]] <- item_par[i]
+    # assign a, b parameters
+    a <- item_par[1]
+    d <- item_par[-1]
+
+    # check the number of step parameters
+    m <- length(d)
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # calculate all the probabilities greater than equal to each threshold
+    allPst <- drm(theta=theta, a=rep(a, m), b=d, g=0, D=D)
+    if(nstd == 1L) {
+      allPst <- matrix(allPst, nrow=1)
     }
-    args.ns <- list()
-    for(i in 1:cats) {
-      args.ns[[i]] <- r_i[, i]
+    allQst <- 1 - allPst[, ,drop=FALSE]
+
+    # calculate category probabilities
+    P <- cbind(1, allPst) - cbind(allPst, 0)
+    P <- ifelse(P == 0L, 1e-20, P)
+
+    # compute the component values to get gradients
+    # theta_b <- purrr::map_dfc(.x=d, .f=function(x) (theta - x))
+    dmat <- matrix(d, nrow=nstd, ncol=m, byrow=TRUE)
+    Da <- D * a
+    pq_st <- allPst * allQst
+    q_p_st <- allQst - allPst
+    # w1 <- D * theta_b
+    w1 <- D * (theta - dmat)
+    w2 <- w1 * pq_st
+    w3 <- cbind(0, w2) - cbind(w2, 0)
+    frac_rp <- r_i / P
+    w4 <- frac_rp[, -(m + 1), drop=FALSE] - frac_rp[, -1, drop=FALSE]
+
+    # compute the gradients of a and bs parameters
+    gr_a <- - sum(frac_rp * w3)
+    gr_b <- - Da * colSums(pq_st * w4)
+
+    # combine all gradients into a vector
+    grad <- c(gr_a, gr_b)
+
+    # create a prior gradient vector
+    grad.prior <- rep(0, n.par)
+
+    # extract the gradient vector when the slope parameter prior is used
+    if(use.aprior) {
+      rst.aprior <-
+        logprior_deriv(val=a, is.aprior=TRUE, D=D, dist=aprior$dist,
+                       par.1=aprior$params[1], par.2=aprior$params[2])
+
+      # extract the gradient vector
+      grad.prior[1] <- attributes(rst.aprior)$gradient
     }
-    args.list <- c(args.pars, args.ns)
-    args.list$theta <- theta
-    args.list$D <- D
 
-    ##-------------------------------------------------------------------------
-    # implement the equation function
-    params_fun <- FUN.grad$params_fun
-    rst <- do.call("params_fun", args.list, envir=environment())
+    # extract the gradient vector when the difficulty parameter prior is used
+    if(use.bprior) {
+      rst.bprior <-
+        logprior_deriv(val=d, is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                       par.1=bprior$params[1], par.2=bprior$params[2])
 
-    # extract the gradient vector
-    grad <- attributes(rst)$gradient
-    grad[is.nan(grad)] <- 0
+      # extract the gradient vector
+      grad.prior[-1] <- attributes(rst.bprior)$gradient
+    }
 
-    # additional steps when the gradients are used for item parameter estimation
-    if(!se) {
-      grad <- colSums(grad)
+  }
+
+  # (2) GPCM and PCM
+  if(pmodel == "GPCM") {
+
+    if(!fix.a) {
+      # For GPCM
+      # assign a parameter
+      a <- item_par[1]
+
+      # include zero for the step parameter of the first category
+      d <- c(0, item_par[-1])
+
+      # check the number of step parameters
+      m <- length(d) - 1
+
+      # check the numbers of examinees and items
+      nstd <- length(theta)
+
+      # create a matrix for step parameters
+      dmat <- matrix(d, nrow=nstd, ncol=(m+1), byrow=TRUE)
+
+      # calculate category probabilities
+      Da <- D * a
+      z <- Da * (theta - dmat)
+      numer <- exp(t(apply(z, 1, cumsum))) # numerator
+      denom <- rowSums(numer) # denominator
+      P <- numer / denom
+      P <- ifelse(P == 0L, 1e-20, P)
+
+      # compute the component values to get a gradient vector
+      dsmat <- matrix(0, nrow=(m+1), ncol=(m+1))
+      dsmat[-1, -1][upper.tri(x=dsmat[-1, -1], diag = TRUE)] <- 1
+      tr_dsmat <- t(dsmat)
+      frac_rp <- r_i / P
+      w1 <- D * (theta - dmat)
+      w1cum <- t(apply(w1, 1, cumsum))
+      denom2 <- denom^2
+      d1a_denom <- rowSums(numer * w1cum)
+      deriv_Pa <- (numer * (w1cum * denom - d1a_denom)) / denom2
+      d1b_denom <- - (Da * numer) %*% tr_dsmat
+      denom_vec <- cbind(denom)
+      DaDenom_vec <- Da * denom_vec
+
+      # compute the gradients of a and bs parameters
+      gr_a <- - sum(frac_rp * deriv_Pa)
+      gr_b <- c()
+      for(k in 1:m) {
+        gr_b[k] <- -sum(frac_rp * (- numer * (DaDenom_vec %*% dsmat[k + 1, , drop=FALSE] + d1b_denom[, k + 1]) / denom2))
+      }
+
+      # combine all gradients into a vector
+      grad <- c(gr_a, gr_b)
+
+      # create a prior gradient vector
+      grad.prior <- rep(0, n.par)
 
       # extract the gradient vector when the slope parameter prior is used
       if(use.aprior) {
-        aprior_fun <- FUN.grad$aprior_fun
-        rst.aprior <- do.call("aprior_fun", list(item_par[1], D), envir=environment())
+        rst.aprior <-
+          logprior_deriv(val=a, is.aprior=TRUE, D=D, dist=aprior$dist,
+                         par.1=aprior$params[1], par.2=aprior$params[2])
 
         # extract the gradient vector
-        grad.aprior <- attributes(rst.aprior)$gradient
-        grad.aprior[is.nan(grad.aprior)] <- 0
-        grad <- grad + colSums(grad.aprior)
+        grad.prior[1] <- attributes(rst.aprior)$gradient
+      }
+
+      # extract the gradient vector when the difficulty parameter prior is used
+      if(use.bprior) {
+        rst.bprior <-
+          logprior_deriv(val=d[-1], is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                         par.1=bprior$params[1], par.2=bprior$params[2])
+
+        # extract the gradient vector
+        grad.prior[-1] <- attributes(rst.bprior)$gradient
+      }
+
+    } else {
+      # for PCM
+      # assign a parameter
+      a <- a.val
+
+      # include zero for the step parameter of the first category
+      d <- c(0, item_par)
+
+      # check the number of step parameters
+      m <- length(d) - 1
+
+      # check the numbers of examinees and items
+      nstd <- length(theta)
+
+      # create a matrix for step parameters
+      dmat <- matrix(d, nrow=nstd, ncol=(m+1), byrow=TRUE)
+
+      # calculate category probabilities
+      Da <- D * a
+      z <- Da * (theta - dmat)
+      numer <- exp(t(apply(z, 1, cumsum))) # numerator
+      denom <- rowSums(numer) # denominator
+      P <- numer / denom
+      P <- ifelse(P == 0L, 1e-20, P)
+
+      # compute the component values to get a gradient vector
+      dsmat <- matrix(0, nrow=(m+1), ncol=(m+1))
+      dsmat[-1, -1][upper.tri(x=dsmat[-1, -1], diag = TRUE)] <- 1
+      tr_dsmat <- t(dsmat)
+      frac_rp <- r_i / P
+      denom2 <- denom^2
+      d1b_denom <- - (Da * numer) %*% tr_dsmat
+      denom_vec <- cbind(denom)
+      DaDenom_vec <- Da * denom_vec
+
+      # compute the gradients of a and bs parameters
+      gr_b <- c()
+      for(k in 1:m) {
+        gr_b[k] <- -sum(frac_rp * (- numer * (DaDenom_vec %*% dsmat[k + 1, , drop=FALSE] + d1b_denom[, k + 1]) / denom2))
+      }
+
+      # combine all gradients into a vector
+      grad <- gr_b
+
+      # create a prior gradient vector
+      grad.prior <- rep(0, n.par)
+
+      # extract the gradient vector when the difficulty parameter prior is used
+      if(use.bprior) {
+        rst.bprior <-
+          logprior_deriv(val=d[-1], is.aprior=FALSE, D=NULL, dist=bprior$dist,
+                         par.1=bprior$params[1], par.2=bprior$params[2])
+
+        # extract the gradient vector
+        grad.prior <- attributes(rst.bprior)$gradient
       }
 
     }
 
-  } else {
-    cats <- length(item_par) + 1
-    n.par <- length(item_par)
+  }
 
-    # create a list containing the arguments to be used in the equation function
-    args.pars <- list()
-    for(i in 1:n.par) {
-      args.pars[[i]] <- item_par[i]
+  # add the prior gradient vector
+  grad <- grad + grad.prior
+
+  # return results
+  grad
+
+}
+
+
+# This function analytically computes a matrix of gradients of dichotomous item parameters across all examinees
+# This function is used to compute the cross-product information matrix
+grad_item_drm_se <- function(item_par, f_i, r_i, theta, model=c("1PLM", "2PLM", "3PLM", "DRM"), D=1,
+                             fix.a=FALSE, fix.g=TRUE, a.val=1, g.val=.2, n.1PLM=NULL) {
+
+
+  # consider DRM as 3PLM
+  if(model == "DRM") model <- "3PLM"
+
+  # transform item parameters as numeric values
+  item_par <- as.numeric(item_par)
+
+  # count the number of item parameters to be estimated
+  n.par <- length(item_par)
+
+  # (1) 1PLM: the slope parameters are contrained to be equal across the 1PLM items
+  if(!fix.a & model == "1PLM") {
+
+    # make vectors of a and b parameters for all 1PLM items
+    a <- rep(item_par[1], n.1PLM)
+    b <- item_par[-1]
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # compute the probabilities of correct and incorrect
+    p <- drm(theta=theta, a=a, b=b, g=0, D=D)
+    if(nstd == 1L) {
+      p <- rbind(p)
     }
-    args.ns <- list()
-    for(i in 1:cats) {
-      args.ns[[i]] <- r_i[, i]
+    p <- ifelse(p == 0L, 1e-20, p)
+    q <- 1 - p
+
+    # compute the component values
+    r_p <- r_i  -  f_i * p
+    bmat <- matrix(b, nrow=nstd, ncol=n.1PLM, byrow=TRUE)
+    theta_b <- theta - bmat
+
+    # compute the gradients of a and bs parameters
+    gr_a <- - D * rowSums(theta_b * r_p)
+    gr_b <- D * a[1] * r_p
+
+    # create a matrix of gradients across all examinees
+    grad <- matrix(0, nrow=nstd, ncol=n.par)
+    grad[, 1] <- gr_a
+    grad[, -1] <- gr_b
+
+  }
+
+  # (2) 1PLM: the slope parameters are fixed to be a specified value
+  if(fix.a & model == "1PLM") {
+
+    # assign a and b parameters
+    a <- a.val
+    b <- item_par
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # compute the probabilities of correct and incorrect
+    p <- drm(theta=theta, a=a, b=b, g=0, D=D)
+    if(nstd == 1L) {
+      p <- rbind(p)
     }
-    args.list <- c(args.pars, args.ns)
-    args.list$theta <- theta
-    args.list$D <- D
+    p <- ifelse(p == 0L, 1e-20, p)
+    q <- 1 - p
 
-    ##-------------------------------------------------------------------------
-    # implement the equation function
-    params_fun <- FUN.grad$params_fun
-    rst <- do.call("params_fun", args.list, envir=environment())
+    # compute the component values
+    r_p <- r_i  -  f_i * p
 
-    # extract the gradient vector
-    grad <- attributes(rst)$gradient
-    grad[is.nan(grad)] <- 0
+    # compute the gradients of b parameter
+    gr_b <- D * a * r_p
 
-    # additional steps when the gradients are used for item parameter estimation
-    if(!se) {
-      grad <- colSums(grad)
+    # create a matrix of gradients across all examinees
+    grad <- matrix(0, nrow=nstd, ncol=n.par)
+    grad[, 1] <- gr_b
+
+  }
+
+  # (3) 2PLM
+  if(model == "2PLM") {
+
+    # make vectors of a and b parameters for all 1PLM items
+    a <- item_par[1]
+    b <- item_par[2]
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # compute the probabilities of correct and incorrect
+    p <- drm(theta=theta, a=a, b=b, g=0, D=D)
+    if(nstd == 1L) {
+      p <- rbind(p)
+    }
+    p <- ifelse(p == 0L, 1e-20, p)
+    q <- 1 - p
+
+    # compute the component values
+    Da <- D * a
+    r_p <- r_i  -  f_i * p
+    theta_b <- theta - b
+
+    # compute the gradients of a and b parameters
+    gr_a <- - D * theta_b * r_p
+    gr_b <- Da * r_p
+
+    # create a matrix of gradients across all examinees
+    grad <- matrix(0, nrow=nstd, ncol=n.par)
+    grad[, 1] <- gr_a
+    grad[, 2] <- gr_b
+
+  }
+
+  # (4) 3PLM
+  if(!fix.g & model == "3PLM") {
+
+    # make vectors of a and b parameters for all 1PLM items
+    a <- item_par[1]
+    b <- item_par[2]
+    g <- item_par[3]
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # compute the probabilities of correct and incorrect
+    p <- drm(theta=theta, a=a, b=b, g=g, D=D)
+    if(nstd == 1L) {
+      p <- rbind(p)
+    }
+    p <- ifelse(p == 0L, 1e-20, p)
+    q <- 1 - p
+
+    # compute the component values
+    g_1 <- 1 - g
+    p_g <- p - g
+    r_p <- r_i  -  f_i * p
+    theta_b <- theta - b
+    u1 <- p_g * r_p / p
+    u2 <- D / g_1
+    u3 <- a * u2
+
+    # compute the gradients of a, b, and g parameters
+    gr_a <- - u2 * theta_b * u1
+    gr_b <- u3 * u1
+    gr_g <- - (1 / g_1) * r_p / p
+
+    # create a matrix of gradients across all examinees
+    grad <- matrix(0, nrow=nstd, ncol=n.par)
+    grad[, 1] <- gr_a
+    grad[, 2] <- gr_b
+    grad[, 3] <- gr_g
+
+  }
+
+  # (5) 3PLM: the guessing parameters are fixed to be specified value
+  if(fix.g & model == "3PLM") {
+
+    # make vectors of a and b parameters for all 1PLM items
+    a <- item_par[1]
+    b <- item_par[2]
+    g <- g.val
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # compute the probabilities of correct and incorrect
+    p <- drm(theta=theta, a=a, b=b, g=g, D=D)
+    if(nstd == 1L) {
+      p <- rbind(p)
+    }
+    p <- ifelse(p == 0L, 1e-20, p)
+    q <- 1 - p
+
+    # compute the component values
+    g_1 <- 1 - g
+    p_g <- p - g
+    r_p <- r_i  -  f_i * p
+    theta_b <- theta - b
+    u1 <- p_g * r_p / p
+    u2 <- D / g_1
+    u3 <- a * u2
+
+    # compute the gradients of a and b parameters
+    gr_a <- - u2 * theta_b * u1
+    gr_b <- u3 * u1
+
+    # create a matrix of gradients across all examinees
+    grad <- matrix(0, nrow=nstd, ncol=n.par)
+    grad[, 1] <- gr_a
+    grad[, 2] <- gr_b
+
+  }
+
+  # return results
+  grad
+
+}
+
+
+# This function analytically computes a matrix of gradients of polytomous item parameters across all examinees
+# This function is used to compute the cross-product information matrix
+grad_item_plm_se <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=1) {
+
+
+  if(pmodel == "GRM" & fix.a) {
+    stop("The slope parameter can't be fixed for GRM.", call.=FALSE)
+  }
+
+  # transform item parameters as numeric values
+  item_par <- as.numeric(item_par)
+
+  # count the number of item parameters to be estimated
+  n.par <- length(item_par)
+
+  ##-------------------------------------------------------------------------
+  # compute the gradients
+  # (1) GRM
+  if(pmodel == "GRM") {
+
+    # make vectors of a and b parameters for all 1PLM items
+    a <- item_par[1]
+    d <- item_par[-1]
+
+    # check the number of step parameters
+    m <- length(d)
+
+    # check the numbers of examinees
+    nstd <- length(theta)
+
+    # calculate all the probabilities greater than equal to each threshold
+    allPst <- drm(theta=theta, a=rep(a, m), b=d, g=0, D=D)
+    if(nstd == 1L) {
+      allPst <- matrix(allPst, nrow=1)
+    }
+    allQst <- 1 - allPst[, ,drop=FALSE]
+
+    # calculate category probabilities
+    P <- cbind(1, allPst) - cbind(allPst, 0)
+    P <- ifelse(P == 0L, 1e-20, P)
+
+    # compute the component values to get gradients
+    # theta_b <- purrr::map_dfc(.x=d, .f=function(x) (theta - x))
+    dmat <- matrix(d, nrow=nstd, ncol=m, byrow=TRUE)
+    Da <- D * a
+    pq_st <- allPst * allQst
+    q_p_st <- allQst - allPst
+    # w1 <- D * theta_b
+    w1 <- D * (theta - dmat)
+    w2 <- w1 * pq_st
+    w3 <- cbind(0, w2) - cbind(w2, 0)
+    frac_rp <- r_i / P
+    w4 <- frac_rp[, -(m + 1), drop=FALSE] - frac_rp[, -1, drop=FALSE]
+
+    # compute the gradients of a and bs parameters
+    gr_a <- - rowSums(frac_rp * w3)
+    gr_b <- - Da * pq_st * w4
+
+    # create a matrix of gradients across all examinees
+    grad <- matrix(0, nrow=nstd, ncol=n.par)
+    grad[, 1] <- gr_a
+    grad[, -1] <- gr_b
+
+  }
+
+  # (2) GPCM and PCM
+  if(pmodel == "GPCM") {
+
+    if(!fix.a) {
+      # For GPCM
+      # count the number of item parameters to be estimated
+      n.par <- length(item_par)
+
+      # make vectors of a and b parameters for all 1PLM items
+      a <- item_par[1]
+
+      # include zero for the step parameter of the first category
+      d <- c(0, item_par[-1])
+
+      # check the number of step parameters
+      m <- length(d) - 1
+
+      # check the numbers of examinees and items
+      nstd <- length(theta)
+
+      # create a matrix for step parameters
+      dmat <- matrix(d, nrow=nstd, ncol=(m+1), byrow=TRUE)
+
+      # calculate category probabilities
+      Da <- D * a
+      z <- Da * (theta - dmat)
+      numer <- exp(t(apply(z, 1, cumsum))) # numerator
+      denom <- rowSums(numer) # denominator
+      P <- numer / denom
+      P <- ifelse(P == 0L, 1e-20, P)
+
+      # compute the component values to get a gradient vector
+      dsmat <- matrix(0, nrow=(m+1), ncol=(m+1))
+      dsmat[-1, -1][upper.tri(x=dsmat[-1, -1], diag = TRUE)] <- 1
+      tr_dsmat <- t(dsmat)
+      frac_rp <- r_i / P
+      w1 <- D * (theta - dmat)
+      w1cum <- t(apply(w1, 1, cumsum))
+      denom2 <- denom^2
+      d1a_denom <- rowSums(numer * w1cum)
+      deriv_Pa <- (numer * (w1cum * denom - d1a_denom)) / denom2
+      d1b_denom <- - (Da * numer) %*% tr_dsmat
+      denom_vec <- cbind(denom)
+      DaDenom_vec <- Da * denom_vec
+
+      # compute the gradients of a and bs parameters
+      gr_a <- - rowSums(frac_rp * deriv_Pa)
+      gr_b <- matrix(0, nrow=nstd, ncol=m)
+      for(k in 1:m) {
+        gr_b[, k] <- - rowSums(frac_rp * (- numer * (DaDenom_vec %*% dsmat[k + 1, , drop=FALSE] + d1b_denom[, k + 1]) / denom2))
+      }
+
+      # create a matrix of gradients across all examinees
+      grad <- matrix(0, nrow=nstd, ncol=n.par)
+      grad[, 1] <- gr_a
+      grad[, -1] <- gr_b
+
+
+    } else {
+      # for PCM
+      # make vectors of a and b parameters for all 1PLM items
+      a <- a.val
+
+      # include zero for the step parameter of the first category
+      d <- c(0, item_par)
+
+      # check the number of step parameters
+      m <- length(d) - 1
+
+      # check the numbers of examinees and items
+      nstd <- length(theta)
+
+      # create a matrix for step parameters
+      dmat <- matrix(d, nrow=nstd, ncol=(m+1), byrow=TRUE)
+
+      # calculate category probabilities
+      Da <- D * a
+      z <- Da * (theta - dmat)
+      numer <- exp(t(apply(z, 1, cumsum))) # numerator
+      denom <- rowSums(numer) # denominator
+      P <- numer / denom
+      P <- ifelse(P == 0L, 1e-20, P)
+
+      # compute the component values to get a gradient vector
+      dsmat <- matrix(0, nrow=(m+1), ncol=(m+1))
+      dsmat[-1, -1][upper.tri(x=dsmat[-1, -1], diag = TRUE)] <- 1
+      tr_dsmat <- t(dsmat)
+      frac_rp <- r_i / P
+      denom2 <- denom^2
+      d1b_denom <- - (Da * numer) %*% tr_dsmat
+      denom_vec <- cbind(denom)
+      DaDenom_vec <- Da * denom_vec
+
+      # compute the gradients of a and bs parameters
+      gr_b <- matrix(0, nrow=nstd, ncol=m)
+      for(k in 1:m) {
+        gr_b[, k] <- - rowSums(frac_rp * (- numer * (DaDenom_vec %*% dsmat[k + 1, , drop=FALSE] + d1b_denom[, k + 1]) / denom2))
+      }
+
+      # create a matrix of gradients across all examinees
+      grad <- gr_b
+
     }
 
   }
@@ -443,3 +1092,4 @@ grad_item_plm <- function(item_par, r_i, theta, pmodel, D=1, fix.a=FALSE, a.val=
   grad
 
 }
+

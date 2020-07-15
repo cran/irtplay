@@ -134,6 +134,7 @@
 #' Yen, W. M. (1981). Using simulation results to choose a latent trait model. \emph{Applied Psychological Measurement, 5}, 245-262.
 #'
 #' @examples
+#' \donttest{
 #' ## example 1
 #' ## use the simulated CAT data
 #' # find the location of items that have more than 10,000 responses
@@ -148,7 +149,6 @@
 #' # select the examinees' abilities
 #' score <- simCAT_MX$score
 #'
-#' \donttest{
 #' # compute fit statistics
 #' fit1 <- irtfit(x=x, score=score, data=data, group.method="equal.width",
 #'                n.width=10, loc.theta="average", range.score=NULL, D=1, alpha=0.05,
@@ -159,7 +159,7 @@
 #'
 #' # contingency tables
 #' fit1$contingency.fitstat
-#' }
+#'
 #'
 #' ## example 2
 #' ## import the "-prm.txt" output file from flexMIRT
@@ -175,7 +175,6 @@
 #' # simulate the response data
 #' data <- simdat(x=x, theta=score, D=1)
 #'
-#' \donttest{
 #' # compute fit statistics
 #' fit2 <- irtfit(x=x, score=score, data=data, group.method="equal.freq",
 #'                n.width=11, loc.theta="average", range.score=c(-4, 4), D=1, alpha=0.05)
@@ -212,6 +211,14 @@ irtfit.default <- function(x, score, data, group.method=c("equal.width", "equal.
   # give column names
   x <- data.frame(x)
   colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
+
+  # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
+  if(ncol(x[, -c(1, 2, 3)]) == 2) {
+    x <- data.frame(x, par.3=NA)
+  }
+
+  # clear the item meta data set
+  x <- back2df(metalist2(x))
 
   # consider DRM as 3PLM
   x$model <- as.character(x$model)
@@ -320,10 +327,6 @@ irtfit.est_item <- function(x, group.method=c("equal.width", "equal.freq"),
   D <- x$scale.D
   x <- x$par.est
 
-  # give column names
-  x <- data.frame(x)
-  colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
-
   # consider DRM as 3PLM
   x$model <- as.character(x$model)
   # consider DRM as 3PLM
@@ -427,10 +430,6 @@ irtfit.est_irt <- function(x, score, group.method=c("equal.width", "equal.freq")
   data <- x$data
   D <- x$scale.D
   x <- x$par.est
-
-  # give column names
-  x <- data.frame(x)
-  colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
 
   # consider DRM as 3PLM
   x$model <- as.character(x$model)
