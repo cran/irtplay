@@ -139,7 +139,6 @@ grm <- function(theta, a, d, D = 1) {
   nstd <- length(theta)
 
   # calculate all the probabilities greater than equal to each threshold
-  # allP <- purrr::map_dfc(d, drm, theta=1, a=a, g=0, D=D)
   allP <- drm(theta=theta, a=rep(a, m), b=d, g=0, D=D)
   if(nstd == 1L) {
     allP <- matrix(allP, nrow=1)

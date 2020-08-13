@@ -20,8 +20,8 @@
 #' individual items, computing the loglikelihood of abilities, computing item and test information functions, computing item and test
 #' characteristic curve functions, and plotting item and test characteristic curves and item and test information functions.
 #'
-#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.6.0\cr Date: \tab
-#' 2020-07-14\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
+#' \tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.6.1\cr Date: \tab
+#' 2020-08-13\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
 #'
 #' @details
 #' Following five sections describe a) how to implement the online item calibration using FIPC, a) how to implement the online item

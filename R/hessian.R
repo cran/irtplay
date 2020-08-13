@@ -124,18 +124,18 @@ hess_score <- function(theta, meta, freq.cat=list(freq.cat_drm=NULL, freq.cat_pl
   # sum of all hessians across all items
   hess <- sum(hess_drm, hess_plm)
 
-  # extract the gradient vector when MAP method is used
+  # extract the hessiam matrix when MAP method is used
   if(method == "MAP") {
 
-    # compute a gradient of prior distribution
+    # compute a hessian of prior distribution
     rst.prior <-
       logprior_deriv(val=theta, is.aprior=FALSE, D=NULL, dist="norm",
                      par.1=norm.prior[1], par.2=norm.prior[2])
 
-    # extract the gradient
+    # extract the hessian
     hess.prior <- attributes(rst.prior)$hessian
 
-    # add the gradient
+    # add the hessian
     hess <- sum(hess, hess.prior)
 
   }

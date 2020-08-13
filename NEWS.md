@@ -1,6 +1,36 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+# irtplay\_1.6.1 (2020-08-13)
+
+o Included a new function of ‘post\_den’ to compute updated prior
+(a.k.a. posterior) densities of the latent ability distribution given a
+prior ability distribution, item parameters, and item response data.
+
+o Updated ‘est\_score’ function so that the standard errors of ability
+estimates can be computed using eigther the observed item information
+function or the expected item information (a.k.a. Fisher information)
+function when MLE, MLE with fence (MLEF), or MAP scoring method is used.
+
+o Updated ‘est\_irt’ function to compute the loglikelihood-based fit
+statistics of Akaike information criterion (AIC) and Bayesian
+information criterion (BIC).
+
+o Updated ‘est\_irt’ function to tally the number of freely estimated
+parameters taking the mean and variance parameters of the latent ability
+distribution into consideration when ‘fipc = TRUE’.
+
+o Updated ‘est\_irt’ function to suppress printing the observed data
+log-likelihood after each EM cycle using the argument of ‘verbose’.
+
+o Fixed an error of the ‘est\_irt’ function when only dichotomous items
+are used with ‘fipc = TRUE’. In that condition, an error message of
+“subscript out of bounds” was returned in the previous version. No
+error message is shown in the updated version. (thanks to Ahmet GUVEN)
+
+o Fixed the ‘lwrc’ function so that it can return the probability
+results even when only a single theta value is used.
+
 # irtplay\_1.6.0 (2020-07-14)
 
 The package has been updated significantly in this verstion. In this

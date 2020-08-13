@@ -42,6 +42,8 @@ summary.est_irt <- function(object, ...) {
   test.2 <- object$test.2
   var.note <- object$var.note
   loglikelihood <- object$loglikelihood
+  aic <- object$aic
+  bic <- object$bic
   estimates <- object$estimates
   group.par <- object$group.par
 
@@ -49,7 +51,7 @@ summary.est_irt <- function(object, ...) {
               weights=weights, npar.est=npar.est, fix.loc=fix.loc, niter=niter,
               maxpar.diff=maxpar.diff, EMtime=EMtime, SEtime=SEtime, TotalTime=TotalTime,
               test.1=test.1, test.2=test.2, var.note=var.note, loglikelihood=loglikelihood,
-              estimates=estimates, group.par=group.par)
+              aic=aic, bic=bic, estimates=estimates, group.par=group.par)
   class(out) <- "summary.est_irt"
   out
 

@@ -213,30 +213,27 @@ plot.irtfit <- function(x, item.loc=NULL, type = "both",
            wald =
              purrr::map2(.x=obs.prop[, -1], .y=zscore * se, .f=function(k, j) data.frame(lower=k - j, upper=k + j)) %>%
              do.call(what="rbind"),
-
            cp =
              purrr::map(freq, .f=function(k)
-               purrr::map2_dfc(.x=k, .y=N, .f=function(i, j)
+               purrr::map2(.x=k, .y=N, .f=function(i, j)
                  stats::binom.test(i, j, alternative="two.sided", conf.level=1-alpha)$conf.int) %>%
-                 t() %>%
+                 bind.fill(type="rbind") %>%
                  data.frame() %>%
                  dplyr::rename("lower"=.data$X1, "upper"=.data$X2)) %>%
              do.call(what="rbind"),
-
            wilson =
              purrr::map(freq, .f=function(k)
-               purrr::map2_dfc(.x=k, .y=N, .f=function(i, j)
+               purrr::map2(.x=k, .y=N, .f=function(i, j)
                  stats::prop.test(i, j, alternative="two.sided", conf.level=1-alpha, correct=FALSE)$conf.int) %>%
-                 t() %>%
+                 bind.fill(type="rbind") %>%
                  data.frame() %>%
                  dplyr::rename("lower"=.data$X1, "upper"=.data$X2)) %>%
              do.call(what="rbind"),
-
            wilson.cr =
              purrr::map(freq, .f=function(k)
-               purrr::map2_dfc(.x=k, .y=N, .f=function(i, j)
+               purrr::map2(.x=k, .y=N, .f=function(i, j)
                  stats::prop.test(i, j, alternative="two.sided", conf.level=1-alpha, correct=TRUE)$conf.int) %>%
-                 t() %>%
+                 bind.fill(type="rbind") %>%
                  data.frame() %>%
                  dplyr::rename("lower"=.data$X1, "upper"=.data$X2)) %>%
              do.call(what="rbind")

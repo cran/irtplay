@@ -72,8 +72,11 @@ plot.test.info <- function(x, item.loc=NULL, xlab.text, ylab.text, main.text, la
     if(missing(line.color)) line.color <- "#F8766D" else line.color <- line.color
 
     # draw a plot
-    p <- df_info %>% ggplot(mapping=aes_string(x="theta", y="info")) +
+    p <- 
+      df_info %>% 
+      ggplot(mapping=aes_string(x="theta", y="info")) +
       geom_line(size=line.size, color=line.color, ...) +
+      ggplot2::theme_bw() +
       labs(title = main.text, x = xlab.text, y = ylab.text) +
       theme(plot.title = element_text(size=main.size),
             axis.title = element_text(size=lab.size),
@@ -85,7 +88,8 @@ plot.test.info <- function(x, item.loc=NULL, xlab.text, ylab.text, main.text, la
   if(!is.null(item.loc)) {
 
     # data manipulation for plotting
-    df_info <- data.frame(t(x$itemInfo), theta=x$theta) %>%
+    df_info <- 
+      data.frame(t(x$itemInfo), theta=x$theta) %>%
       stats::setNames(nm=c(1:nrow(x$itemInfo), "theta")) %>%
       reshape2::melt(variable.name="item", id.vars="theta", value.name="info")
     df_info$item <- as.numeric(df_info$item)
@@ -98,8 +102,11 @@ plot.test.info <- function(x, item.loc=NULL, xlab.text, ylab.text, main.text, la
     if(missing(main.text)) main.text <- 'Item Information'
     if(missing(line.color)) line.color <- "#F8766D" else line.color <- line.color
 
-    p <- df_info %>% ggplot2::ggplot(mapping=aes_string(x="theta", y="info")) +
+    p <- 
+      df_info %>% 
+      ggplot2::ggplot(mapping=aes_string(x="theta", y="info")) +
       ggplot2::geom_line(size=line.size, color=line.color, ...) +
+      ggplot2::theme_bw() +
       labs(title = main.text, x = xlab.text, y = ylab.text) +
       theme(plot.title = element_text(size=main.size),
             axis.title = element_text(size=lab.size),

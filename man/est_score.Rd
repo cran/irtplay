@@ -11,13 +11,14 @@ est_score(x, ...)
 \method{est_score}{default}(x, data, D = 1, method = "MLE",
   range = c(-4, 4), norm.prior = c(0, 1), nquad = 41,
   weights = NULL, fence.a = 3, fence.b = NULL, se = TRUE,
-  constant = 0.1, constraint = FALSE, range.tcc = c(-7, 7),
-  missing = NA, ncore = 1, ...)
+  obs.info = TRUE, constant = 0.1, constraint = FALSE,
+  range.tcc = c(-7, 7), missing = NA, ncore = 1, ...)
 
 \method{est_score}{est_irt}(x, method = "MLE", range = c(-4, 4),
   norm.prior = c(0, 1), nquad = 41, weights = NULL, fence.a = 3,
-  fence.b = NULL, se = TRUE, constant = 0.1, constraint = FALSE,
-  range.tcc = c(-7, 7), missing = NA, ncore = 1, ...)
+  fence.b = NULL, se = TRUE, obs.info = TRUE, constant = 0.1,
+  constraint = FALSE, range.tcc = c(-7, 7), missing = NA,
+  ncore = 1, ...)
 }
 \arguments{
 \item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...) or an object of
@@ -59,7 +60,11 @@ for the two imaginary items, respectively, in MLEF. When \code{fence.b = NULL}, 
 automatically set. See below for details. Default is NULL.}
 
 \item{se}{A logical value. If TRUE, the standard errors of ability estimates are computed. However, if \code{method} is "EAP.SUM" or "INV.TCC", the standard
-errors are always returned.}
+errors are always returned. Default is TRUE.}
+
+\item{obs.info}{A logical value. If TRUE, the observed item information functions are used to compute the standard errors of ability estimates when "MLE", "MLEF", 
+or "MAP" is specified in \code{method}. If FALSE, the expected item information (a.k.a. Fisher information) functions are used to compute the standard errors. 
+Note that under the 1PL and 2PL models, the observed item information function is exactly equal to the expected item information function. Default is TRUE.}
 
 \item{constant}{A numeric value used to adjust zero and perfect raw sum scores, or the raw sum score equal to the sum of item guessing parameters,
 if necessary, to find estimable solutions for those raw sum scores when \code{method = "INV.TCC"}. The zero raw score is forced to become the score of "zero raw score + constant"

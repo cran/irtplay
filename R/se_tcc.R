@@ -140,14 +140,12 @@ se_tcc <- function(x, eval.score, scale.score=NULL, D=1, constant=0.1, constrain
 
   # calculate the standard error of ability estimates
   se <-
-    purrr::map_dfc(.x=1:ncol(lkhd),
-                   .f=function(i) sqrt(cal_moment(node=theta, weight=lkhd[, i])[2])) %>%
-    as.numeric()
+    purrr::map_dbl(.x=1:ncol(lkhd),
+                   .f=function(i) sqrt(cal_moment(node=theta, weight=lkhd[, i])[2]))
   if(!is.null(scale.score)) {
     se.scaled <-
-      purrr::map_dfc(.x=1:ncol(lkhd),
-                     .f=function(i) sqrt(cal_moment(node=scale.score, weight=lkhd[, i])[2])) %>%
-      as.numeric()
+      purrr::map_dbl(.x=1:ncol(lkhd),
+                     .f=function(i) sqrt(cal_moment(node=scale.score, weight=lkhd[, i])[2]))
   }
 
   # return results

@@ -53,30 +53,30 @@
 #' @import dplyr
 #
 inv_tcc <- function(x, data, D=1, constant=0.1, constraint=FALSE, range.tcc=c(-7, 7)) {
-
+  
   # check missing data
   if(any(is.na(data))) stop("There should be no missing data in the data set.", call.=FALSE)
-
+  
   ##########################################
   # give column names
   x <- data.frame(x)
   colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
-
+  
   # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
   if(ncol(x[, -c(1, 2, 3)]) == 2) {
     x <- data.frame(x, par.3=NA)
   }
-
+  
   # clear the item meta data set
   x <- back2df(metalist2(x))
-
+  
   ## collect all information for the test form
   cats <- x[, 2]
   drm <- any(cats == 2)
-
+  
   # Find a maximum raw score
   max.score <- sum(cats - 1)
-
+  
   # Find a minimum raw score
   if(drm) {
     gs <- x[which(cats == 2), 6]
@@ -86,53 +86,53 @@ inv_tcc <- function(x, data, D=1, constant=0.1, constraint=FALSE, range.tcc=c(-7
     min.g <- 0L
     min.score <- 0L
   }
-
+  
   ##########################################
   # set the range of raw scores whose theta values are estimable
   scores <- seq(min.score, max.score, 1)
-
+  
   # find the theta values correspoding to the raw scores
   theta <- raw2theta(raw.score=scores, x=x, D=D, constant=constant)
-
+  
   # if the constraint is applied,
   # linear interpolation method is used to find ability estimates for the raw scores
   # less than the sum of item guessing parameters using the lower and upper bounds of abilities
   if(constraint) {
-
+    
     # create a score conversion table
     if(min.g != 0L) {
-
+      
       if(range.tcc[1] > theta[1]) {
         stop(paste0("A lower bound of theta must be less than ", round(theta[1], 3),
                     ", which is the theta estimate of the smallest raw score greater than or equal to the sum of item guessing parameters. Use the different lower bound of theta."),
              call.=FALSE)
       }
-
+      
       # calculate slope and intercept for linear interpolation
       lessg.score <- 0:(min.score-1)
       slope <- scores[1] / (theta[1] - range.tcc[1])
       intercept <- - slope * range.tcc[1]
       lessg.theta <- (lessg.score - intercept) / slope
-
+      
       theta <- c(lessg.theta, theta)
       theta <- ifelse(is.nan(theta), range.tcc[1], theta)
     }
-
+    
     # restrict the range of thetas
     theta <- ifelse(theta < range.tcc[1], range.tcc[1], theta)
     theta <- ifelse(theta > range.tcc[2], range.tcc[2], theta)
-
+    
     # score conversion table
     score.table <- data.frame(sum.score=0:max.score, est.theta=theta)
-
+    
   }
-
+  
   # if the constraint is not applied,
   # linear extrapolation method is used to find ability estimates for the raw scores
   # less than the sum of item guessing parameters using the maximum raw score and corresponding ability estimate
   # and the smallest raw score greater than or equal to the sum of item guessing parameters and corresponding ability estimate
   if(!constraint) {
-
+    
     # create a score conversion table
     if(min.g != 0L) {
       # calculate slope and intercept for linear interpolation
@@ -143,35 +143,32 @@ inv_tcc <- function(x, data, D=1, constant=0.1, constraint=FALSE, range.tcc=c(-7
       theta <- c(lessg.theta, theta)
     }
     score.table <- data.frame(sum.score=0:max.score, est.theta=theta)
-
+    
   }
-
+  
   # estimate observed score function using lord-wingersky argorithem
   lkhd <- lwrc(x=x, theta=theta, D=D)
-
+  
   # calculate the standard error of ability estimates
   se.est <-
-    purrr::map_dfc(.x=1:length(theta),
-                   .f=function(i) sqrt(cal_moment(node=theta, weight=lkhd[, i])[2])) %>%
-    as.numeric()
-
+    purrr::map_dbl(.x=1:length(theta),
+                   .f=function(i) sqrt(cal_moment(node=theta, weight=lkhd[, i])[2]))
+  
   # assign the inverse TCC scores and the corresponding SE valsues to each examinee
   names(theta) <- 0:max.score
   names(se.est) <- 0:max.score
   sumScore <- apply(data, 1, sum)
   est_score <- theta[as.character(sumScore)]
   est_se <- se.est[as.character(sumScore)]
-
+  
   # add SEs to the score conversion table
   score.table <- data.frame(score.table, se.theta=se.est)
-
+  
   # return results
   rst <- list(est.theta=est_score, se.theta=est_se, sum.score=sumScore, score.table=score.table)
   rst
-
+  
 }
-
-
 
 # "raw2theta" function
 # This is a function to find theta corresponding to raw score using TCC.

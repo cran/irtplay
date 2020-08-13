@@ -14,7 +14,7 @@ est_irt(x = NULL, data, D = 1, model = NULL, cats = NULL,
   group.mean = 0, group.var = 1, EmpHist = FALSE,
   use.startval = FALSE, Etol = 1e-04, MaxE = 500,
   control = list(iter.max = 200), fipc = FALSE, fipc.method = "MEM",
-  fix.loc = NULL)
+  fix.loc = NULL, verbose = TRUE)
 }
 \arguments{
 \item{x}{A data.frame containing the item meta data. This meta data is necessary to obtain the information of
@@ -134,6 +134,8 @@ in the argument \code{MaxE}.}
 \item{fix.loc}{A vector of positive integer values specifying the location of the items to be fixed in the item meta data (i.e., \code{x})
 when the FIPC is implemented. For example, suppose that five items located in the 1st, 2nd, 4th, 7th, and 9th rows of the item meta data \code{x}
 should be fixed. Then \code{fix.loc = c(1, 2, 4, 7, 9)}.}
+
+\item{verbose}{A logical value. If TRUE, the function prints the observed data log-likelihood after each EM cycle. Defalut is TRUE.}
 }
 \value{
 This function returns an object of class \code{\link{est_irt}}. Within this object, several internal objects are contained such as:
@@ -145,6 +147,8 @@ observed information functions. The standard errors are estimated using the cros
 when interpreting the variance-covariance matrix of item parameter estimates.}
 \item{covariance}{A matrix of variance-covariance matrix of item parameter estimates.}
 \item{loglikelihood}{A sum of the log-likelihood values of the observed data set (marginal log-likelihood) across all estimated items.}
+\item{aic}{A model fit statistic of Akaike information criterion based on the loglikelihood.}
+\item{bic}{A model fit statistic of Bayesian information criterion based on the loglikelihood.}
 \item{group.par}{A data.frame containing the mean, variance, and standard deviation of latent variable prior distribution.}
 \item{weights}{A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
 (in the second column) of the (updated) latent variable prior distribution.}
@@ -158,7 +162,7 @@ The row and column indicate the response pattern and the quadrature point, respe
 \item{MaxE}{The maximum number of E steps in the EM algorithm.}
 \item{aprior}{A list containing the information of the prior distribution for item slope parameters.}
 \item{gprior}{A list containing the information of the prior distribution for item guessing parameters.}
-\item{npar.est}{A total number of the estimated item parameters.}
+\item{npar.est}{A total number of the estimated parameters.}
 \item{niter}{The number of EM cycles completed.}
 \item{maxpar.diff}{A maximum item parameter change when the EM cycles were completed.}
 \item{EMtime}{Time (in seconds) spent for the EM cycles.}
@@ -425,7 +429,7 @@ score2 <- rnorm(1000, mean=0.4, sd=1.3)
 sim.dat2 <- simdat(x=x, theta=score2, D=1)
 
 # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
-# fix the five 3PL items (1st - 5th items) and three GRM items (53th to 55th items)
+# fix the five 3PL items (1st - 5th items) and three GRM items (53rd to 55th items)
 # also, estimate the empirical histogram of latent variable
 # use the MEM method.
 fix.loc <- c(1:5, 53:55)
@@ -440,7 +444,7 @@ plot(emphist$weight ~ emphist$theta)
 summary(mod.fix1)
 
 # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
-# fix the five 3PL items (1st - 5th items) and three GRM items (53th to 55th items)
+# fix the five 3PL items (1st - 5th items) and three GRM items (53rd to 55th items)
 # at this moment, do estimate the empirical histogram of latent variable.
 # instead, estimate the scale of normal prior distribution of latent variable
 # use the MEM method.

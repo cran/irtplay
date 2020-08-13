@@ -32,7 +32,10 @@
 #' for the two imaginary items, respectively, in MLEF. When \code{fence.b = NULL}, the lower and upper fences of item difficulty parameters were
 #' automatically set. See below for details. Default is NULL.
 #' @param se A logical value. If TRUE, the standard errors of ability estimates are computed. However, if \code{method} is "EAP.SUM" or "INV.TCC", the standard
-#' errors are always returned.
+#' errors are always returned. Default is TRUE. 
+#' @param obs.info A logical value. If TRUE, the observed item information functions are used to compute the standard errors of ability estimates when "MLE", "MLEF", 
+#' or "MAP" is specified in \code{method}. If FALSE, the expected item information (a.k.a. Fisher information) functions are used to compute the standard errors. 
+#' Note that under the 1PL and 2PL models, the observed item information function is exactly equal to the expected item information function. Default is TRUE. 
 #' @param constant A numeric value used to adjust zero and perfect raw sum scores, or the raw sum score equal to the sum of item guessing parameters,
 #' if necessary, to find estimable solutions for those raw sum scores when \code{method = "INV.TCC"}. The zero raw score is forced to become the score of "zero raw score + constant"
 #' and the perfect raw score is forced to become the score of "perfect raw score - constant". If the 3PLM items are included in the item meta data,
@@ -163,39 +166,39 @@ est_score <- function(x, ...) UseMethod("est_score")
 #'
 #' @export
 est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), norm.prior = c(0, 1),
-                              nquad = 41, weights = NULL, fence.a = 3.0, fence.b = NULL, se = TRUE,
+                              nquad = 41, weights = NULL, fence.a = 3.0, fence.b = NULL, se = TRUE, obs.info=TRUE,
                               constant=0.1, constraint=FALSE, range.tcc=c(-7, 7), missing = NA, ncore=1, ...) {
-
+  
   method <- toupper(method)
-
+  
   # check if the data set is a vector of an examinee
   if(is.vector(data)) {
     data <- rbind(data)
   }
-
+  
   # scoring of MLE, MAP, and EAP
   if(method %in% c("MLE", "MAP", "EAP", "MLEF")) {
-
+    
     # check the number of examinees
     nstd <- nrow(data)
-
+    
     # recode missing values
     if(!is.na(missing)) {
       data[data == missing] <- NA
     }
-
+    
     # give column names
     x <- data.frame(x)
     colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
-
+    
     # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
     if(ncol(x[, -c(1, 2, 3)]) == 2) {
       x <- data.frame(x, par.3=NA)
     }
-
+    
     # clear the item meta data set
     x <- back2df(metalist2(x))
-
+    
     # add two more items and data responses when "MLE" with Fences method is used
     if(method == "MLEF") {
       if(is.null(fence.b)) {
@@ -203,15 +206,15 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
         range.b <- range(x[, 4])
         range.b[1] <- floor(range.b[1] - 0.001)
         range.b[2] <- ceiling(range.b[2] + 0.001)
-
+        
         # adjust the range of b-parameters to be used as a fence
         fence.b[1] <- ifelse(range.b[1] >= -3.5, -3.5, range.b[1])
         fence.b[2] <- ifelse(range.b[2] >= 3.5, range.b[2], 3.5)
       }
-
+      
       # add two more response columns for the two fence items
       data <- data.frame(data, f.lower=rep(1, nstd), f.upper=rep(0, nstd))
-
+      
       # create a new item meta data for the two fence items
       x.fence <- shape_df(par.dc=list(a=rep(fence.a, 2), b=fence.b, g=0),
                           item.id=c("fence.lower", "fence.upper"), cats=rep(2, 2), model="3PLM")
@@ -220,46 +223,47 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
         x.fence <- data.frame(x.fence, matrix(NA, nrow=2, ncol=add.colnum))
         colnames(x.fence) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x.fence) - 3)))
       }
-
+      
       # create the new item meta data by adding two fence items
       x <- rbind(x, x.fence)
     }
-
+    
     # listrize the data.frame
     meta <- metalist2(x)
-
+    
     # check the number of CPU cores
     if(ncore < 1) {
       stop("The number of logical CPU cores must not be less than 1.", call.=FALSE)
     }
-
+    
     # estimation
     if(ncore == 1L) {
-
+      
       # set a function for scoring
       f <- function(i) est_score_indiv(meta=meta, resp=data[i, ], D=D, method=method, range=range,
-                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se)
-
+                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se, 
+                                       obs.info=obs.info)
+      
       # scoring
       ncase <- nrow(data)
       est <- vector('list', ncase)
       for(i in 1:ncase) {
-
+        
         # start a progress bar
         pb <- utils::txtProgressBar(min=1, max=100, initial=0, style=3, label="0% done", width=50)
-
+        
         # scoring
         est[[i]] <- f(i)
-
+        
         # update the progress bar
         info <- sprintf("%d%% done", round((i/ncase)*100))
         utils::setTxtProgressBar(pb, i/ncase*100, label=info)
-
+        
       }
-
+      
       # closing the progress bar
       close(pb)
-
+      
       # assign estimated values
       est.theta <- purrr::map_dbl(est, "est.theta")
       if(se) {
@@ -267,35 +271,37 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
       } else {
         se.theta <- NULL
       }
-
+      
       rst <- list(est.theta=est.theta, se.theta=se.theta)
-
+      
     } else {
-
+      
       # specify the number of CPU cores
       numCores <- ncore
-
+      
       # create a parallel processesing cluster
       cl = parallel::makeCluster(numCores, ...)
-
+      
       # load some specific variable names into processing cluster
       parallel::clusterExport(cl, c("meta", "data", "D", "method", "range",
                                     "norm.prior", "nquad", "weights", "se",
                                     "est_score_indiv", "loglike_score", "grad_score", "hess_score",
-                                    "ll_brute", "logprior_deriv", "esprior_norm",
+                                    "ll_brute", "logprior_deriv", "esprior_norm", 
+                                    "se_expinfo", "info.dich", "info.poly",
                                     "drm", "plm", "grm", "gpcm", "gen.weight"), envir = environment())
       parallel::clusterEvalQ(cl, library(dplyr))
-
+      
       # set a function for scoring
       f <- function(i) est_score_indiv(meta=meta, resp=data[i, ], D=D, method=method, range=range,
-                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se)
-
+                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se, 
+                                       obs.info=obs.info)
+      
       # parallel scoring
       est <- pbapply::pblapply(X=1:nrow(data), FUN=f, cl=cl) # to see the progress bar
-
+      
       # finish
       parallel::stopCluster(cl)
-
+      
       # assign estimated values
       est.theta <- purrr::map_dbl(est, "est.theta")
       if(se) {
@@ -303,13 +309,13 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
       } else {
         se.theta <- NULL
       }
-
+      
       rst <- list(est.theta=est.theta, se.theta=se.theta)
-
+      
     }
-
+    
   }
-
+  
   if(method == "EAP.SUM") {
     if(is.null(weights)) {
       rst <- eap_sum(x, data, norm.prior=norm.prior, nquad=nquad, D=D)
@@ -317,14 +323,14 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
       rst <- eap_sum(x, data, weights=weights, D=D)
     }
   }
-
+  
   if(method == "INV.TCC") {
     rst <- inv_tcc(x, data, D=D, constant=constant, constraint=constraint, range.tcc=range.tcc)
   }
-
+  
   # return results
   rst
-
+  
 }
 
 
@@ -333,41 +339,41 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
 #' @export
 #'
 est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = c(0, 1),
-                              nquad = 41, weights = NULL, fence.a = 3.0, fence.b = NULL, se = TRUE,
+                              nquad = 41, weights = NULL, fence.a = 3.0, fence.b = NULL, se = TRUE, obs.info=TRUE,
                               constant=0.1, constraint=FALSE, range.tcc=c(-7, 7), missing = NA, ncore=1, ...) {
-
+  
   method <- toupper(method)
-
+  
   # extract information from an object
   data <- x$data
   D <- x$scale.D
   x <- x$par.est
-
+  
   # check if the data set is a vector of an examinee
   if(is.vector(data)) {
     data <- rbind(data)
   }
-
+  
   # scoring of MLE, MAP, and EAP
   if(method %in% c("MLE", "MAP", "EAP", "MLEF")) {
-
+    
     # check the number of examinees
     nstd <- nrow(data)
-
+    
     # recode missing values
     if(!is.na(missing)) {
       data[data == missing] <- NA
     }
-
+    
     # give column names
     x <- data.frame(x)
     colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
-
+    
     # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
     if(ncol(x[, -c(1, 2, 3)]) == 2) {
       x <- data.frame(x, par.3=NA)
     }
-
+    
     # add two more items and data responses when "MLE" with Fences method is used
     if(method == "MLEF") {
       if(is.null(fence.b)) {
@@ -375,15 +381,15 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
         range.b <- range(x[, 4])
         range.b[1] <- floor(range.b[1] - 0.001)
         range.b[2] <- ceiling(range.b[2] + 0.001)
-
+        
         # adjust the range of b-parameters to be used as a fence
         fence.b[1] <- ifelse(range.b[1] >= -3.5, -3.5, range.b[1])
         fence.b[2] <- ifelse(range.b[2] >= 3.5, range.b[2], 3.5)
       }
-
+      
       # add two more response columns for the two fence items
       data <- data.frame(data, f.lower=rep(1, nstd), f.upper=rep(0, nstd))
-
+      
       # create a new item meta data for the two fence items
       x.fence <- shape_df(par.dc=list(a=rep(fence.a, 2), b=fence.b, g=0),
                           item.id=c("fence.lower", "fence.upper"), cats=rep(2, 2), model="3PLM")
@@ -392,46 +398,47 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
         x.fence <- data.frame(x.fence, matrix(NA, nrow=2, ncol=add.colnum))
         colnames(x.fence) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x.fence) - 3)))
       }
-
+      
       # create the new item meta data by adding two fence items
       x <- rbind(x, x.fence)
     }
-
+    
     # listrize the data.frame
     meta <- metalist2(x)
-
+    
     # check the number of CPU cores
     if(ncore < 1) {
       stop("The number of logical CPU cores must not be less than 1.", call.=FALSE)
     }
-
+    
     # estimation
     if(ncore == 1L) {
-
+      
       # set a function for scoring
       f <- function(i) est_score_indiv(meta=meta, resp=data[i, ], D=D, method=method, range=range,
-                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se)
-
+                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se, 
+                                       obs.info=obs.info)
+      
       # scoring
       ncase <- nrow(data)
       est <- vector('list', ncase)
       for(i in 1:ncase) {
-
+        
         # start a progress bar
         pb <- utils::txtProgressBar(min=1, max=100, initial=0, style=3, label="0% done", width=50)
-
+        
         # scoring
         est[[i]] <- f(i)
-
+        
         # update the progress bar
         info <- sprintf("%d%% done", round((i/ncase)*100))
         utils::setTxtProgressBar(pb, i/ncase*100, label=info)
-
+        
       }
-
+      
       # closing the progress bar
       close(pb)
-
+      
       # assign estimated values
       est.theta <- purrr::map_dbl(est, "est.theta")
       if(se) {
@@ -439,35 +446,37 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
       } else {
         se.theta <- NULL
       }
-
+      
       rst <- list(est.theta=est.theta, se.theta=se.theta)
-
+      
     } else {
-
+      
       # specify the number of CPU cores
       numCores <- ncore
-
+      
       # create a parallel processesing cluster
       cl = parallel::makeCluster(numCores, ...)
-
+      
       # load some specific variable names into processing cluster
       parallel::clusterExport(cl, c("meta", "data", "D", "method", "range",
                                     "norm.prior", "nquad", "weights", "se",
                                     "est_score_indiv", "loglike_score", "grad_score", "hess_score",
                                     "ll_brute", "logprior_deriv", "esprior_norm",
+                                    "se_expinfo", "info.dich", "info.poly",
                                     "drm", "plm", "grm", "gpcm", "gen.weight"), envir = environment())
       parallel::clusterEvalQ(cl, library(dplyr))
-
+      
       # set a function for scoring
       f <- function(i) est_score_indiv(meta=meta, resp=data[i, ], D=D, method=method, range=range,
-                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se)
-
+                                       norm.prior=norm.prior, nquad=nquad, weights=weights, se=se, 
+                                       obs.info=obs.info)
+      
       # parallel scoring
       est <- pbapply::pblapply(X=1:nrow(data), FUN=f, cl=cl) # to see the progress bar
-
+      
       # finish
       parallel::stopCluster(cl)
-
+      
       # assign estimated values
       est.theta <- purrr::map_dbl(est, "est.theta")
       if(se) {
@@ -475,13 +484,13 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
       } else {
         se.theta <- NULL
       }
-
+      
       rst <- list(est.theta=est.theta, se.theta=se.theta)
-
+      
     }
-
+    
   }
-
+  
   if(method == "EAP.SUM") {
     if(is.null(weights)) {
       rst <- eap_sum(x, data, norm.prior=norm.prior, nquad=nquad, D=D)
@@ -489,27 +498,26 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
       rst <- eap_sum(x, data, weights=weights, D=D)
     }
   }
-
+  
   if(method == "INV.TCC") {
     rst <- inv_tcc(x, data, D=D, constant=constant, constraint=constraint, range.tcc=range.tcc)
   }
-
+  
   # return results
   rst
-
+  
 }
-
 
 # This function computes an abiltiy estimate for each examinee
 est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4), norm.prior = c(0, 1),
-                            nquad = 41, weights=NULL, se = TRUE) {
-
-
+                            nquad = 41, weights=NULL, se = TRUE, obs.info = TRUE) {
+  
+  
   # find missing data and
   # delete missing data from item data set and response data
   if(any(is.na(resp))) {
     loc.miss <- which(is.na(resp)) # check the locations of missing data
-
+    
     # delete missing data from the item meta data
     if(!is.null(meta$drm)) {
       meta$drm <- purrr::map(.x=meta$drm, .f=function(x) x[!meta$drm$loc %in% loc.miss])
@@ -518,11 +526,11 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
       meta$plm <- purrr::map(.x=meta$plm, .f=function(x) x[!meta$plm$loc %in% loc.miss])
     }
   }
-
+  
   # factorize the response values
   max.cats <- max(c(meta$drm$cats, meta$plm$cats))
   resp.f <- factor(resp, levels=(seq_len(max.cats) - 1))
-
+  
   # calculate the score categories
   tmp.id <- 1:length(resp.f)
   if(length(resp.f) > 1L) {
@@ -530,7 +538,7 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
   } else {
     freq.cat <- rbind(stats::xtabs(~ tmp.id + resp.f, addNA=TRUE))
   }
-
+  
   if(any(is.na(resp))) freq.cat <- freq.cat[, -ncol(freq.cat), drop=FALSE]
   if(!is.null(meta$drm)) {
     freq.cat_drm <- freq.cat[meta$drm$loc, 1:2, drop=FALSE]
@@ -543,14 +551,14 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
     freq.cat_plm <- NULL
   }
   freq.cat <- list(freq.cat_drm=freq.cat_drm, freq.cat_plm=freq.cat_plm)
-
+  
   ##----------------------------------------------------
   ## MLE and MAP scorings
   if(method %in% c("MLE", "MAP", "MLEF")) {
-
+    
     # compute a perfect NC score
     total.nc <- sum(c(meta$drm$cats, meta$plm$cats) - 1)
-
+    
     # compute a ininal value for scoring
     if(sum(resp, na.rm=TRUE) == 0) {
       startval <- log(1 / total.nc)
@@ -561,34 +569,34 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
     if(!sum(resp, na.rm=TRUE) %in% c(0, total.nc)) {
       startval <- log(sum(resp, na.rm=TRUE) / (total.nc - sum(resp, na.rm=TRUE)))
     }
-
+    
     # estimate an abiltiy and SE
     if(method %in% c("MLE", "MLEF")) {
-
+      
       # find a better starting value for MLE using a brute force method
       # prepare the discrete theta values
       startval_tmp <- c(seq(from=range[1], to=range[2], length.out=102))
-
+      
       # compute the negative log-likelihood values for all the theta values
       ll_tmp <- ll_brute(theta=startval_tmp, meta=meta, freq.cat=freq.cat, method="MLE", D=D)
-
+      
       # find the locations of thetas where the sign of slope changes
       # loc_change <- which(diff(sign(diff(ll_tmp))) != 0L) + 1
       loc_change <- which(diff(sign(diff(ll_tmp))) > 0L) + 1
-
+      
       # select a theta value that has the minimum of negative log-likelihood value
       startval_tmp1 <- startval_tmp[loc_change][which.min(ll_tmp[loc_change])]
-
+      
       # if there is no selected value from step 2, use the starting value from step 1
       startval <- ifelse(length(startval_tmp1) > 0L, startval_tmp1, startval)
-
+      
       # estimation
       est.mle <-
         suppressWarnings(tryCatch({stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
                                                  norm.prior=norm.prior, logL=TRUE,
                                                  gradient=grad_score, hessian=hess_score,
                                                  lower=range[1], upper=range[2])}, error = function(e) {NULL}))
-
+      
       # when the estimation returns an error message
       if(is.null(est.mle)) {
         est.mle <- stats::nlminb(startval, objective=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
@@ -604,19 +612,23 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
         brute_ll <- ll_brute(theta=brute_theta, meta=meta, freq.cat=freq.cat, method="MLE", D=D, norm.prior=norm.prior)
         est.theta <- brute_theta[which.min(brute_ll)]
       }
-
+      
       if(se) {
         if(est.theta %in% range) {
           se.theta <- 99.9999
         } else {
-          hess <- hess_score(theta=est.theta, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
-                             norm.prior=norm.prior, logL=TRUE)
-          # to prevent the case when the hessian has a negative value
-          if(hess < 0L) {
-            hess <- stats::optimHess(par=est.theta, fn=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
-                                     norm.prior=norm.prior, logL=TRUE)
+          if(obs.info) {
+            hess <- hess_score(theta=est.theta, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
+                               norm.prior=norm.prior, logL=TRUE)
+            # to prevent the case when the hessian has a negative value
+            if(hess < 0L) {
+              hess <- stats::optimHess(par=est.theta, fn=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
+                                       norm.prior=norm.prior, logL=TRUE)
+            }
+            se.theta <- as.numeric(sqrt(1 / hess))
+          } else {
+            se.theta <- se_expinfo(meta=meta, theta=est.theta, D=D, method="MLE")
           }
-          se.theta <- as.numeric(sqrt(1 / hess))
         }
       } else {
         se.theta <- NULL
@@ -643,40 +655,45 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
         brute_ll <- ll_brute(theta=brute_theta, meta=meta, freq.cat=freq.cat, method="MAP", D=D, norm.prior=norm.prior)
         est.theta <- brute_theta[which.min(brute_ll)]
       }
-
+      
       if(se) {
-        hess <- hess_score(theta=est.theta, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
-                           norm.prior=norm.prior, logL=TRUE)
-        # to prevent the case when the hessian has a negative value
-        if(hess < 0L) {
-          hess <- stats::optimHess(par=est.theta, fn=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
-                                   norm.prior=norm.prior, logL=TRUE)
+        if(obs.info) {
+          hess <- hess_score(theta=est.theta, meta=meta, freq.cat=freq.cat, method="MAP", D=D,
+                             norm.prior=norm.prior, logL=TRUE)
+          # to prevent the case when the hessian has a negative value
+          if(hess < 0L) {
+            hess <- stats::optimHess(par=est.theta, fn=loglike_score, meta=meta, freq.cat=freq.cat, method="MLE", D=D,
+                                     norm.prior=norm.prior, logL=TRUE)
+          }
+          se.theta <- as.numeric(sqrt(1 / hess))
+        } else {
+          se.theta <- se_expinfo(meta=meta, theta=est.theta, D=D, method="MAP", norm.prior=norm.prior)
         }
-        se.theta <- as.numeric(sqrt(1 / hess))
+        
       } else {
         se.theta <- NULL
       }
     }
   }
-
+  
   ##----------------------------------------------------
   ## EAP scoring
   if(method == "EAP") {
-
+    
     # generate quadrature points and weights
     if(is.null(weights)) {
       popdist <- gen.weight(n=nquad, dist="norm", mu=norm.prior[1], sigma=norm.prior[2])
     } else {
       popdist <- data.frame(weights)
     }
-
+    
     # estimating posterior dist
     posterior <- loglike_score(theta=popdist[, 1], meta=meta, freq.cat=freq.cat, D=D, logL=FALSE) * popdist[, 2]
-
+    
     # Expected A Posterior
     posterior <- posterior / sum(posterior)
     est.theta <- sum(popdist[, 1] * posterior)
-
+    
     if(se) {
       # calculating standard error
       ex2 <- sum(popdist[, 1]^2 * posterior)
@@ -685,12 +702,12 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
     } else {
       se.theta <- NULL
     }
-
+    
   }
-
+  
   # return results
   rst <- list(est.theta=est.theta, se.theta=se.theta)
-
+  
   rst
-
+  
 }

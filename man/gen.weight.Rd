@@ -22,7 +22,7 @@ only \code{n} can be used, and when \code{dist = "emp"}, only \code{theta} can b
 \item{theta}{A vector of empirical theta (or node) values for which weights are generated.}
 }
 \value{
-This function returns a matrix with two columns, where the first column has theta values (nodes) and the second column provides weights.
+This function returns a data frame with two columns, where the first column has theta values (nodes) and the second column provides weights.
 }
 \description{
 This function generates a set of weights based on a set of theta values to be used in the functions \code{\link{est_score}}

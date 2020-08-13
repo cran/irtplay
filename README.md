@@ -1,7 +1,7 @@
+irtplay
+================
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
-# irtplay
 
 The goal of `irtplay` is to fit unidimensional item response theory
 (IRT) models to mixture of dichotomous and polytomous data, calibrate
@@ -63,11 +63,11 @@ pretest items on the scale of the operational item parameters (Kim,
 1.  Prepare a response data set and the item meta data of the fixed (or
     operational) items.
 2.  Implement FIPC to estimate the item parameters of pretest items
-    using the `est_irt` function.
+    using the `est_irt()` function.
 
 ### (1) Preparing a data set
 
-To run the `est_irt` function, it requires two data sets:
+To run the `est_irt()` function, it requires two data sets:
 
 1.  Item meta data set (i.e., model, score category, and item
     parameters. see the desciption of the argument `x` in the function
@@ -79,7 +79,7 @@ To run the `est_irt` function, it requires two data sets:
 
 ### (2) Estimating the pretest item parameters
 
-When FIPC is implemented in `est_irt` function, the pretest item
+When FIPC is implemented in `est_irt()` function, the pretest item
 parameters are estimated by fixing the operational item parameters. To
 estimate the item parameters, you need to provide the item meta data in
 the argument `x` and the response data in the argument `data`.
@@ -105,11 +105,11 @@ last columns. When the number of categories differs between items, the
 empty cells of item parameters should be filled with NAs. See `est_irt`
 for more details about the item meta data.
 
-Also, you should specify in the argument ’fipc = TRUE`and a specific
-FIPC method in the argument`fipc.method`. Finally, you should provide a
-vector of the location of the items to be fixed in the
-argument`fix.loc`. For more details about implementing FIPC, see the
-description of the function`est\_irt\`.
+Also, you should specify in the argument `fipc = TRUE` and a specific
+FIPC method in the argument `fipc.method`. Finally, you should provide a
+vector of the location of the items to be fixed in the argument
+`fix.loc`. For more details about implementing FIPC, see the description
+of the `est_irt()` function.
 
 When implementing FIPC, you can estimate both the emprical histogram and
 the scale of latent variable prior distribution by setting `EmpHist =
@@ -129,7 +129,7 @@ available.
 In addition, if the response data include missing values, you must
 indicate the missing value in argument `missing`.
 
-Once the `est_irt` function has been implemented, you’ll get a list of
+Once the `est_irt()` function has been implemented, you’ll get a list of
 several internal objects such as the item parameter estimates, standard
 error of the parameter estimates.
 
@@ -151,11 +151,11 @@ with two main steps:
 1.  Prepare a data set for the calibration of item parameters (i.e.,
     item response data and ability estimates).
 2.  Implement Method A to estimate the item parameters using the
-    `est_item` function.
+    `est_item()` function.
 
 ### (1) Preparing a data set
 
-To run the `est_item` function, it requires two data sets:
+To run the `est_item()` function, it requires two data sets:
 
 1.  Examinees’ ability (or proficiency) estimates. It should be in the
     format of a numeric vector.
@@ -167,8 +167,8 @@ To run the `est_item` function, it requires two data sets:
 
 ### (2) Estimating the pretest item parameters
 
-The `est_item` function estimates the pretest item parameters given the
-proficiency estimates. To estimate the item parameters, you need to
+The `est_item()` function estimates the pretest item parameters given
+the proficiency estimates. To estimate the item parameters, you need to
 provide the response data in the argument `data` and the ability
 estimates in the argument `score`.
 
@@ -181,7 +181,7 @@ credit model, respectively. Note that “DRM” is considered as “3PLM” in
 this function. If a single character of the IRT model is specified, that
 model will be recycled across all items.
 
-The `est_item` function requires a vector of the number of score
+The `est_item()` function requires a vector of the number of score
 categories for the items in the argument `cats`. For example, a
 dichotomous item has two score categories. If a single numeric value is
 specified, that value will be recycled across all items. If NULL and all
@@ -215,7 +215,7 @@ model-data fit on item-level can be implemented with three main steps:
 1.  Prepare a data set for the IRT item fit analysis (i.e., item meta
     data, ability estimates, and response data).
 2.  Obtain the IRT fit statistics such as the X2, G2, infit, and outfit
-    statistics using the `irtfit` function.
+    statistics using the `irtfit()` function.
 3.  Based on the results of IRT model fit analysis (i.e., an object of
     class `irtfit`) obtained in step 2, draw the IRT residual plots
     (i.e., raw residual and standardized residual plots) using `plot`
@@ -224,19 +224,19 @@ model-data fit on item-level can be implemented with three main steps:
 ### (1) Preparing a data set
 
 Before conducting the IRT model fit analysis, it is necessary to prepare
-a data set. To run the `irtfit` function, it requires three data sets:
+a data set. To run the `irtfit()` function, it requires three data sets:
 
 1.  Item meta data including the item ID, number of score categories,
     IRT models, and item parameters. The item meta data should be in the
     format of data.frame. You can prepare the data either by using the
-    `shape_df` function or by creating a data.frame of the item meta
+    `shape_df()` function or by creating a data.frame of the item meta
     data by yourself. If you have output files of item parameter
     estimates obtained from one of the IRT software such as BILOG-MG 3,
     PARSCALE 4, flexMIRT, and mirt (R package), the item meta data can
-    be easily obtained using the functions of `bring.bilog`,
-    `bring.parscale`, `bring.flexmirt`, `bring.mirt`. See the functions
-    of `irtfit`, `test.info`, or `simdat` for more details about the
-    item meta data format.
+    be easily obtained using the functions of `bring.bilog()`,
+    `bring.parscale()`, `bring.flexmirt()`, `bring.mirt()`. See the
+    functions of `irtfit()`, `test.info()`, or `simdat()` for more
+    details about the item meta data format.
 2.  Examinees’ ability (or proficiency) estimates. It should be in the
     format of a numeric vector.
 3.  Examinees’ response data set for the items. It should be in the
@@ -248,7 +248,7 @@ a data set. To run the `irtfit` function, it requires three data sets:
 
 ### (2) Computing the IRT model-data fit statistics
 
-The `irtfit` function computes the traditional IRT item fit statistics
+The `irtfit()` function computes the traditional IRT item fit statistics
 such as X2, G2, infit, and outfit statistics. To calculate the X2 and G2
 statistics, two methods are available to divide the ability scale into
 several groups. The two methods are “equal.width” for dividing the scale
@@ -261,7 +261,7 @@ at the average point of examinees’ ability estimates in each group and
 “middle” for computing the expected probability at the midpoint of
 each group.
 
-To use the `irtfit` function, you need to insert the item meta data in
+To use the `irtfit()` function, you need to insert the item meta data in
 the argument `x`, the ability estimates in the argument `score`, and the
 response data in the argument `data`. If you want to divide the ability
 scale into other than ten groups, you need to specify the number of
@@ -269,7 +269,7 @@ groups in the argument `n.width`. In addition, if the response data
 include missing values, you must indicate the missing value in argument
 `missing`.
 
-Once the `irtfit` function has been implemented, you’ll get the fit
+Once the `irtfit()` function has been implemented, you’ll get the fit
 statistic results and the contingency tables for every item used to
 calculate the X2 and G2 fit statistics.
 
@@ -326,17 +326,17 @@ sim.dat <- simdat(x=x, theta=score, D=1)
 # also, estimate the empirical histogram of latent variable
 fix.loc <- c(1:5, 53:55)
 (mod.fix1 <- est_irt(x=x, data=sim.dat, D=1, use.gprior=TRUE, gprior=list(dist="beta", params=c(5, 16)),
-                    EmpHist=TRUE, Etol=1e-3, fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc))
+                    EmpHist=TRUE, Etol=1e-3, fipc=TRUE, fipc.method="MEM", fix.loc=fix.loc, verbose=FALSE))
 #> Parsing input... 
 #> Estimating item parameters... 
-#>  EM iteration: 1, Loglike: -28912.3526, Max-Change: 3.22265 EM iteration: 2, Loglike: -25094.9221, Max-Change: 0.86707 EM iteration: 3, Loglike: -24854.5695, Max-Change: 0.23789 EM iteration: 4, Loglike: -24847.9987, Max-Change: 0.09966 EM iteration: 5, Loglike: -24846.7185, Max-Change: 0.0740 EM iteration: 6, Loglike: -24846.1673, Max-Change: 0.05455 EM iteration: 7, Loglike: -24845.8645, Max-Change: 0.04023 EM iteration: 8, Loglike: -24845.6791, Max-Change: 0.02986 EM iteration: 9, Loglike: -24845.5582, Max-Change: 0.02239 EM iteration: 10, Loglike: -24845.4763, Max-Change: 0.01698 EM iteration: 11, Loglike: -24845.4193, Max-Change: 0.01302 EM iteration: 12, Loglike: -24845.3793, Max-Change: 0.01048 EM iteration: 13, Loglike: -24845.3513, Max-Change: 0.00898 EM iteration: 14, Loglike: -24845.3319, Max-Change: 0.0083 EM iteration: 15, Loglike: -24845.3191, Max-Change: 0.00759 EM iteration: 16, Loglike: -24845.3112, Max-Change: 0.00689 EM iteration: 17, Loglike: -24845.3072, Max-Change: 0.00623 EM iteration: 18, Loglike: -24845.3061, Max-Change: 0.00562 EM iteration: 19, Loglike: -24845.3075, Max-Change: 0.00506 EM iteration: 20, Loglike: -24845.3108, Max-Change: 0.00455 EM iteration: 21, Loglike: -24845.3156, Max-Change: 0.00409 EM iteration: 22, Loglike: -24845.3217, Max-Change: 0.00369 EM iteration: 23, Loglike: -24845.3288, Max-Change: 0.00332 EM iteration: 24, Loglike: -24845.3367, Max-Change: 0.00299 EM iteration: 25, Loglike: -24845.3453, Max-Change: 0.0027 EM iteration: 26, Loglike: -24845.3544, Max-Change: 0.00244 EM iteration: 27, Loglike: -24845.3641, Max-Change: 0.00221 EM iteration: 28, Loglike: -24845.3740, Max-Change: 0.0020 EM iteration: 29, Loglike: -24845.3843, Max-Change: 0.00181 EM iteration: 30, Loglike: -24845.3948, Max-Change: 0.00164 EM iteration: 31, Loglike: -24845.4055, Max-Change: 0.00149 EM iteration: 32, Loglike: -24845.4163, Max-Change: 0.00135 EM iteration: 33, Loglike: -24845.4273, Max-Change: 0.00123 EM iteration: 34, Loglike: -24845.4383, Max-Change: 0.00111 EM iteration: 35, Loglike: -24845.4493, Max-Change: 0.00101 EM iteration: 36, Loglike: -24845.4604, Max-Change: 0.00092 
+#>  
 #> Computing item parameter var-covariance matrix... 
-#> Estimation is finished in 6.79 seconds.
+#> Estimation is finished in 4.42 seconds.
 #> 
 #> Call:
 #> est_irt(x = x, data = sim.dat, D = 1, use.gprior = TRUE, gprior = list(dist = "beta", 
 #>     params = c(5, 16)), EmpHist = TRUE, Etol = 0.001, fipc = TRUE, 
-#>     fipc.method = "MEM", fix.loc = fix.loc)
+#>     fipc.method = "MEM", fix.loc = fix.loc, verbose = FALSE)
 #> 
 #> Item parameter estimation using MMLE-EM. 
 #> 36 E-step cycles were completed using 49 quadrature points.
@@ -351,7 +351,7 @@ summary(mod.fix1)
 #> Call:
 #> est_irt(x = x, data = sim.dat, D = 1, use.gprior = TRUE, gprior = list(dist = "beta", 
 #>     params = c(5, 16)), EmpHist = TRUE, Etol = 0.001, fipc = TRUE, 
-#>     fipc.method = "MEM", fix.loc = fix.loc)
+#>     fipc.method = "MEM", fix.loc = fix.loc, verbose = FALSE)
 #> 
 #> Summary of the Data 
 #>  Number of Items: 55
@@ -362,15 +362,15 @@ summary(mod.fix1)
 #>  Convergence criterion of E-step: 0.001
 #>  Number of rectangular quadrature points: 49
 #>  Minimum & Maximum quadrature points: -6, 6
-#>  Number of free parameters: 145
+#>  Number of free parameters: 147
 #>  Number of fixed items: 8
 #>  Number of E-step cycles completed: 36
 #>  Maximum parameter change: 0.0009203804
 #> 
 #> Processing time (in seconds) 
-#>  EM algorithm: 4.62
-#>  Standard error computation: 1.7
-#>  Total computation: 6.79
+#>  EM algorithm: 2.91
+#>  Standard error computation: 1.25
+#>  Total computation: 4.42
 #> 
 #> Convergence and Stability of Solution 
 #>  First-order test: Convergence criteria are satisfied.
@@ -380,6 +380,8 @@ summary(mod.fix1)
 #> 
 #> Summary of Estimation Results 
 #>  -2loglikelihood: 49690.92
+#>  Akaike Information Criterion (AIC): 49984.92
+#>  Bayesian Information Criterion (BIC): 50706.36
 #>  Item Parameters: 
 #>        id  cats  model  par.1  se.1  par.2  se.2  par.3  se.3  par.4  se.4
 #> 1    CMC1     2   3PLM   0.76    NA   1.46    NA   0.26    NA     NA    NA
@@ -593,7 +595,7 @@ data <- simdat(x=x, theta=score, D=1)
 ## Step 2: Estimate the item parameters
 # 1) item parameter estimation: constrain the slope parameters of the 1PLM to be equal
 (mod1 <- est_item(x, data, score, D=1, fix.a.1pl=FALSE, use.gprior=TRUE,
-                 gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE))
+                  gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE))
 #> Starting... 
 #> Parsing input... 
 #> Estimating item parameters... 
@@ -678,7 +680,7 @@ summary(mod1)
 #> 55   AFR3  500
 #> 
 #> Processing time (in seconds) 
-#>  Total computation: 1.36
+#>  Total computation: 0.92
 #> 
 #> Convergence of Solution 
 #>  All item parameters were successfully converged.
@@ -805,7 +807,7 @@ summary(mod1)
 
 # 2) item parameter estimation: fix the slope parameters of the 1PLM to 1
 (mod2 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, a.val.1pl=1, use.gprior=TRUE,
-                 gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE))
+                  gprior=list(dist="beta", params=c(5, 17)), use.startval=FALSE))
 #> Starting... 
 #> Parsing input... 
 #> Estimating item parameters... 
@@ -890,7 +892,7 @@ summary(mod2)
 #> 55   AFR3  500
 #> 
 #> Processing time (in seconds) 
-#>  Total computation: 2.05
+#>  Total computation: 0.94
 #> 
 #> Convergence of Solution 
 #>  All item parameters were successfully converged.
@@ -1017,7 +1019,7 @@ summary(mod2)
 
 # 3) item parameter estimation: fix the guessing parameters of the 3PLM to 0.2
 (mod3 <- est_item(x, data, score, D=1, fix.a.1pl=TRUE, fix.g=TRUE, a.val.1pl=1, g.val=.2,
-                 use.startval=FALSE))
+                  use.startval=FALSE))
 #> Starting... 
 #> Parsing input... 
 #> Estimating item parameters... 
@@ -1100,7 +1102,7 @@ summary(mod3)
 #> 55   AFR3  500
 #> 
 #> Processing time (in seconds) 
-#>  Total computation: 1.18
+#>  Total computation: 0.8
 #> 
 #> Convergence of Solution 
 #>  All item parameters were successfully converged.

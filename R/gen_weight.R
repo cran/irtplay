@@ -20,7 +20,7 @@
 #' \code{dist = "norm"}, normalized weights from the normal distribution are returned. If \code{dist = "emp"}, every specified theta value has the equal
 #' values of normalized weights.
 #'
-#' @return This function returns a matrix with two columns, where the first column has theta values (nodes) and the second column provides weights.
+#' @return This function returns a data frame with two columns, where the first column has theta values (nodes) and the second column provides weights.
 #'
 #' @author Hwanggyu Lim \email{hglim83@@gmail.com}
 #'

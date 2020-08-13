@@ -294,13 +294,14 @@ Mstep <- function(estep, id, cats, model, quadpt, equation, D=1, loc_1p_const, l
     if(EmpHist) {
 
       # update the prior frequencies
-      prior_freq <- unname(colSums(post_dist))
+      prior_freq <- prior_freq2 <- unname(colSums(post_dist))
 
       # prevent that the frequency has less than 1e-20
       prior_freq[prior_freq < 1e-20] <- 1e-20
 
       # normalize the updated prior freqency to obtain prior density function
-      prior_dense <- unname(colSums(post_dist) / nstd)
+      # prior_dense <- unname(colSums(post_dist) / nstd)
+      prior_dense <- prior_freq2 /nstd
 
       # update the prior densities
       if(fipc) {
@@ -322,11 +323,8 @@ Mstep <- function(estep, id, cats, model, quadpt, equation, D=1, loc_1p_const, l
         # update the prior frequencies
         prior_freq <- unname(colSums(post_dist))
 
-        # prevent that the frequency has less than 1e-20
-        prior_freq[prior_freq < 1e-20] <- 1e-20
-
         # normalize the updated prior freqency to obtain prior density function
-        prior_dense <- unname(colSums(post_dist) / nstd)
+        prior_dense <- prior_freq / nstd
 
         # compute the mean and sd of the updated prior distribution
         moments <- cal_moment(node=quadpt, weight=prior_dense)

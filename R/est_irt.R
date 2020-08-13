@@ -96,6 +96,7 @@
 #' @param fix.loc A vector of positive integer values specifying the location of the items to be fixed in the item meta data (i.e., \code{x})
 #' when the FIPC is implemented. For example, suppose that five items located in the 1st, 2nd, 4th, 7th, and 9th rows of the item meta data \code{x}
 #' should be fixed. Then \code{fix.loc = c(1, 2, 4, 7, 9)}.
+#' @param verbose A logical value. If TRUE, the function prints the observed data log-likelihood after each EM cycle. Defalut is TRUE. 
 #'
 #' @details A specific form of a data.frame should be used for the argument \code{x}. The first column should have item IDs,
 #' the second column should contain the number of score categories of the items, and the third column should include IRT models.
@@ -168,6 +169,8 @@
 #' when interpreting the variance-covariance matrix of item parameter estimates.}
 #' \item{covariance}{A matrix of variance-covariance matrix of item parameter estimates.}
 #' \item{loglikelihood}{A sum of the log-likelihood values of the observed data set (marginal log-likelihood) across all estimated items.}
+#' \item{aic}{A model fit statistic of Akaike information criterion based on the loglikelihood.}
+#' \item{bic}{A model fit statistic of Bayesian information criterion based on the loglikelihood.}
 #' \item{group.par}{A data.frame containing the mean, variance, and standard deviation of latent variable prior distribution.}
 #' \item{weights}{A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
 #' (in the second column) of the (updated) latent variable prior distribution.}
@@ -181,7 +184,7 @@
 #' \item{MaxE}{The maximum number of E steps in the EM algorithm.}
 #' \item{aprior}{A list containing the information of the prior distribution for item slope parameters.}
 #' \item{gprior}{A list containing the information of the prior distribution for item guessing parameters.}
-#' \item{npar.est}{A total number of the estimated item parameters.}
+#' \item{npar.est}{A total number of the estimated parameters.}
 #' \item{niter}{The number of EM cycles completed.}
 #' \item{maxpar.diff}{A maximum item parameter change when the EM cycles were completed.}
 #' \item{EMtime}{Time (in seconds) spent for the EM cycles.}
@@ -401,7 +404,7 @@
 #' sim.dat2 <- simdat(x=x, theta=score2, D=1)
 #'
 #' # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
-#' # fix the five 3PL items (1st - 5th items) and three GRM items (53th to 55th items)
+#' # fix the five 3PL items (1st - 5th items) and three GRM items (53rd to 55th items)
 #' # also, estimate the empirical histogram of latent variable
 #' # use the MEM method.
 #' fix.loc <- c(1:5, 53:55)
@@ -416,7 +419,7 @@
 #' summary(mod.fix1)
 #'
 #' # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
-#' # fix the five 3PL items (1st - 5th items) and three GRM items (53th to 55th items)
+#' # fix the five 3PL items (1st - 5th items) and three GRM items (53rd to 55th items)
 #' # at this moment, do estimate the empirical histogram of latent variable.
 #' # instead, estimate the scale of normal prior distribution of latent variable
 #' # use the MEM method.
@@ -456,11 +459,11 @@ est_irt <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE, f
                     gprior=list(dist="beta", params=c(5, 16)), missing=NA, Quadrature=c(49, 6.0), weights=NULL,
                     group.mean=0.0, group.var=1.0, EmpHist=FALSE,
                     use.startval=FALSE, Etol=1e-04, MaxE=500, control=list(iter.max=200),
-                    fipc=FALSE, fipc.method="MEM", fix.loc=NULL) {
-
+                    fipc=FALSE, fipc.method="MEM", fix.loc=NULL, verbose=TRUE) {
+  
   # match.call
   cl <- match.call()
-
+  
   # item parameter estimation
   if(!fipc) {
     # item parameter estimation using MMLE-EM algorithm
@@ -468,23 +471,23 @@ est_irt <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE, f
                           a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, use.aprior=use.aprior, use.bprior=use.bprior,
                           use.gprior=use.gprior, aprior=aprior, bprior=bprior, gprior=gprior, missing=missing, Quadrature=Quadrature,
                           weights=weights, group.mean=group.mean, group.var=group.var, EmpHist=EmpHist, use.startval=use.startval,
-                          Etol=Etol, MaxE=MaxE, control=control)
-
+                          Etol=Etol, MaxE=MaxE, control=control, verbose=verbose)
+    
   } else {
     # implement FIPC method
     est_par <- est_irt_fipc(x=x, data=data, D=D, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g,
                             a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, use.aprior=use.aprior, use.bprior=use.bprior,
                             use.gprior=use.gprior, aprior=aprior, bprior=bprior, gprior=gprior, missing=missing, Quadrature=Quadrature,
                             weights=weights, group.mean=group.mean, group.var=group.var, EmpHist=EmpHist, use.startval=use.startval,
-                            Etol=Etol, MaxE=MaxE, control=control, fipc=TRUE, fipc.method=fipc.method, fix.loc=fix.loc)
-
+                            Etol=Etol, MaxE=MaxE, control=control, fipc=TRUE, fipc.method=fipc.method, fix.loc=fix.loc, verbose=verbose)
+    
   }
-
+  
   # return the estimation results
   class(est_par) <- "est_irt"
   est_par$call <- cl
   est_par
-
+  
 }
 
 
@@ -494,11 +497,11 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
                        aprior=list(dist="lnorm", params=c(0.0, 0.5)), bprior=list(dist="norm", params=c(0.0, 1.0)),
                        gprior=list(dist="beta", params=c(5, 16)), missing=NA, Quadrature=c(49, 6.0), weights=NULL,
                        group.mean=0, group.var=1, EmpHist=FALSE, use.startval=FALSE, Etol=1e-04, MaxE=500,
-                       control=list(eval.max=200, iter.max=200)) {
-
+                       control=list(eval.max=200, iter.max=200), verbose=TRUE) {
+  
   # check start time
   start.time <- Sys.time()
-
+  
   ##---------------------------------------------------------------------
   # prepare the item parameter estimation
   ##---------------------------------------------------------------------
@@ -506,19 +509,19 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   if(use.startval & is.null(x)) {
     stop("To use starting values for item parameter estimation, the item meta data must be specified in the argument 'x'.", call.=FALSE)
   }
-
+  
   # extract information about the number of score cetegories and models
   cat("Parsing input...", '\n')
   if(!is.null(x)) {
     # give column names
     x <- data.frame(x)
     colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
-
+    
     # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
     if(ncol(x[, -c(1, 2, 3)]) == 2) {
       x <- data.frame(x, par.3=NA)
     }
-
+    
     # clear the item meta data set
     x <- back2df(metalist2(x))
     id <- x[, 1]
@@ -548,10 +551,10 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
     x <- startval_df(cats=cats, model=model)
     id <- x$id
   }
-
+  
   # check whether included data are correct
   if(nrow(x) != ncol(data)) stop("The number of items included in 'x' and 'data' must be the same.", call.=FALSE)
-
+  
   # consider DRM as 3PLM
   if("DRM" %in% model) {
     model[model == "DRM"] <- "3PLM"
@@ -559,95 +562,95 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
     memo <- "All 'DRM' items were considered as '3PLM' items during the item parameter estimation. \n"
     warning(memo, call.=FALSE)
   }
-
+  
   # recode missing values
   if(!is.na(missing)) {
     data[data == missing] <- NA
   }
-
+  
   # transform a data set to matrix
   data <- data.matrix(data)
-
+  
   # check the number of item responses across all items
   n.resp <- colSums(!is.na(data))
-
+  
   # check the items which have all missing responses
   loc_allmiss <- which(n.resp == 0L)
   if(length(loc_allmiss) > 0L) {
     memo2 <- paste0(paste0("item ", loc_allmiss, collapse = ", "), " has/have no item response data. \n")
     stop(memo2, call.=TRUE)
   }
-
+  
   # find the location of 1PLM items in which slope parameters should be constrained to be equal
   # also, find the location of other items
   if("1PLM" %in% model & !fix.a.1pl) {
     loc_1p_const <- which(model == "1PLM")
     loc_else <- which(model != "1PLM")
-
+    
   } else {
     loc_1p_const <- NULL
     loc_else <- 1:nrow(x)
   }
-
+  
   # record the original location of item parameters to be estimated, and
   # the relocated position of item parameters when computing
   # the variance-covariance matrix of item parameter estimates
   param_loc <- parloc(x=x, loc_1p_const=loc_1p_const, loc_else=loc_else,
                       fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g)
-
+  
   ##---------------------------------------------------------------------
   # conduct item parameter estimation using MMLE-EM algorithm
   ##---------------------------------------------------------------------
   # check the total number of examinees
   nstd <- nrow(data)
-
+  
   # create initial weights of prior ability distribution when it is not specified
   if(is.null(weights)) {
     # create quadrature points
     quadpt <- seq(-Quadrature[2], Quadrature[2], length.out=Quadrature[1])
-
+    
     # create the data.frame containing the quadurature points and weights
     weights <- gen.weight(dist="norm", mu=group.mean, sigma=sqrt(group.var), theta=quadpt)
-
+    
   } else {
     quadpt <- weights[, 1]
   }
-
+  
   # factorize the response values and create a list of item responses across items
   resp <- purrr::map2(.x=data.frame(data), .y=cats, .f=function(k, m) factor(k, levels=(seq_len(m) - 1)))
-
+  
   # calculate the score categories for each examinee
   std.id <- 1:nstd
   freq.cat <- purrr::map(.x=resp, .f=function(k) stats::xtabs(~ std.id + k, na.action=stats::na.pass, addNA = FALSE))
-
+  
   # transform the score category data.frame to a matrix
   freq.cat <- purrr::map(.x=freq.cat,
                          .f=function(k) data.matrix(k) %>%
                            unname())
-
+  
   # delete 'resp' object
   rm(resp, envir=environment(), inherits = FALSE)
-
+  
   # divide the data set for the mixed-item format
   datlist <- divide_data(data=data, cats=cats, freq.cat=freq.cat)
   data1_drm <- datlist$data1_drm
   data2_drm <- datlist$data2_drm
   data_plm <- datlist$data_plm
-
+  
   # delete 'datlist' object
   rm(datlist, envir=environment(), inherits = FALSE)
-
+  
   # estimation
   cat("Estimating item parameters...", '\n')
-
+  
   # implement EM algorithm
   time1 <- Sys.time()
   par.history <- list()
   for(r in 1:MaxE) {
-
+    
     # implement E-step
     estep <- Estep(x=x, data1_drm=data1_drm, data2_drm=data2_drm, data_plm=data_plm, freq.cat=freq.cat, weights=weights, D=D)
-
+    
     # implement M-step
     mstep <- Mstep(estep=estep, id=id, cats=cats, model=model, quadpt=quadpt, D=D, loc_1p_const=loc_1p_const, loc_else=loc_else,
                    EmpHist=EmpHist, weights=weights, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl,
@@ -655,46 +658,48 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
                    aprior=aprior, bprior=bprior, gprior=gprior,  group.mean=group.mean, group.var=group.var, nstd=nstd,
                    Quadrature=Quadrature, use.startval=TRUE, control=control, iter=r, fipc=FALSE,
                    reloc.par=param_loc$reloc.par, info.mstep=FALSE)
-
+    
     # compute the difference between previous and updated item parameter estimates
     diff_par <- mstep$par_df[, -c(1, 2, 3)] - x[, -c(1, 2, 3)]
     max.diff <- abs(max(diff_par, na.rm=TRUE))
-
+    
     # loglikehood value
     llike <- mstep$loglike
-
+    
     # print
-    cat("\r", paste0("EM iteration: ", r, ", Loglike: ", format(round(mstep$loglike, 4), nsmall=4), ", Max-Change: ", format(round(max.diff, 6), nsmall=5)))
-
+    if(verbose) {
+      cat("\r", paste0("EM iteration: ", r, ", Loglike: ", format(round(mstep$loglike, 4), nsmall=4), ", Max-Change: ", format(round(max.diff, 6), nsmall=5)))      
+    }
+    
     # check the convergence of EM algorithm
     converge <- max.diff <= Etol
-
+    
     # end the EM step if the convergence criterion is satisfied
     if(converge | r == MaxE) {
       # extract the final item parameter estimates
       par_df <- mstep$par_df
       par.history[[r]] <- mstep$par_vec
-
+      
       # extract the final quadrature points and the corresponding weights of the prior population density
       weights <- mstep$weights
       break
-
+      
     } else {
       # extract the interim item parameter estimates
       x <- mstep$par_df
       par.history[[r]] <- mstep$par_vec
-
+      
       # extract the interim quadrature points and the corresponding weights of the prior population density
       weights <- mstep$weights
     }
-
+    
   }
   cat("", "\n")
   time2 <- Sys.time()
-
+  
   # record the item parameter estimation time
   est_time1 <- round(as.numeric(difftime(time2, time1, units = "secs")), 2)
-
+  
   # the first order test: check convergence-criteria test
   test_1st <- all(c(all(mstep$convergence == 0L), r < MaxE))
   if(test_1st) {
@@ -703,22 +708,22 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
     memo3 <- "Convergence criteria are not satisfied."
     warning(paste0(memo3,  " \n"), call.=FALSE)
   }
-
+  
   # conduct one more E-step to update the posterior distribution using the final item parameter estimates
   estep <- Estep(x=x, data1_drm=data1_drm, data2_drm=data2_drm, data_plm=data_plm, freq.cat=freq.cat, weights=weights, D=D)
-
+  
   # compute the final log of marginal likelihood
   llike <- sum(log(estep$likehd %*% matrix(weights[, 2])))
-
+  
   ##---------------------------------------------------------------------
   # estimates the information matrix and standard errors of item parameter estimates
   ##---------------------------------------------------------------------
   # listrize the item parameter estimate data.frame
   meta <- metalist2(par_df)
-
+  
   # extract the finalized posterior density
   post_dist <- estep$post_dist
-
+  
   # compute the infomation matrix of item parameter estimates using the cross-product method
   cat("Computing item parameter var-covariance matrix...", '\n')
   time1 <- Sys.time()
@@ -726,17 +731,17 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
                         D=D, loc_1p_const=loc_1p_const, loc_else=loc_else, nstd=nstd,
                         fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl,
                         a.val.gpcm=a.val.gpcm, g.val=g.val, reloc.par=param_loc$reloc.par)
-
+  
   # compute the infomation matrix of item parameter priors
   info.prior <- info_prior(meta=meta, cats=cats, model=model, D=D, loc_1p_const=loc_1p_const,
                            loc_else=loc_else, nstd=nstd, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g,
                            a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, aprior=aprior, bprior=bprior,
                            gprior=gprior, use.aprior=use.aprior, use.bprior=use.bprior, use.gprior=use.gprior,
                            reloc.par=param_loc$reloc.par)
-
+  
   # sum of two information matrixs
   info.mat <- info.data + info.prior
-
+  
   # the second-order test: check if the information matrix is positive definite
   test_2nd <- all(eigen(info.mat, only.values=TRUE)$values > 1e-20)
   if(test_2nd) {
@@ -749,11 +754,11 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
     memo4 <- "Information matrix of item parameter estimates is not positive definite; unstable solution."
     warning(paste0(memo4, " \n"), call.=FALSE)
   }
-
+  
   # compute the variance-covariance matrix of the item parameter estimates, and
   # check if the hessian matrix can be inversed
   cov_mat <- suppressWarnings(tryCatch({solve(info.mat, tol=1e-200)}, error = function(e) {NULL}))
-
+  
   # compute the standard errors of item parameter estimates
   if(is.null(cov_mat)) {
     se_par <- rep(99999, length(diag(info.mat)))
@@ -763,19 +768,19 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
     se_par <- suppressWarnings(sqrt(diag(cov_mat)))
     memo5 <- "Variance-covariance matrix of item parameter estimates is obtainable."
   }
-
+  
   # prevent showing NaN values of standard errors
   if(any(is.nan(se_par))) {
     se_par[is.nan(se_par)] <- 99999
   }
-
+  
   # set an upper bound of standard error
   se_par <- ifelse(se_par > 99999, 99999, se_par)
   time2 <- Sys.time()
-
+  
   # record the standard error computationtime
   est_time2 <- round(as.numeric(difftime(time2, time1, units = "secs")), 2)
-
+  
   # deploy the standard errors on the location of matrix as the item parameter estimates
   se_df <- loc.par <- param_loc$loc.par
   for(i in 1:nrow(loc.par)) {
@@ -783,16 +788,16 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
     se.loc <- loc.par[i, ][num.loc]
     se_df[i, num.loc] <- se_par[se.loc]
   }
-
+  
   # create a full data.frame for the standard error estimates
   se_df <- data.frame(par_df[, 1:3], se_df)
   colnames(se_df) <- c("id", "cats", "model", paste0("se.", 1:ncol(loc.par)))
-
+  
   # create a full data.frame containing the position of item parameter estimates
   # this data.frame is useful when interpreting the variance-covariance matrix of item parameter estimates
   loc_df <- data.frame(par_df[, 1:3], loc.par)
   colnames(loc_df) <- c("id", "cats", "model", paste0("par.", 1:ncol(loc.par)))
-
+  
   ##---------------------------------------------------------------------
   # summarize the estimation results
   ##---------------------------------------------------------------------
@@ -805,38 +810,44 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   col.names[seq(2, 2*ncol(loc.par), 2)] <- paste0("se.", 1:ncol(loc.par))
   colnames(all_df) <- col.names
   full_all_df <- data.frame(x[, 1:3], all_df)
-
+  
   # population density parameters
   moments <- c(mu=group.mean, sigma2=group.var, sigma=sqrt(group.var))
   moments.se <- rep(NA, 3)
-
+  
   # data.frame for the population density parameter estimates
   group.par <- data.frame(rbind(moments, moments.se))
   colnames(group.par) <- c("mu", "sigma2", "sigma")
   rownames(group.par) <- c("estimates", "se")
-
+  
   # prior information
   if(use.aprior) aprior.dist <- aprior else aprior.dist <- NULL
   if(use.bprior) bprior.dist <- bprior else bprior.dist <- NULL
   if(use.gprior) gprior.dist <- gprior else gprior.dist <- NULL
-
+  
+  # statistics based on the loglikelihood of the fitted model:
+  npar.est=length(param_loc$reloc.par)
+  neg2llke <- - 2 * llike
+  aic <- 2 * npar.est + neg2llke
+  bic <- npar.est * log(nstd) + neg2llke
+  
   ##---------------------------------------------------------------
   # check end time
   end.time <- Sys.time()
-
+  
   # record total computation time
   est_time3 <- round(as.numeric(difftime(end.time, start.time, units = "secs")), 2)
-
+  
   # return results
-  rst <- list(estimates=full_all_df, par.est=par_df, se.est=se_df, pos.par=loc_df, covariance=cov_mat, loglikelihood=llike, group.par=group.par,
-              weights=weights, posterior.dist=post_dist, data=data, scale.D=D, ncase=nstd, nitem=nrow(par_df), Etol=Etol, MaxE=MaxE,
-              aprior=aprior.dist, bprior=bprior.dist, gprior=gprior.dist, npar.est=length(param_loc$reloc.par), niter=r, maxpar.diff=max.diff,
+  rst <- list(estimates=full_all_df, par.est=par_df, se.est=se_df, pos.par=loc_df, covariance=cov_mat, loglikelihood=llike, aic=aic, bic=bic, 
+              group.par=group.par, weights=weights, posterior.dist=post_dist, data=data, scale.D=D, ncase=nstd, nitem=nrow(par_df), 
+              Etol=Etol, MaxE=MaxE, aprior=aprior.dist, bprior=bprior.dist, gprior=gprior.dist, npar.est=npar.est, niter=r, maxpar.diff=max.diff,
               EMtime=est_time1, SEtime=est_time2, TotalTime=est_time3, test.1=memo3, test.2=memo4, var.note=memo5, fipc=FALSE,
               fipc.method=NULL, fix.loc=NULL)
-
+  
   cat("Estimation is finished in", est_time3, "seconds.",'\n')
   return(rst)
-
+  
 }
 
 
@@ -846,11 +857,11 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
                          aprior=list(dist="lnorm", params=c(0.0, 0.5)), bprior=list(dist="norm", params=c(0.0, 1.0)),
                          gprior=list(dist="beta", params=c(5, 16)), missing=NA, Quadrature=c(49, 6.0), weights=NULL,
                          group.mean=0.0, group.var=1.0, EmpHist=FALSE, use.startval=FALSE, Etol=1e-04, MaxE=500,
-                         control=list(eval.max=200, iter.max=200), fipc=TRUE, fipc.method="MEM", fix.loc=NULL) {
-
+                         control=list(eval.max=200, iter.max=200), fipc=TRUE, fipc.method="MEM", fix.loc=NULL, verbose=TRUE) {
+  
   # check start time
   start.time <- Sys.time()
-
+  
   ##---------------------------------------------------------------------
   # prepare the item parameter estimation
   ##---------------------------------------------------------------------
@@ -858,139 +869,139 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   if(is.null(x)) {
     stop("To implement the fixed item parameter calibration, the item meta data must be specified in the argument 'x'.", call.=FALSE)
   }
-
+  
   # extract information about the number of score cetegories and models
   cat("Parsing input...", '\n')
-
+  
   # give column names
   x <- data.frame(x)
   colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
-
+  
   # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
   if(ncol(x[, -c(1, 2, 3)]) == 2) {
     x <- data.frame(x, par.3=NA)
   }
-
+  
   # clear the item meta data set
   x <- back2df(metalist2(x))
-
+  
   # transform the model variables into character type
   x$model <-
     as.character(x$model) %>%
     toupper()
-
+  
   # consider DRM as 3PLM
   if("DRM" %in% x$model) {
     x$model[x$model == "DRM"] <- "3PLM"
     memo <- "All 'DRM' items were considered as '3PLM' items during the item parameter estimation. \n"
     warning(memo, call.=FALSE)
   }
-
+  
   # count the number of items
   nitem <- nrow(x)
-
+  
   # check the location of items whose item parameters are estimated
   nofix.loc <- c(1:nitem)[!c(1:nitem) %in% fix.loc]
-
+  
   # divide the meta data.frame into two groups: fixed (x_fix) and non-fixed (x_new)
   x_fix <- x[fix.loc, ]
   x_new <- x[nofix.loc, ]
-
+  
   # clear the two item meta data sets
   x_fix <- back2df(metalist2(x_fix))
   x_new <- back2df(metalist2(x_new))
-
+  
   # record the score categories and model information of the new items to be estimated
   id <- x_new$id
   cats <- x_new$cats
   model <- x_new$model
-
+  
   # generate the empty meta data with starting values
   if(!use.startval) {
     x_new <- startval_df(cats=cats, model=model)
     x_new$id <- id
   }
-
+  
   # create the total item meta data to be used in the further estimation process
   x_all <- startval_df(cats=x$cats, model=x$model)
   x_all[fix.loc, 1:ncol(x_fix)] <- x_fix
   x_all[nofix.loc, 1:ncol(x_new)] <- x_new
-
+  
   # check whether included data are correct
   if(nrow(x_all) != ncol(data)) stop("The number of items included in 'x' and 'data' must be the same.", call.=FALSE)
-
+  
   # recode missing values
   if(!is.na(missing)) {
     data[data == missing] <- NA
   }
-
+  
   # transform a data set to matrix
   data <- data.matrix(data)
-
+  
   # check the number of item responses across all items
   n.resp <- colSums(!is.na(data))
-
+  
   # check the items which have all missing responses
   loc_allmiss <- which(n.resp == 0L)
   if(length(loc_allmiss) > 0L) {
     memo2 <- paste0(paste0("item ", loc_allmiss, collapse = ", "), " has/have no item response data. \n")
     stop(memo2, call.=TRUE)
   }
-
+  
   # save the item response data into the different object
   data_all <- data
   rm(data, envir=environment(), inherits = FALSE)
-
+  
   # divide the item response data into two groups: fixed (x_fix) and non-fixed (x)
   data_fix <- data_all[, fix.loc]
   data_new <- data_all[, nofix.loc]
-
+  
   # find the location of 1PLM items in which slope parameters should be constrained to be equal
   # also, find the location of other items
   if("1PLM" %in% model & !fix.a.1pl) {
     loc_1p_const <- which(model == "1PLM")
     loc_else <- which(model != "1PLM")
-
+    
   } else {
     loc_1p_const <- NULL
     loc_else <- 1:nrow(x_new)
   }
-
+  
   # record the original location of item parameters to be estimated, and
   # the relocated position of item parameters when computing
   # the variance-covariance matrix of item parameter estimates
   param_loc <- parloc(x=x_new, loc_1p_const=loc_1p_const, loc_else=loc_else,
                       fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g)
-
+  
   ##---------------------------------------------------------------------
   # conduct item parameter estimation using MMLE-EM algorithm
   ##---------------------------------------------------------------------
   # check the total number of examinees
   nstd <- nrow(data_all)
-
+  
   # create initial weights of prior ability distribution when it is not specified
   if(is.null(weights)) {
     # create quadrature points
     quadpt <- seq(-Quadrature[2], Quadrature[2], length.out=Quadrature[1])
-
+    
     # create the data.frame containing the quadurature points and weights
     weights <- gen.weight(dist="norm", mu=group.mean, sigma=sqrt(group.var), theta=quadpt)
-
+    
   } else {
     quadpt <- weights[, 1]
   }
-
+  
   # factorize the response values and create a list of item responses across items
   resp_new <- purrr::map2(.x=data.frame(data_new), .y=cats, .f=function(k, m) factor(k, levels=(seq_len(m) - 1)))
   resp_fix <- purrr::map2(.x=data.frame(data_fix), .y=x_fix$cats, .f=function(k, m) factor(k, levels=(seq_len(m) - 1)))
   resp_all <- purrr::map2(.x=data.frame(data_all), .y=x_all$cats, .f=function(k, m) factor(k, levels=(seq_len(m) - 1)))
-
+  
   # calculate the score categories for each examinee
   std.id <- 1:nstd
   freq_new.cat <- purrr::map(.x=resp_new, .f=function(k) stats::xtabs(~ std.id + k, na.action=stats::na.pass, addNA = FALSE))
   freq_fix.cat <- purrr::map(.x=resp_fix, .f=function(k) stats::xtabs(~ std.id + k, na.action=stats::na.pass, addNA = FALSE))
   freq_all.cat <- purrr::map(.x=resp_all, .f=function(k) stats::xtabs(~ std.id + k, na.action=stats::na.pass, addNA = FALSE))
-
+  
   # transform the score category data.frame to a matrix
   freq_new.cat <- purrr::map(.x=freq_new.cat,
                              .f=function(k) data.matrix(k) %>%
@@ -1001,29 +1012,29 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   freq_all.cat <- purrr::map(.x=freq_all.cat,
                              .f=function(k) data.matrix(k) %>%
                                unname())
-
+  
   # delete 'resp' object
   rm(resp_new, envir=environment(), inherits = FALSE)
   rm(resp_fix, envir=environment(), inherits = FALSE)
   rm(resp_all, envir=environment(), inherits = FALSE)
-
+  
   # divide the item response data set into the dichotomous (correct & incorrect) and polytomous parts
   datlist_new <- divide_data(data=data_new, cats=cats, freq.cat=freq_new.cat)
   datlist_fix <- divide_data(data=data_fix, cats=x_fix$cats, freq.cat=freq_fix.cat)
   datlist_all <- divide_data(data=data_all, cats=x_all$cats, freq.cat=freq_all.cat)
-
+  
   # estimation
   cat("Estimating item parameters...", '\n')
-
+  
   # set the number of EM iteration to one when OEM (Wainer & Mislevy, 1990) method is used
   if(fipc.method=="OEM") MaxE <- 1
-
-
+  
+  
   # implement EM algorithm
   time1 <- Sys.time()
   par.history <- list()
   for(r in 1:MaxE) {
-
+    
     # implement E-step
     if(r == 1L) {
       estep <- Estep_fipc(x1=x_new, x2=x_fix,
@@ -1036,7 +1047,7 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
                           data1_drm2=datlist_all$data1_drm, data2_drm2=datlist_all$data2_drm, data_plm2=datlist_all$data_plm,
                           freq.cat=freq_new.cat, weights=weights, D=D)
     }
-
+    
     # implement M-step
     mstep <- Mstep(estep=estep, id=id, cats=cats, model=model, quadpt=quadpt, D=D, loc_1p_const=loc_1p_const, loc_else=loc_else,
                    EmpHist=EmpHist, weights=weights, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl,
@@ -1044,48 +1055,50 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
                    aprior=aprior, bprior=bprior, gprior=gprior, group.mean=group.mean, group.var=group.var, nstd=nstd,
                    Quadrature=Quadrature, use.startval=TRUE, control=control, iter=r, fipc=TRUE,
                    reloc.par=param_loc$reloc.par, info.mstep=FALSE)
-
+    
     # compute the difference between previous and updated item parameter estimates
     diff_par <- mstep$par_df[, -c(1, 2, 3)] - x_new[, -c(1, 2, 3)]
     max.diff <- abs(max(diff_par, na.rm=TRUE))
-
+    
     # loglikehood value
     llike <- mstep$loglike
-
+    
     # print
-    cat("\r", paste0("EM iteration: ", r, ", Loglike: ", format(round(mstep$loglike, 4), nsmall=4), ", Max-Change: ", format(round(max.diff, 5), nsmall=4)))
-
+    if(verbose) {
+      cat("\r", paste0("EM iteration: ", r, ", Loglike: ", format(round(mstep$loglike, 4), nsmall=4), ", Max-Change: ", format(round(max.diff, 5), nsmall=4)))      
+    }
+    
     # check the convergence of EM algorithm
     converge <- max.diff <= Etol
-
+    
     # end the EM step if the convergence criterion is satisfied
     if(converge | r == MaxE) {
       # extract the final item parameter estimates
       par_df <- mstep$par_df
       x_all[nofix.loc, 1:ncol(par_df)] <- par_df
       par.history[[r]] <- mstep$par_vec
-
+      
       # extract the final quadrature points and the corresponding weights of the prior population density
       weights <- mstep$weights
       break
-
+      
     } else {
       # extract the interim item parameter estimates
       x_new <- mstep$par_df
       x_all[nofix.loc, 1:ncol(x_new)] <- x_new
       par.history[[r]] <- mstep$par_vec
-
+      
       # extract the interim quadrature points and the corresponding weights of the prior population density
       weights <- mstep$weights
     }
-
+    
   }
   cat("", "\n")
   time2 <- Sys.time()
-
+  
   # record the item parameter estimation time
   est_time1 <- round(as.numeric(difftime(time2, time1, units = "secs")), 2)
-
+  
   # the first order test: check convergence-criteria test
   test_1st <- all(c(all(mstep$convergence == 0L), r < MaxE))
   if(test_1st) {
@@ -1094,28 +1107,28 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
     memo3 <- "Convergence criteria are not satisfied."
     warning(paste0(memo3,  " \n"), call.=FALSE)
   }
-
+  
   # conduct one more E-step to update the posterior distribution using the final item parameter estimates
   estep <- Estep_fipc(x1=par_df, x2=x_all,
                       data1_drm1=datlist_new$data1_drm, data2_drm1=datlist_new$data2_drm, data_plm1=datlist_new$data_plm,
                       data1_drm2=datlist_all$data1_drm, data2_drm2=datlist_all$data2_drm, data_plm2=datlist_all$data_plm,
                       freq.cat=freq_new.cat, weights=weights, D=D)
-
+  
   # compute the final log of marginal likelihood
   llike <- sum(log(estep$likehd %*% matrix(weights[, 2])))
-
+  
   # compute the mean and variance of the estimated density distribution
   pop_moments <- cal_moment(node=quadpt, weight=weights[, 2])
-
+  
   ##---------------------------------------------------------------------
   # estimates the standard errors of item parameter estimates
   ##---------------------------------------------------------------------
   # listrize the item parameter estimate data.frame
   meta <- metalist2(par_df)
-
+  
   # extract the finalized posterior density
   post_dist <- estep$post_dist
-
+  
   # compute the infomation matrix of item parameter estimates using the cross-product method
   cat("Computing item parameter var-covariance matrix...", '\n')
   time1 <- Sys.time()
@@ -1123,17 +1136,17 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
                         D=D, loc_1p_const=loc_1p_const, loc_else=loc_else, nstd=nstd,
                         fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl,
                         a.val.gpcm=a.val.gpcm, g.val=g.val, reloc.par=param_loc$reloc.par)
-
+  
   # compute the infomation matrix of item parameter priors
   info.prior <- info_prior(meta=meta, cats=cats, model=model, D=D, loc_1p_const=loc_1p_const,
                            loc_else=loc_else, nstd=nstd, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g,
                            a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, aprior=aprior, bprior=bprior,
                            gprior=gprior, use.aprior=use.aprior, use.bprior=use.bprior, use.gprior=use.gprior,
                            reloc.par=param_loc$reloc.par)
-
+  
   # sum of two information matrixs
   info.mat <- info.data + info.prior
-
+  
   # the second-order test: check if the information matrix is positive definite
   test_2nd <- all(eigen(info.mat, only.values=TRUE)$values > 1e-8)
   if(test_2nd) {
@@ -1146,11 +1159,11 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
     memo4 <- "Information matrix of item parameter estimates is not positive definite; unstable solution."
     warning(paste0(memo4, " \n"), call.=FALSE)
   }
-
+  
   # compute the variance-covariance matrix of the item parameter estimates, and
   # check if the hessian matrix can be inversed
   cov_mat <- suppressWarnings(tryCatch({solve(info.mat, tol=1e-200)}, error = function(e) {NULL}))
-
+  
   # compute the standard errors of item parameter estimates
   if(is.null(cov_mat)) {
     se_par <- rep(99999, length(diag(info.mat)))
@@ -1160,19 +1173,19 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
     se_par <- suppressWarnings(sqrt(diag(cov_mat)))
     memo5 <- "Variance-covariance matrix of item parameter estimates is obtainable."
   }
-
+  
   # prevent showing NaN values of standard errors
   if(any(is.nan(se_par))) {
     se_par[is.nan(se_par)] <- 99999
   }
-
+  
   # set an upper bound of standard error
   se_par <- ifelse(se_par > 99999, 99999, se_par)
   time2 <- Sys.time()
-
+  
   # record the standard error computationtime
   est_time2 <- round(as.numeric(difftime(time2, time1, units = "secs")), 2)
-
+  
   # deploy the standard errors on the location of matrix as the item parameter estimates
   # 1) for the only new items
   se_df <- loc.par <- param_loc$loc.par
@@ -1181,25 +1194,27 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
     se.loc <- loc.par[i, ][num.loc]
     se_df[i, num.loc] <- se_par[se.loc]
   }
-
+  
   # 2) for the a total test form
-  se_all_df <- loc_all.par <- matrix(NA, nrow=nitem, ncol=max(x_all$cats))
+  all.col <- max(x_all$cats)
+  all.col <- ifelse(all.col == 2, 3, all.col)
+  se_all_df <- loc_all.par <- matrix(NA, nrow=nitem, ncol=all.col)
   if(ncol(se_df) < ncol(se_all_df)) {
     n2add <- ncol(se_all_df) - ncol(se_df)
     se_df <- cbind(se_df, matrix(NA, nrow=nrow(se_df), ncol=n2add))
   }
   se_all_df[nofix.loc, 1:ncol(se_df)] <- se_df
   loc_all.par[nofix.loc, 1:ncol(loc.par)] <- loc.par
-
+  
   # create a full data.frame for the standard error estimates
   se_all_df <- data.frame(x_all[, 1:3], se_all_df)
   colnames(se_all_df) <- c("id", "cats", "model", paste0("se.", 1:ncol(loc_all.par)))
-
+  
   # create a full data.frame containing the position of item parameter estimates
   # this data.frame is useful when interpreting the variance-covariance matrix of item parameter estimates
   loc_all_df <- data.frame(x_all[, 1:3], loc_all.par)
   colnames(loc_all_df) <- c("id", "cats", "model", paste0("par.", 1:ncol(loc_all.par)))
-
+  
   ##---------------------------------------------------------------------
   # summarize the estimation results
   ##---------------------------------------------------------------------
@@ -1212,45 +1227,51 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   col.names[seq(2, 2*ncol(loc_all.par), 2)] <- paste0("se.", 1:ncol(loc_all.par))
   colnames(all_df) <- col.names
   full_all_df <- data.frame(x_all[, 1:3], all_df)
-
+  
   # population density parameters
   mu <- pop_moments[1]
   sigma2 <- pop_moments[2]
   sigma <- sqrt(pop_moments[2])
   moments.est <- c(mu, sigma2, sigma)
-
+  
   # compute the standard errors of population density parameters
   se.mu <- sigma / sqrt(nstd)
   se.sigma2 <- sigma2 * sqrt(2 / (nstd - 1))
   se.sigma <- (1 / (2 * sigma)) * se.sigma2 # using Delta method
   moments.se <- c(se.mu, se.sigma2, se.sigma)
-
+  
   # data.frame for the population density parameter estimates
   group.par <- data.frame(rbind(moments.est, moments.se))
   colnames(group.par) <- c("mu", "sigma2", "sigma")
   rownames(group.par) <- c("estimates", "se")
-
+  
   # prior information
   if(use.aprior) aprior.dist <- aprior else aprior.dist <- NULL
   if(use.bprior) bprior.dist <- bprior else bprior.dist <- NULL
   if(use.gprior) gprior.dist <- gprior else gprior.dist <- NULL
-
+  
+  # statistics based on the loglikelihood of the fitted model:
+  npar.est=length(param_loc$reloc.par) + 2
+  neg2llke <- - 2 * llike
+  aic <- 2 * npar.est + neg2llke
+  bic <- npar.est * log(nstd) + neg2llke
+  
   ##---------------------------------------------------------------
   # check end time
   end.time <- Sys.time()
-
+  
   # record total computation time
   est_time3 <- round(as.numeric(difftime(end.time, start.time, units = "secs")), 2)
-
+  
   # return results
-  rst <- list(estimates=full_all_df, par.est=x_all, se.est=se_all_df, pos.par=loc_all_df, covariance=cov_mat, loglikelihood=llike, group.par=group.par,
-              weights=weights, posterior.dist=post_dist, data=data_all, scale.D=D, ncase=nstd, nitem=nitem, Etol=Etol, MaxE=MaxE,
-              aprior=aprior.dist, bprior=bprior.dist, gprior=gprior.dist, npar.est=length(param_loc$reloc.par), niter=r, maxpar.diff=max.diff,
-              EMtime=est_time1, SEtime=est_time2, TotalTime=est_time3, test.1=memo3, test.2=memo4, var.note=memo5, fipc=TRUE,
-              fipc.method=fipc.method, fix.loc=fix.loc)
-
+  rst <- list(estimates=full_all_df, par.est=x_all, se.est=se_all_df, pos.par=loc_all_df, covariance=cov_mat, loglikelihood=llike, 
+              aic=aic, bic=bic, group.par=group.par, weights=weights, posterior.dist=post_dist, data=data_all, scale.D=D, ncase=nstd, 
+              nitem=nitem, Etol=Etol, MaxE=MaxE, aprior=aprior.dist, bprior=bprior.dist, gprior=gprior.dist, npar.est=npar.est, 
+              niter=r, maxpar.diff=max.diff, EMtime=est_time1, SEtime=est_time2, TotalTime=est_time3, test.1=memo3, test.2=memo4, 
+              var.note=memo5, fipc=TRUE, fipc.method=fipc.method, fix.loc=fix.loc)
+  
   cat("Estimation is finished in", est_time3, "seconds.",'\n')
   return(rst)
-
+  
 }
 

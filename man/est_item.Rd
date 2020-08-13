@@ -111,7 +111,7 @@ observed information functions.}
 \item{convergence}{A string indicating the convergence status of the item parameter estimation.}
 \item{nitem}{A total number of items included in the response data.}
 \item{deleted.item}{The items which have no item response data. Those items are excluded from the item parameter estimation.}
-\item{npar.est}{A total number of the estimated item parameters.}
+\item{npar.est}{A total number of the estimated parameters.}
 \item{n.response}{An integer vector indicating the number of item responses for each item used to estimate the item parameters.}
 \item{TotalTime}{Time (in seconds) spent for total compuatation.}
 

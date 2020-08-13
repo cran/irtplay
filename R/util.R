@@ -28,15 +28,16 @@ bind.fill <- function(List, type=c("rbind", "cbind")){
   type <- match.arg(type)
   nm <- List
   nm <- purrr::map(nm, as.matrix)
+  names(nm) <- 1:length(nm)
   n <- max(purrr::map_dbl(nm, nrow))
   df <-
-    purrr::map_dfc(nm, function(x) rbind(x, matrix(NA, n-nrow(x), ncol(x)))) %>%
+    purrr::map_dfc(nm, function(x) {rbind(x, matrix(NA, n-nrow(x), ncol(x)))}) %>%
     as.matrix()
   switch(type,
          cbind = unname(df),
          rbind = unname(t(df))
   )
-
+  
 }
 
 # a function to calculate a mean and variance at each theta point

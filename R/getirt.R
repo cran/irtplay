@@ -19,6 +19,8 @@
 #' when interpreting the variance-covariance matrix of item parameter estimates.}
 #' \item{covariance}{A matrix of variance-covariance matrix of item parameter estimates.}
 #' \item{loglikelihood}{A sum of the log-likelihood values of the observed data set (marginal log-likelihood) across all estimated items.}
+#' \item{aic}{A model fit statistic of Akaike information criterion based on the loglikelihood.}
+#' \item{bic}{A model fit statistic of Bayesian information criterion based on the loglikelihood.}
 #' \item{group.par}{A data.frame containing the mean, variance, and standard deviation of latent variable prior distribution.}
 #' \item{weights}{A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
 #' (in the second column) of the (updated) latent variable prior distribution.}
@@ -33,7 +35,7 @@
 #' \item{aprior}{A list containing the information of the prior distribution for item slope parameters.}
 #' \item{bprior}{A list containing the information of the prior distribution for item difficulty (or threshold) parameters.}
 #' \item{gprior}{A list containing the information of the prior distribution for item guessing parameters.}
-#' \item{npar.est}{A total number of the estimated item parameters.}
+#' \item{npar.est}{A total number of the estimated parameters.}
 #' \item{niter}{The number of EM cycles completed.}
 #' \item{maxpar.diff}{A maximum item parameter change when the EM cycles were completed.}
 #' \item{EMtime}{Time (in seconds) spent for the EM cycles.}
@@ -62,7 +64,7 @@
 #' \item{convergence}{A string indicating the convergence status of the item parameter estimation.}
 #' \item{nitem}{A total number of items included in the response data.}
 #' \item{deleted.item}{The items which have no item response data. Those items are excluded from the item parameter estimation.}
-#' \item{npar.est}{A total number of the estimated item parameters.}
+#' \item{npar.est}{A total number of the estimated parameters.}
 #' \item{n.response}{An integer vector indicating the number of item responses for each item used to estimate the item parameters.}
 #' \item{TotalTime}{Time (in seconds) spent for total compuatation.}
 #' }
@@ -101,6 +103,8 @@ getirt.est_irt <- function(x, what, ...){
                pos.par = x$pos.par,
                covariance = x$covariance,
                loglikelihood = x$loglikelihood,
+               aic = x$aic,
+               bic = x$bic,
                group.par = x$group.par,
                weights = x$weights,
                data = x$data,
