@@ -8,9 +8,9 @@ covirt(x, D = 1, nstd = 1000, pcm.loc = NULL, norm.prior = c(0, 1),
   nquad = 41, weights = NULL)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
-See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data.
-This data.frame can be easily obtained using the function \code{\link{shape_df}}.}
+\item{x}{A data frame containing the item metadata (e.g., item parameters, number of categories, models ...).
+See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item metadata.
+This data frame can be easily obtained using the function \code{\link{shape_df}}.}
 
 \item{D}{A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
 Default is 1.}
@@ -27,7 +27,7 @@ Default is c(0,1).}
 
 \item{nquad}{An integer value specifying the number of gaussian quadrature points from the normal prior distribution. Default is 41.}
 
-\item{weights}{A two-column matrix or data.frame containing the theta values (in the first column) and the weights (in the second column)
+\item{weights}{A two-column matrix or data frame containing the theta values (in the first column) and the weights (in the second column)
 for the prior distribution. The weights and theta values can be easily obtained using the function \code{\link{gen.weight}}.
 If NULL, default values are used for the prior distribution (see the arguments of \code{norm.prior} and \code{nquad}). Default is NULL.}
 }
@@ -36,18 +36,22 @@ A list of two internal objects. The first internal object contains a list of the
 The second internal object contains a list of the standard errors of item parameter estimates.
 }
 \description{
-This function calculates the analytical asymptotic variance-covariance matrices (Li & Lissitz, 2004)
-of item parameter estimates for dichotomous and polytomous IRT Models without examinee's responses to test items.
-The square root of variance terms in the matrices can be used as the asymptotic standard errors of maximum
-likelihood item parameter estimates.
+This function calculates the analytical asymptotic variance-covariance matrices (e.g., Li & Lissitz, 2004; Thissen & Wainer, 1982)
+of item parameter estimates for dichotomous and polytomous IRT Models without examinee's responses to test items, 
+given a set of item parameter estimates. The square roots of variance terms in the matrices can be used as the asymptotic 
+standard errors of maximum likelihood item parameter estimates.
 }
 \details{
+The standard errors obtained from the analytical approach are likely to represent lower bounds for the actual standard errors (Thissen & Wainer, 1982).
+Therefore, they may be useful for assessing the degree of precision of a set of item parameter estimates when the corresponding standard errors of 
+the estimates are presented in literature or research reports.
+
 Sometimes item parameters need to be estimated using different sample size. If the item parameters in the argument \code{x} were
 calibrated with different number of examinees, a vector of different sample sizes should be specified in the argument \code{nstd}. Suppose
 that you want to compute the variance-covariance matrices of five IRT 3PLM items and the five items were calibrated with 500, 600, 1,000, 2,000,
 and 700 examinees, respectively. Then, \code{nstd = c(500, 600, 1000, 2000, 700)} must be specified.
 
-Because you can specify only "GPCM" for both the partial credit model (PCM) or the generalized partial credit model (GPCM) in the item meta data,
+Because you can specify only "GPCM" for both the partial credit model (PCM) or the generalized partial credit model (GPCM) in the item metadata,
 you must indicate which items are the PCM items through the argument \code{pcm.loc}. This is because the item category difficulty parameters are estimated
 from the PCM, meaning that the variance-covariance of item parameter estimates must be computed for the item category difficulty parameters. Suppose
 that you want to compute the variance-covariance matrices of five polytomous items and the last two items were calibrated with the PCM. Then,
@@ -67,6 +71,9 @@ covirt(x, D=1, nstd=2000, norm.prior=c(0, 1), nquad=40)
 \references{
 Li, Y. & Lissitz, R. (2004). Applications of the analytically derived asymptotic standard errors of item response theory
 item parameter estimates. \emph{Journal of educational measurement, 41}(2), 85-117.
+
+Thissen, D. & Wainer, H. (1982). Weighted likelihood estimation of ability in item response theory. 
+\emph{Psychometrika, 54}(3), 427-450.
 }
 \seealso{
 \code{\link{irtfit}}, \code{\link{test.info}}, \code{\link{simdat}}, \code{\link{shape_df}}, \code{\link{gen.weight}}

@@ -9,12 +9,12 @@
 #' operational item parameter estimates and recalibrate the operational items to evaluate the parameter drifts
 #' of the operational items (Chen & Wang, 2016; Stocking, 1988).
 #'
-#' @param x A data.frame containing the item meta data. This meta data is necessary to obtain the information of
+#' @param x A data frame containing the item metadata. This metadata is necessary to obtain the information of
 #' each item (i.e., number of score categories and IRT model) to be calibrated. You can easily create an empty
-#' item meta data using the function \code{\link{shape_df}}. When \code{use.startval = TRUE}, the item parameters
-#' specified in the item meta data are used as the starting values for the item parameter estimation.
+#' item metadata using the function \code{\link{shape_df}}. When \code{use.startval = TRUE}, the item parameters
+#' specified in the item metadata are used as the starting values for the item parameter estimation.
 #' If \code{x = NULL}, the arguments of \code{model} and \code{cats} must be specified. See \code{\link{irtfit}},
-#' \code{\link{test.info}} or \code{\link{simdat}} for more details about the item meta data. See below for details.
+#' \code{\link{test.info}} or \code{\link{simdat}} for more details about the item metadata. See below for details.
 #' @param data A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
 #' the examinees and items, respectively.
 #' @param score A vector of examinees' ability estimates. Length of the vector must be the same as the number of rows in the
@@ -68,23 +68,24 @@
 #' in the first argument. In terms of the two parameters of the three distributions, see \code{dbeta()}, \code{dlnorm()},
 #' and \code{dnorm()} in the \pkg{stats} package for more details.
 #' @param missing A value indicating missing values in the response data set. Default is NA.
-#' @param use.startval A logical value. If TRUE, the item parameters provided in the item meta data (i.e., the argument \code{x}) are used as
+#' @param use.startval A logical value. If TRUE, the item parameters provided in the item metadata (i.e., the argument \code{x}) are used as
 #' the starting values for the item parameter estimation. Otherwise, internal starting values of this function are used. Default is FALSE.
 #' @param control A list of control parameters to be passed to the optimization function of \code{nlminb()} in the \pkg{stats} package. The control parameters
 #' set the conditions of the item parameter estimation process such as the maximum number of iterations. See \code{nlminb()} in the \pkg{stats} package for details.
+#' @param verbose A logical value. If FALSE, all progress messages are suppressed. Default is TRUE. 
 #'
 #' @details In most cases, the function \code{\link{est_item}} will return successfully converged item parameter estimates using
 #' the default internal starting values. However, if there is a convergence problem in the calibration, one possible solution is using
-#' different starting values. When the item parameter values are specified in the item meta data (i.e., the argument \code{x}), those values
+#' different starting values. When the item parameter values are specified in the item metadata (i.e., the argument \code{x}), those values
 #' can be used as the starting values for the item parameter calibration by setting \code{use.startval = TRUE}.
 #'
 #' @return This function returns an object of class \code{\link{est_item}}. Within this object, several internal objects are contained such as:
-#' \item{estimates}{A data.frame containing both the item parameter estimates and the corresponding standard errors of estimates.}
-#' \item{par.est}{A data.frame containing the item parameter estimates.}
-#' \item{se.est}{A data.frame containing the standard errors of the item parameter estimates. Note that the standard errors are estimated using
+#' \item{estimates}{A data frame containing both the item parameter estimates and the corresponding standard errors of estimates.}
+#' \item{par.est}{A data frame containing the item parameter estimates.}
+#' \item{se.est}{A data frame containing the standard errors of the item parameter estimates. Note that the standard errors are estimated using
 #' observed information functions.}
 #' \item{loglikelihood}{A sum of the log-likelihood values of the complete data set across all estimated items.}
-#' \item{data}{A data.frame of the examinees' response data set.}
+#' \item{data}{A data frame of the examinees' response data set.}
 #' \item{score}{A vector of the examinees' ability values used as the fixed effects.}
 #' \item{scale.D}{A scaling factor in IRT models.}
 #' \item{convergence}{A string indicating the convergence status of the item parameter estimation.}
@@ -119,10 +120,10 @@
 #' ## import the "-prm.txt" output file from flexMIRT
 #' flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 #'
-#' # select the item meta data
+#' # select the item metadata
 #' x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
 #'
-#' # modify the item meta data so that some items follow 1PLM, 2PLM and GPCM
+#' # modify the item metadata so that some items follow 1PLM, 2PLM and GPCM
 #' x[c(1:3, 5), 3] <- "1PLM"
 #' x[c(1:3, 5), 4] <- 1
 #' x[c(1:3, 5), 6] <- 0
@@ -173,7 +174,7 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
                      a.val.1pl=1, a.val.gpcm=1, g.val=.2, use.aprior=FALSE, use.bprior=FALSE, use.gprior=TRUE,
                      aprior=list(dist="lnorm", params=c(0, 0.5)), bprior=list(dist="norm", params=c(0.0, 1.0)),
                      gprior=list(dist="beta", params=c(5, 17)), missing=NA, use.startval=FALSE,
-                     control=list(eval.max=500, iter.max=500)) {
+                     control=list(eval.max=500, iter.max=500), verbose=TRUE) {
 
   # check start time
   start.time <- Sys.time()
@@ -182,16 +183,20 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   cl <- match.call()
 
   ##-------------------------------------------------------------------------------------------------------
-  ## 1. preperation of item parameter estimation
-  cat("Starting...", '\n')
+  ## 1. preparation of item parameter estimation
+  if(verbose) {
+    cat("Starting...", '\n')    
+  }
 
   # check if the starting values are available
   if(use.startval & is.null(x)) {
-    stop("To use starting values for item parameter estimation, the item meta data must be specified in the argument 'x'.", call.=FALSE)
+    stop("To use starting values for item parameter estimation, the item metadata must be specified in the argument 'x'.", call.=FALSE)
   }
 
-  # extract information about the number of score cetegories and models
-  cat("Parsing input...", '\n')
+  # extract information about the number of score categories and models
+  if(verbose) {
+    cat("Parsing input...", '\n')
+  }
   if(!is.null(x)) {
     # give column names
     x <- data.frame(x)
@@ -203,7 +208,7 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
       x <- data.frame(x, par.3=NA)
     }
 
-    # clear the item meta data set
+    # clear the item metadata set
     x <- back2df(metalist2(x))
     model <-
       as.character(x[, 3]) %>%
@@ -255,7 +260,7 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   # check the items which have all missing responses
   loc_allmiss <- which(n.resp == 0L)
 
-  # delete items which have all missing responses from the item meta data set
+  # delete items which have all missing responses from the item metadata set
   if(length(loc_allmiss) > 0L) {
     loc_nomiss <- which(n.resp > 0L)
     x_pre <- x
@@ -331,9 +336,11 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
   objective <- NULL
 
   # estimation
-  cat("Estimating item parameters...", '\n')
+  if(verbose) {
+    cat("Estimating item parameters...", '\n')    
+  }
 
-  # listrize the item meta data to use the starting values
+  # listrize the item metadata to use the starting values
   meta <- metalist2(x)
 
   # the dichotomous items: 1PLM with constrained slope values
@@ -606,7 +613,9 @@ est_item <- function(x=NULL, data, score, D=1, model=NULL, cats=NULL, fix.a.1pl=
                    class="est_item")
   rst$call <- cl
 
-  cat('Estimation is finished.', '\n')
+  if(verbose) {
+    cat('Estimation is finished.', '\n')
+  }
   return(rst)
 
 

@@ -3,9 +3,9 @@
 #' @description This function computes updated prior (a.k.a. posterior) densities of the latent ability distribution given 
 #' a prior ability distribution, item parameters, and item response data. 
 #'
-#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...). 
-#' See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}}  for more details about the item meta data.
-#' This data.frame can be easily obtained using the function \code{\link{shape_df}}. 
+#' @param x A data frame containing the item metadata (e.g., item parameters, number of categories, models ...). 
+#' See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}}  for more details about the item metadata.
+#' This data frame can be easily obtained using the function \code{\link{shape_df}}. 
 #' @param data A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
 #' the examinees and items, respectively.
 #' @param D A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
@@ -13,7 +13,7 @@
 #' @param Quadrature A numeric vector of two components specifying the number of quadrature points (in the first component) and
 #' the symmetric minimum and maximum values of these points (in the second component). For example, a vector of c(49, 6) indicates 49 rectangular
 #' quadrature points over -6 and 6. Default is c(49, 6).
-#' @param weights A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
+#' @param weights A two-column matrix or data frame containing the quadrature points (in the first column) and the corresponding weights
 #' (in the second column) of the latent variable prior distribution. The weights and quadrature points can be easily obtained
 #' using the function \code{\link{gen.weight}}. If NULL, a normal prior density is used based on the information provided in the arguments
 #' of \code{Quadrature}, \code{group.mean}, and \code{group.var}). Default is NULL.
@@ -57,7 +57,7 @@ post_den <- function(x, data, D=1, Quadrature=c(49, 6.0), weights=NULL,
     x <- data.frame(x, par.3=NA)
   }
   
-  # clear the item meta data set
+  # clear the item metadata set
   x <- back2df(metalist2(x))
   cats <- x[, 2]
   model <-

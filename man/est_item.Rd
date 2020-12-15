@@ -11,15 +11,15 @@ est_item(x = NULL, data, score, D = 1, model = NULL, cats = NULL,
   "lnorm", params = c(0, 0.5)), bprior = list(dist = "norm", params =
   c(0, 1)), gprior = list(dist = "beta", params = c(5, 17)),
   missing = NA, use.startval = FALSE, control = list(eval.max = 500,
-  iter.max = 500))
+  iter.max = 500), verbose = TRUE)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data. This meta data is necessary to obtain the information of
+\item{x}{A data frame containing the item metadata. This metadata is necessary to obtain the information of
 each item (i.e., number of score categories and IRT model) to be calibrated. You can easily create an empty
-item meta data using the function \code{\link{shape_df}}. When \code{use.startval = TRUE}, the item parameters
-specified in the item meta data are used as the starting values for the item parameter estimation.
+item metadata using the function \code{\link{shape_df}}. When \code{use.startval = TRUE}, the item parameters
+specified in the item metadata are used as the starting values for the item parameter estimation.
 If \code{x = NULL}, the arguments of \code{model} and \code{cats} must be specified. See \code{\link{irtfit}},
-\code{\link{test.info}} or \code{\link{simdat}} for more details about the item meta data. See below for details.}
+\code{\link{test.info}} or \code{\link{simdat}} for more details about the item metadata. See below for details.}
 
 \item{data}{A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
 the examinees and items, respectively.}
@@ -92,20 +92,22 @@ and \code{dnorm()} in the \pkg{stats} package for more details.}
 
 \item{missing}{A value indicating missing values in the response data set. Default is NA.}
 
-\item{use.startval}{A logical value. If TRUE, the item parameters provided in the item meta data (i.e., the argument \code{x}) are used as
+\item{use.startval}{A logical value. If TRUE, the item parameters provided in the item metadata (i.e., the argument \code{x}) are used as
 the starting values for the item parameter estimation. Otherwise, internal starting values of this function are used. Default is FALSE.}
 
 \item{control}{A list of control parameters to be passed to the optimization function of \code{nlminb()} in the \pkg{stats} package. The control parameters
 set the conditions of the item parameter estimation process such as the maximum number of iterations. See \code{nlminb()} in the \pkg{stats} package for details.}
+
+\item{verbose}{A logical value. If FALSE, all progress messages are suppressed. Default is TRUE.}
 }
 \value{
 This function returns an object of class \code{\link{est_item}}. Within this object, several internal objects are contained such as:
-\item{estimates}{A data.frame containing both the item parameter estimates and the corresponding standard errors of estimates.}
-\item{par.est}{A data.frame containing the item parameter estimates.}
-\item{se.est}{A data.frame containing the standard errors of the item parameter estimates. Note that the standard errors are estimated using
+\item{estimates}{A data frame containing both the item parameter estimates and the corresponding standard errors of estimates.}
+\item{par.est}{A data frame containing the item parameter estimates.}
+\item{se.est}{A data frame containing the standard errors of the item parameter estimates. Note that the standard errors are estimated using
 observed information functions.}
 \item{loglikelihood}{A sum of the log-likelihood values of the complete data set across all estimated items.}
-\item{data}{A data.frame of the examinees' response data set.}
+\item{data}{A data frame of the examinees' response data set.}
 \item{score}{A vector of the examinees' ability values used as the fixed effects.}
 \item{scale.D}{A scaling factor in IRT models.}
 \item{convergence}{A string indicating the convergence status of the item parameter estimation.}
@@ -130,17 +132,17 @@ of the operational items (Chen & Wang, 2016; Stocking, 1988).
 \details{
 In most cases, the function \code{\link{est_item}} will return successfully converged item parameter estimates using
 the default internal starting values. However, if there is a convergence problem in the calibration, one possible solution is using
-different starting values. When the item parameter values are specified in the item meta data (i.e., the argument \code{x}), those values
+different starting values. When the item parameter values are specified in the item metadata (i.e., the argument \code{x}), those values
 can be used as the starting values for the item parameter calibration by setting \code{use.startval = TRUE}.
 }
 \examples{
 ## import the "-prm.txt" output file from flexMIRT
 flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 
-# select the item meta data
+# select the item metadata
 x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
 
-# modify the item meta data so that some items follow 1PLM, 2PLM and GPCM
+# modify the item metadata so that some items follow 1PLM, 2PLM and GPCM
 x[c(1:3, 5), 3] <- "1PLM"
 x[c(1:3, 5), 4] <- 1
 x[c(1:3, 5), 6] <- 0

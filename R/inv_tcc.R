@@ -3,8 +3,8 @@
 # @description This function estimates examinees' abilities corresponding to thire raw sum scores using
 # the inverse test characteristic curve (TCC) scoring method (e.g., Kolen & Brennan, 2004; Kolen & Tong, 2010; Stocking, 1996).
 #
-# @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
-# See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data.
+# @param x A data.frame containing the item metadata (e.g., item parameters, number of categories, models ...).
+# See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item metadata.
 # This data.frame can be easily obtained using the function \code{\link{shape_df}}.
 # @param data A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
 # the examinees and items, respectively.
@@ -12,14 +12,14 @@
 # Default is 1.
 # @param constant A numeric value used to adjust zero and perfect raw sum scores, or the raw sum score equal to the sum of item guessing parameters,
 # if necessary, to find estimable solutions for those raw sum scores. The zero raw score is forced to become the score of "zero raw score + constant"
-# and the perfect raw score is forced to become the score of "perfect raw score - constant". If the 3PLM items are included in the item meta data,
+# and the perfect raw score is forced to become the score of "perfect raw score - constant". If the 3PLM items are included in the item metadata,
 # the raw sum score equal to the sum of item guessing parameters is forced to become the score of "the raw score + constant". Default is .1.
 # @param constraint A logical value indicating whether the ability estimates will be restricted within a specific ability range
 # specified in the argument \code{range.tcc}. If \code{constraint = TRUE}, all ability estimates less than the first value in the vector specified in
 # the argument \code{range.tcc} are transformed to the first value and all ability estimates greather than the second value in the vector specified in
 # the argument \code{range.tcc} are transformed to the second value. Also, when \code{constraint = TRUE} and the 3PLM items are contained
-# in the item meta data, linear interpolation method is used to find the ability estimates for the raw sum scores less than the sum of item guessing
-# parameters. When \code{constraint = FALSE} and the 3PLM items are contained in the item meta data, linear extrapolation method is used to find
+# in the item metadata, linear interpolation method is used to find the ability estimates for the raw sum scores less than the sum of item guessing
+# parameters. When \code{constraint = FALSE} and the 3PLM items are contained in the item metadata, linear extrapolation method is used to find
 # the ability estimates for the raw sum scores less than the sum of item guessing parameters. See below for details. Default is FALSE.
 # @param range.tcc A numeric vector of two components to be used as the lower and upper bounds of ability estimates when \code{constraint = TRUE}.
 # Default is c(-7, 7).
@@ -67,7 +67,7 @@ inv_tcc <- function(x, data, D=1, constant=0.1, constraint=FALSE, range.tcc=c(-7
     x <- data.frame(x, par.3=NA)
   }
   
-  # clear the item meta data set
+  # clear the item metadata set
   x <- back2df(metalist2(x))
   
   ## collect all information for the test form

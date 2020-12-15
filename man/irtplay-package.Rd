@@ -5,7 +5,7 @@
 \alias{irtplay-package}
 \title{irtplay: Unidimensional Item Response Theory Modeling}
 \description{
-Fit unidimensional item response theory (IRT) models to mixture of dichotomous and polytomous data,
+Fit unidimensional item response theory (IRT) models to a mixture of dichotomous and polytomous data,
 calibrate online item parameters (i.e., pretest and operational items), estimate examinees abilities, and examine the IRT model-data
 fit on item-level in different ways as well as provide useful functions related to unidimensional IRT.
 
@@ -24,8 +24,8 @@ computing the conditional distribution of observed scores using the Lord-Wingers
 individual items, computing the loglikelihood of abilities, computing item and test information functions, computing item and test
 characteristic curve functions, and plotting item and test characteristic curves and item and test information functions.
 
-\tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.6.1\cr Date: \tab
-2020-08-13\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
+\tabular{ll}{ Package: \tab irtplay\cr Version: \tab 1.6.2\cr Date: \tab
+2020-12-14\cr Depends: \tab R (>= 3.6)\cr License: \tab GPL (>= 2)\cr }
 }
 \details{
 Following five sections describe a) how to implement the online item calibration using FIPC, a) how to implement the online item
@@ -40,11 +40,11 @@ to put the parameter estimates of pretest items on the same scale of operational
 linking/scaling (Ban, Hanson, Wang, Yi, & Harris, 2001; Chen & Wang, 2016). In FIPC, the operational item parameters are fixed to
 estimate the characteristic of the underlying latent variable prior distribution when calibrating the pretest items. More specifically,
 the underlying latent variable prior distribution of the operational items is estimated during the calibration of the pretest
-items to put the item parameters of the pretest items on the scale of the operational item parameters (Kim, 2006). In \pkg{irtplay}
+items to put the item parameters of the pretest items on the scale of the operational item parameters (Kim, 2006). In the \pkg{irtplay}
 package, FIPC is implemented with two main steps:
 
 \enumerate{
-  \item Prepare a response data set and the item meta data of the fixed (or operational) items.
+  \item Prepare a response data set and the item metadata of the fixed (or operational) items.
   \item Implement FIPC to estimate the item parameters of pretest items using the \code{\link{est_irt}} function.
 }
 
@@ -53,17 +53,17 @@ package, FIPC is implemented with two main steps:
   To run the \code{\link{est_irt}} function, it requires two data sets:
 
     \enumerate{
-      \item Item meta data set (i.e., model, score category, and item parameters. see the desciption of the argument \code{x} in the function \code{\link{est_irt}}).
+      \item Item metadata set (i.e., model, score category, and item parameters. see the desciption of the argument \code{x} in the function \code{\link{est_irt}}).
       \item Examinees' response data set for the items. It should be a matrix format where a row and column indicate the examinees and the items, respectively.
-      The order of the columns in the response data set must be exactly the same as the order of rows of the item meta data.
+      The order of the columns in the response data set must be exactly the same as the order of rows of the item metadata.
     }
   }
 
   \item{2. Estimating the pretest item parameters}{
   When FIPC is implemented in \code{\link{est_irt}} function, the pretest item parameters are estimated by fixing the operational item parameters. To estimate the item
-  parameters, you need to provide the item meta data in the argument \code{x} and the response data in the argument \code{data}.
+  parameters, you need to provide the item metadata in the argument \code{x} and the response data in the argument \code{data}.
 
-  It is worthwhile to explain about how to prepare the item meta data set in the argument \code{x}. A specific form of a data.frame should be used for
+  It is worthwhile to explain about how to prepare the item metadata set in the argument \code{x}. A specific form of a data frame should be used for
   the argument \code{x}. The first column should have item IDs, the second column should contain the number of score categories of the items, and the third
   column should include IRT models. The available IRT models are "1PLM", "2PLM", "3PLM", and "DRM" for dichotomous items, and "GRM" and "GPCM" for polytomous
   items. Note that "DRM" covers all dichotomous IRT models (i.e, "1PLM", "2PLM", and "3PLM") and "GRM" and "GPCM" represent the graded response model and
@@ -72,7 +72,7 @@ package, FIPC is implemented with two main steps:
   specified for any items in the third column, NAs should be inserted for the item guessing parameters. For polytomous items, the item discrimination (or slope)
   parameters should be contained in the fourth column and the item threshold (or step) parameters should be included from the fifth to the last columns.
   When the number of categories differs between items, the empty cells of item parameters should be filled with NAs. See `est_irt` for more details about
-  the item meta data.
+  the item metadata.
 
   Also, you should specify in the argument \code{fipc = TRUE} and a specific FIPC method in the argument \code{fipc.method}. Finally, you should provide
   a vector of the location of the items to be fixed in the argument \code{fix.loc}. For more details about implementing FIPC, see the
@@ -158,7 +158,7 @@ and looking at the discrepancy between the observed data and model-based predict
 of evaluating the IRT model-data fit on item-level can be implemented with three main steps:
 
 \enumerate{
-  \item Prepare a data set for the IRT item fit analysis (i.e., item meta data, ability estimates, and response data).
+  \item Prepare a data set for the IRT item fit analysis (i.e., item metadata, ability estimates, and response data).
   \item Obtain the IRT fit statistics such as \eqn{\chi^{2}}, \eqn{G^{2}}, infit, and outfit statistics using the function \code{\link{irtfit}}.
   \item Based on the results of IRT model fit analysis (i.e., an object of class \code{\link{irtfit}}) obtained in step 2,
 draw the IRT residual plots (i.e., raw residual and standardized residual plots) using the function \code{\link{plot.irtfit}}.
@@ -170,15 +170,15 @@ draw the IRT residual plots (i.e., raw residual and standardized residual plots)
   three data sets:
 
    \enumerate{
-   \item Item meta data including the item ID, number of score categories, IRT models, and item parameters. The item meta data should be in the format of
-   data.frame. You can prepare the data either by using the function \code{\link{shape_df}} or by creating a data.frame of the item meta data by yourself.
+   \item Item metadata including the item ID, number of score categories, IRT models, and item parameters. The item metadata should be in the format of
+   data frame. You can prepare the data either by using the function \code{\link{shape_df}} or by creating a data frame of the item metadata by yourself.
    If you have output files of item parameter estimates obtained from one of the IRT software such as BILOG-MG 3, PARSCALE 4, flexMIRT, and mirt (R package),
-   the item meta data can be easily obtained using the functions of \code{\link{bring.bilog}}, \code{\link{bring.parscale}}, \code{\link{bring.flexmirt}},
-   and \code{\link{bring.mirt}}. See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data format.
+   the item metadata can be easily obtained using the functions of \code{\link{bring.bilog}}, \code{\link{bring.parscale}}, \code{\link{bring.flexmirt}},
+   and \code{\link{bring.mirt}}. See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item metadata format.
    \item Examinees' ability (or proficiency) estimates. It should be in the format of a numeric vector.
    \item Examinees' response data set for the items. It should be in the format of matrix where a row and column indicate the examinees and the items,
    respectively. The order of the examinees in the response data set must be exactly the same as that of the examinees' ability estimates. The order of the items
-   in the response data set must be exactly the same as that of the items in the item meta data.
+   in the response data set must be exactly the same as that of the items in the item metadata.
    }
 
  }
@@ -191,7 +191,7 @@ draw the IRT residual plots (i.e., raw residual and standardized residual plots)
   Available locations are "average" for computing the expected probability at the average point of examinees' ability estimates in each group and "middle" for
   computing the expected probability at the midpoint of each group.
 
-  To use the function \code{\link{irtfit}}, you need to insert the item meta data in the argument \code{x}, the ability estimates in the argument \code{score},
+  To use the function \code{\link{irtfit}}, you need to insert the item metadata in the argument \code{x}, the ability estimates in the argument \code{score},
   and the response data in the argument \code{data}. If you want to divide the ability scale into other than ten groups, you need to specify the number of groups
   in the argument \code{n.width}. In addition, if the response data include missing values, you must indicate the missing value in argument \code{missing}.
 
@@ -233,7 +233,7 @@ library(irtplay)
 ## import the "-prm.txt" output file from flexMIRT
 flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 
-# select the item meta data
+# select the item metadata
 x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
 
 # generate 1,000 examinees' latent abilities from N(0.4, 1.3)
@@ -272,10 +272,10 @@ plot(emphist$weight ~ emphist$theta, xlab="Theta", ylab="Density")
 # import the "-prm.txt" output file from flexMIRT
 flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 
-# select the item meta data
+# select the item metadata
 x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
 
-# modify the item meta data so that some items follow 1PLM, 2PLM and GPCM
+# modify the item metadata so that some items follow 1PLM, 2PLM and GPCM
 x[c(1:3, 5), 3] <- "1PLM"
 x[c(1:3, 5), 4] <- 1
 x[c(1:3, 5), 6] <- 0
@@ -319,7 +319,7 @@ summary(mod3)
 # find the location of items that have more than 1,000 item responses
 over1000 <- which(colSums(simCAT_MX$res.dat, na.rm=TRUE) > 1000)
 
-# (1) item meta data
+# (1) item metadata
 x <- simCAT_MX$item.prm[over1000, ]
 
 # (2) examinee's ability estimates
@@ -386,37 +386,45 @@ plot(x=fit1, item.loc=113, type = "sr", ci.method = "wald",
 \section{IRT Models}{
 
 
-In \pkg{irtplay} package, both dichotomous and polytomous IRT models are available.
-For dichotomous items, IRT one-, two-, and three-parameter logistic models are used. For polytomous items,
-the graded response model (GRM) and the (generalized) partial credit model (GPCM) are used.
-Note that the item discrimination (or slope) parameters should be fixed to 1 when the partial credit model is used.
-The IRT model parameter labels use the conventions shown below. Note that \eqn{M} is the total number of categories
-for each of polytomous item.
+In the \pkg{irtplay} package, both dichotomous and polytomous IRT models are available.
+For dichotomous items, IRT one-, two-, and three-parameter logistic models (1PLM, 2PLM, and 3PLM) are used. 
+For polytomous items, the graded response model (GRM) and the (generalized) partial credit model (GPCM) are used.
+Note that the item discrimination (or slope) parameters should be fixed to 1 when the partial credit model is fit to data. 
+
+In the following, let \eqn{Y} be the response of an examinee with latent ability \eqn{\theta} on an item and suppose that there 
+are \eqn{K} unique score categories for each polytomous item. 
 
 \describe{
   \item{IRT 1-3PL models}{
     For the IRT 1-3PL models, the probability that an examinee with \eqn{\theta} provides a correct answer for an item is given by,
-     \deqn{P(u = 1|\theta) = g + \frac{(1 - g)}{1 + exp(-Da(\theta - b))},}
-    where \eqn{D} is a scaling factor. When the IRT 1PL model is used, \eqn{a} is fixed to a constant and \eqn{g = 0}
-    for all items. When the IRT 2PL model is used, \eqn{g = 0}.
+     \deqn{P(Y = 1|\theta) = g + \frac{(1 - g)}{1 + exp(-Da(\theta - b))},}
+    where \eqn{a} is the item discrimination (or slope) parameter, \eqn{b} represents the item difficulty parameter, 
+    \eqn{g} refers to the item guessing parameter. \eqn{D} is a scaling factor in IRT models to make the logistic function 
+    as close as possible to the normal ogive function when \eqn{D = 1.702}. When the 1PLM is used, \eqn{a} is either fixed to a constant 
+    value (e.g., \eqn{a=1}) or constrained to have the same value across all 1PLM item data. When the IRT 1PLM or 2PLM is fit to data, 
+    \eqn{g = 0} is set to 0.
   }
   \item{GRM}{
-    For the graded response model, the probability that an examinee with \eqn{\theta} scores \eqn{k} on an item with \eqn{M} categories
-    is a given by,
-    \deqn{P(u = k | \theta) = P(x \ge k | \theta) - P(x \ge k + 1 | \theta),}
-    \deqn{P(x \ge k | \theta) = \frac{1}{1 + exp(-Da(\theta - b_{k}))}, }
-    \deqn{P(x \ge k + 1 | \theta) = \frac{1}{1 + exp(-Da(\theta - b_{k+1}))}, }
-    where \eqn{b_{k}} is the \eqn{k}th threshold parameter for an item.
+    For the GRM, the probability that an examinee with latent ability \eqn{\theta} responds to score category \eqn{k} (\eqn{k=0,1,...,K}) 
+    of an item is a given by,
+    \deqn{P(Y = k | \theta) = P^{*}(Y \ge k | \theta) - P^{*}(Y \ge k + 1 | \theta),}
+    \deqn{P^{*}(Y \ge k | \theta) = \frac{1}{1 + exp(-Da(\theta - b_{k}))}, and}
+    \deqn{P^{*}(Y \ge k + 1 | \theta) = \frac{1}{1 + exp(-Da(\theta - b_{k+1}))}, }
+    
+    where \eqn{P^{*}(Y \ge k | \theta} refers to the category boundary (threshold) function for score category \eqn{k} of an item
+    and its formula is analogous to that of 2PLM. \eqn{b_{k}} is the difficulty (or threshold) parameter for category boundary 
+    \eqn{k} of an item. Note that \eqn{P(Y = 0 | \theta) = 1 - P^{*}(Y \ge 1 | \theta)}
+    and \eqn{P(Y = K-1 | \theta) = P^{*}(Y \ge K-1 | \theta)}. 
   }
   \item{GPCM}{
-    For the (generalized) partial credit model, the probability that an examinee with \eqn{\theta} scores \eqn{k} on an item with \eqn{M}
-    categories is a given by,
-     \deqn{P(u = k | \theta) = \frac{exp(\sum_{u=0}^{k}{Da(\theta - b_{u})})}{\sum_{j=0}^{M-1}{exp(\sum_{u=0}^{j}{Da(\theta - b_{u})})}},}
-    where \eqn{b_{u}} is the \eqn{u}th step parameter for an item. In other contexts, the step parameter \eqn{b_{u}} can
-    also be parameterized as \eqn{b_{u} = \beta - \tau_{u}}, where \eqn{\beta} denotes the location (or overall difficulty) parameter
-    and \eqn{\tau_{u}} represents a difficulty (or threshold) parameter for each category. In this package, only the step parameter of \eqn{b_{u}}
-    is only used. Also, note that M-1 step parameters are necessary when an item has M categories because a step parameter for the first category
-    does not affect the category probabilities. When a partial credit model is used, \eqn{a = 1}.
+    For the GPCM, the probability that an examinee with latent ability \eqn{\theta} responds to score category \eqn{k} (\eqn{k=0,1,...,K}) 
+    of an item is a given by,
+     \deqn{P(Y = k | \theta) = \frac{exp(\sum_{v=0}^{k}{Da(\theta - b_{v})})}{\sum_{h=0}^{K-1}{exp(\sum_{v=0}^{h}{Da(\theta - b_{v})})}},}      
+    where \eqn{b_{v}} is the difficulty parameter for category boundary \eqn{v} of an item. In other contexts, the difficulty parameter \eqn{b_{v}} 
+    can also be parameterized as \eqn{b_{v} = \beta - \tau_{v}}, where \eqn{\beta} refers to the location (or overall difficulty) parameter 
+    and \eqn{\tau_{jv}} represents a threshold parameter for score category \eqn{v} of an item. In the \pkg{irtplay} package, \eqn{K-1} difficulty 
+    parameters are necessary when an item has \eqn{K} unique score categories because \eqn{b_{0}=0}. When a partial credit model is fit to data, \eqn{a} 
+    is fixed to 1.
    }
 
 }
@@ -510,6 +518,9 @@ Stocking, M. L. (1988). \emph{Scale drift in on-line calibration} (Research Rep.
 
 Thissen, D. (1982). Marginal maximum likelihood estimation for the one-parameter logistic model.
 \emph{Psychometrika, 47}, 175-186.
+
+Thissen, D. & Wainer, H. (1982). Weighted likelihood estimation of ability in item response theory. 
+\emph{Psychometrika, 54}(3), 427-450.
 
 Thissen, D., Pommerich, M., Billeaud, K., & Williams, V. S. (1995). Item Response Theory
 for Scores on Tests Including Polytomous Items with Ordered Responses. \emph{Applied Psychological

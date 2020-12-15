@@ -11,7 +11,7 @@ plm(theta, a, d, D = 1, pmodel = c("GRM", "GPCM"))
 
 \item{a}{A numeric value of item discrimination (or slope) parameter.}
 
-\item{d}{A vector of item threshold (or step) parameters.}
+\item{d}{A vector of item difficulty (or threshold) parameters.}
 
 \item{D}{A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function  (if set to 1.7).
 Default is 1.}
@@ -30,11 +30,13 @@ partial credit model.
 }
 \details{
 When the category probabilities are computed for an item with the partial credit model, \code{a = 1} for that item.
-When \code{pmodel = "GPCM"}, \code{d} should include step parameters. Item step parameters are the overall item
-difficulty (or location) parameter subtracted by the difficulty (or threshold) parameter for each category. Thus, the number of step parameters
-for an item with m categories is m-1 because a step parameter for the first category does not affect the category probabilities. For example,
-if an item has five categories under the (generalized) partial credit model, four step parameters should be specified. For more details about
-the parameterization of the (generalized) partial credit model, see \code{\link{irtfit}}.
+When \code{pmodel = "GPCM"}, \code{d} should include the item difficulty (or threshold) parameters. In the \pkg{irtplay} package, 
+the item difficulty (or threshold) parameters of category boundaries for GPCM are expressed as the item location (or overall difficulty) 
+parameter subtracted by the threshold parameter for unique score categories of the item. Note that when an GPCM item has \emph{K} 
+unique score categories, \emph{K-1} item difficulty parameters are necessary because the item difficulty parameter for the first category 
+boundary is always 0. For example, if an GPCM item has five score categories, four item difficulty parameters should be specified. 
+For more details about the parameterization of the (generalized) partial credit model, See \code{IRT Models} section 
+in the page of \code{\link{irtplay-package}}.
 }
 \examples{
 ## Category probabilities for an item with four categories

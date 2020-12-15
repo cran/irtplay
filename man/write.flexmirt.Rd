@@ -7,19 +7,19 @@
 write.flexmirt(x, file = NULL, norm.pop = c(0, 1), rePrm = TRUE)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
-See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data.
-This data.frame can be easily obtained using the function \code{\link{shape_df}}.}
+\item{x}{A data frame containing the item metadata (e.g., item parameters, number of categories, models ...).
+See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item metadata.
+This data frame can be easily obtained using the function \code{\link{shape_df}}.}
 
 \item{file}{The destination file name.}
 
 \item{norm.pop}{A numeric vector of two components specifying a mean and standard deviation of the normal
 population distribution. Default is c(0,1).}
 
-\item{rePrm}{A logical value indicating whether the item parameters in the item meta data
+\item{rePrm}{A logical value indicating whether the item parameters in the item metadata
 are the reparameterized item parameters. If TRUE, the item intercepts and logits of item guessing parameters
-should be included in the item meta data. If FALSE, the item difficulty and item guessing parameters
-should be included in the item meta data.}
+should be included in the item metadata. If FALSE, the item difficulty and item guessing parameters
+should be included in the item metadata.}
 }
 \value{
 A "-prm.txt" file.
@@ -30,7 +30,7 @@ can be used only for the unidimensional IRT models.
 }
 \examples{
 ## use the simulated CAT data
-# extract the item meta data
+# extract the item metadata
 x <- simCAT_MX$item.prm
 
 # set a name of "-prm.txt" file

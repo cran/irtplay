@@ -1,15 +1,15 @@
 #' Lord-Wingersky Recursion Formula
 #'
 #' @description This function computes the conditional distributions of number-correct (or observed) scores
-#' given probabilities of category responses to items or given a set of theta values using the Lord and
+#' given probabilities of category responses to items or given a set of theta values using Lord and
 #' Wingersky recursion formula (1984).
 #'
-#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
-#' See \code{\link{irtfit}}, \code{\link{test.info}} or \code{\link{simdat}} for more details about the item meta data.
-#' This data.frame can be easily obtained using the function \code{\link{shape_df}}. If \code{prob = NULL}, this data.frame is
+#' @param x A data frame containing the item metadata (e.g., item parameters, number of categories, models ...).
+#' See \code{\link{irtfit}}, \code{\link{test.info}} or \code{\link{simdat}} for more details about the item metadata.
+#' This data frame can be easily obtained using the function \code{\link{shape_df}}. If \code{prob = NULL}, this data frame is
 #' used in the recursion formula. See below for details.
 #' @param theta A vector of theta values where the conditional distribution of observed scores are computed.
-#' The theta values are only required when a data.frame is specified in the argument \code{x}.
+#' The theta values are only required when a data frame is specified in the argument \code{x}.
 #' @param prob A matrix containing the probability of answering each category of an item. Each row indicates an item and
 #' each column represents each category of the item. When the number of categories differs between items, the empty cells
 #' should be filled with zeros or NA values. If \code{x = NULL}, this probability matrix is used in the recursion Formula.
@@ -23,10 +23,12 @@
 #' of any number-correct scores on a test based on IRT models. This algorithm is particularly useful when computing
 #' the IRT model-based observed score distribution for a test.
 #'
-#' To compute the conditional distributions of observed scores, either the item meta data set specified in \code{x} or
+#' To compute the conditional distributions of observed scores, either the item metadata set specified in \code{x} or
 #' the probability matrix specified in \code{prob} can be used.
 #'
-#' @return This function returns a vector of the probabilities of obtaining every observed score on a test.
+#' @return When the \code{prob} argument is provided, this function returns a vector of the probabilities of obtaining every 
+#' observed score on a test. When the \code{x} argument is specified, the function returns a matrix of conditional probabilities 
+#' across all possible observed scores and theta values.
 #'
 #' @author Hwanggyu Lim \email{hglim83@@gmail.com}
 #'
@@ -43,7 +45,7 @@
 #' # create a matrix of probabilities of getting correct and incorrect answers for three items
 #' probs <- matrix(c(.74, .73, .82, .26, .27, .18), nrow=3, ncol=2, byrow = FALSE)
 #'
-#' # creat a vector of score cagtegories for the three items
+#' # create a vector of score categories for the three items
 #' cats <- c(2,2,2)
 #'
 #' # compute the conditional distributions of observed scores
@@ -51,30 +53,30 @@
 #'
 #' ## example 2: when a matrix of probabilities is used as a data set
 #' ## with a mixed-format test
-#' # category probabilies for a dichotomous item
+#' # category probabilities for a dichotomous item
 #' p1 <- c(0.2, 0.8, 0, 0, 0)
-#' # category probabilies for a dichotomous item
+#' # category probabilities for a dichotomous item
 #' p2 <- c(0.4, 0.6, NA, NA, NA)
-#' # category probabilies for a polytomous item with five categories
+#' # category probabilities for a polytomous item with five categories
 #' p3 <- c(0.1, 0.2, 0.2, 0.4, 0.1)
-#' # category probabilies for a polytomous item with three categories
+#' # category probabilities for a polytomous item with three categories
 #' p4 <- c(0.5, 0.3, 0.2, NA, NA)
 #'
 #' # rbind the probability vectors
 #' p <- rbind(p1, p2, p3, p4)
 #'
-#' # creat a vector of score cagtegories for the four items
+#' # create a vector of score categories for the four items
 #' cats <- c(2, 2, 5, 3)
 #'
 #' # compute the conditional distributions of observed scores
 #' lwrc(prob=p, cats=cats)
 #'
-#' ## example 3: when a data.frame for the item meta data is used instead of a probabiliy matrix
+#' ## example 3: when a data frame for the item metadata is used instead of a probabiliy matrix
 #' ## with a mixed-format test
 #' # import the "-prm.txt" output file from flexMIRT
 #' flex_prm <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 #'
-#' # read item parameters and transform them to item meta data
+#' # read item parameters and transform them to item metadata
 #' x <- bring.flexmirt(file=flex_prm, "par")$Group1$full_df
 #'
 #' # compute the conditional distributions of observed scores

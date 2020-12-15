@@ -5,9 +5,9 @@
 #' expected a posteriori estimation (EAP; Bock & Mislevy, 1982), EAP summed scoring (Thissen et al., 1995; Thissen & Orlando, 2001),
 #' and inverse test characteristic curve (TCC) scoring (e.g., Kolen & Brennan, 2004; Kolen & Tong, 2010; Stocking, 1996).
 #'
-#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...) or an object of
+#' @param x A data frame containing the item metadata (e.g., item parameters, number of categories, models ...) or an object of
 #' class \code{\link{est_irt}} obtained from the function \code{\link{est_irt}}. See \code{\link{irtfit}}, \code{\link{test.info}},
-#' or \code{\link{simdat}} for more details about the item meta data. This data.frame can be easily obtained using the function \code{\link{shape_df}}.
+#' or \code{\link{simdat}} for more details about the item metadata. This data frame can be easily obtained using the function \code{\link{shape_df}}.
 #' @param data A matrix or vector containing examinees' response data for the items in the argument \code{x}. When a matrix is used, a row and column indicate
 #' the examinees and items, respectively. When a vector is used, it should contains the item response data for an examinee.
 #' @param D A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
@@ -22,7 +22,7 @@
 #' c(0,1). Ignored if \code{method} is "MLE", "MLEF", or "INV.TCC".
 #' @param nquad An integer value specifying the number of gaussian quadrature points from the normal prior distribution. Default is 41.
 #' Ignored if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".
-#' @param weights A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
+#' @param weights A two-column matrix or data frame containing the quadrature points (in the first column) and the corresponding weights
 #' (in the second column) of the latent variable prior distribution. The weights and quadrature points can be easily obtained
 #' using the function \code{\link{gen.weight}}. If NULL and \code{method} is "EAP" or "EAP.SUM", default values are used (see the arguments
 #' of \code{norm.prior} and \code{nquad}). Ignored if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".
@@ -38,14 +38,14 @@
 #' Note that under the 1PL and 2PL models, the observed item information function is exactly equal to the expected item information function. Default is TRUE. 
 #' @param constant A numeric value used to adjust zero and perfect raw sum scores, or the raw sum score equal to the sum of item guessing parameters,
 #' if necessary, to find estimable solutions for those raw sum scores when \code{method = "INV.TCC"}. The zero raw score is forced to become the score of "zero raw score + constant"
-#' and the perfect raw score is forced to become the score of "perfect raw score - constant". If the 3PLM items are included in the item meta data,
+#' and the perfect raw score is forced to become the score of "perfect raw score - constant". If the 3PLM items are included in the item metadata,
 #' the raw sum score equal to the sum of item guessing parameters is forced to become the score of "the raw sum score + constant". Default is .1.
 #' @param constraint A logical value indicating whether the ability estimates will be restricted within a specific ability range
 #' specified in the argument \code{range.tcc} when \code{method = "INV.TCC"}. If \code{constraint = TRUE}, all ability estimates less than the first value in the vector specified in
 #' the argument \code{range.tcc} are transformed to the first value and all ability estimates greater than the second value in the vector specified in
 #' the argument \code{range.tcc} are transformed to the second value. Also, when \code{constraint = TRUE} and the 3PLM items are contained
-#' in the item meta data, linear interpolation method is used to find the ability estimates for the raw sum scores less than the sum of item guessing
-#' parameters. When \code{constraint = FALSE} and the 3PLM items are contained in the item meta data, linear extrapolation method is used to find
+#' in the item metadata, linear interpolation method is used to find the ability estimates for the raw sum scores less than the sum of item guessing
+#' parameters. When \code{constraint = FALSE} and the 3PLM items are contained in the item metadata, linear extrapolation method is used to find
 #' the ability estimates for the raw sum scores less than the sum of item guessing parameters. See below for details. Default is FALSE.
 #' @param range.tcc A numeric vector of two components to be used as the lower and upper bounds of ability estimates when \code{method = "INV.TCC"} and
 #' \code{constraint = TRUE}. Default is c(-7, 7).
@@ -66,8 +66,8 @@
 #'
 #' When \code{fence.b = NULL} in MLEF, the function automatically sets the lower and upper fences of item difficulty parameters using two steps. More specifically,
 #' in the first step, the lower fence of the item difficulty parameter is set to the greatest integer value less than the minimum of item difficulty parameters
-#' in the item meta data and the upper fence of the item difficulty parameter is set to the smallest integer value greater than the maximum of item difficulty
-#' parameters in the item meta data. Then, in the second step, if the lower fence set in the first step is greater than -3.5, the lower fence is constrained to -3.5
+#' in the item metadata and the upper fence of the item difficulty parameter is set to the smallest integer value greater than the maximum of item difficulty
+#' parameters in the item metadata. Then, in the second step, if the lower fence set in the first step is greater than -3.5, the lower fence is constrained to -3.5
 #' and if the upper fence set in the first step is less than 3.5, the upper fence is constrained to 3.5. Otherwise, the fence values of item difficulty parameters
 #' set in the first step are used.
 #'
@@ -125,7 +125,7 @@
 #' ## the use of a "-prm.txt" file obtained from a flexMIRT
 #' flex_prm <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 #'
-#' # read item parameters and transform them to item meta data
+#' # read item parameters and transform them to item metadata
 #' x <- bring.flexmirt(file=flex_prm, "par")$Group1$full_df
 #'
 #' # generate examinees abilities
@@ -155,14 +155,14 @@
 #' est_score(x, data, D=1, method="EAP.SUM", norm.prior=c(0, 1), nquad=30)
 #'
 #' # estimate the abilities using inverse TCC scoring
-#' est_score(x, data, D=1, method="INV.TCC", constant=0.1, constraint=FALSE, range.tcc=c(-7, 7))
+#' est_score(x, data, D=1, method="INV.TCC", constant=0.1, constraint=TRUE, range.tcc=c(-7, 7))
 #'
 #' }
 #'
 #' @export
 est_score <- function(x, ...) UseMethod("est_score")
 
-#' @describeIn est_score Default method to estimate examinees' latent ability parameters using a data.frame \code{x} containing the item meta data.
+#' @describeIn est_score Default method to estimate examinees' latent ability parameters using a data frame \code{x} containing the item metadata.
 #'
 #' @export
 est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), norm.prior = c(0, 1),
@@ -196,13 +196,13 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
       x <- data.frame(x, par.3=NA)
     }
     
-    # clear the item meta data set
+    # clear the item metadata set
     x <- back2df(metalist2(x))
     
     # add two more items and data responses when "MLE" with Fences method is used
     if(method == "MLEF") {
       if(is.null(fence.b)) {
-        # find the range of b-parameters in the item meta data
+        # find the range of b-parameters in the item metadata
         range.b <- range(x[, 4])
         range.b[1] <- floor(range.b[1] - 0.001)
         range.b[2] <- ceiling(range.b[2] + 0.001)
@@ -215,7 +215,7 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
       # add two more response columns for the two fence items
       data <- data.frame(data, f.lower=rep(1, nstd), f.upper=rep(0, nstd))
       
-      # create a new item meta data for the two fence items
+      # create a new item metadata for the two fence items
       x.fence <- shape_df(par.dc=list(a=rep(fence.a, 2), b=fence.b, g=0),
                           item.id=c("fence.lower", "fence.upper"), cats=rep(2, 2), model="3PLM")
       if(ncol(x) > ncol(x.fence)) {
@@ -224,7 +224,7 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
         colnames(x.fence) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x.fence) - 3)))
       }
       
-      # create the new item meta data by adding two fence items
+      # create the new item metadata by adding two fence items
       x <- rbind(x, x.fence)
     }
     
@@ -250,19 +250,19 @@ est_score.default <- function(x, data, D = 1, method = "MLE", range = c(-4, 4), 
       for(i in 1:ncase) {
         
         # start a progress bar
-        pb <- utils::txtProgressBar(min=1, max=100, initial=0, style=3, label="0% done", width=50)
+        # pb <- utils::txtProgressBar(min=1, max=100, initial=0, style=3, label="0% done", width=50)
         
         # scoring
         est[[i]] <- f(i)
         
         # update the progress bar
-        info <- sprintf("%d%% done", round((i/ncase)*100))
-        utils::setTxtProgressBar(pb, i/ncase*100, label=info)
+        # info <- sprintf("%d%% done", round((i/ncase)*100))
+        # utils::setTxtProgressBar(pb, i/ncase*100, label=info)
         
       }
       
       # closing the progress bar
-      close(pb)
+      # close(pb)
       
       # assign estimated values
       est.theta <- purrr::map_dbl(est, "est.theta")
@@ -377,7 +377,7 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
     # add two more items and data responses when "MLE" with Fences method is used
     if(method == "MLEF") {
       if(is.null(fence.b)) {
-        # find the range of b-parameters in the item meta data
+        # find the range of b-parameters in the item metadata
         range.b <- range(x[, 4])
         range.b[1] <- floor(range.b[1] - 0.001)
         range.b[2] <- ceiling(range.b[2] + 0.001)
@@ -390,7 +390,7 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
       # add two more response columns for the two fence items
       data <- data.frame(data, f.lower=rep(1, nstd), f.upper=rep(0, nstd))
       
-      # create a new item meta data for the two fence items
+      # create a new item metadata for the two fence items
       x.fence <- shape_df(par.dc=list(a=rep(fence.a, 2), b=fence.b, g=0),
                           item.id=c("fence.lower", "fence.upper"), cats=rep(2, 2), model="3PLM")
       if(ncol(x) > ncol(x.fence)) {
@@ -399,7 +399,7 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
         colnames(x.fence) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x.fence) - 3)))
       }
       
-      # create the new item meta data by adding two fence items
+      # create the new item metadata by adding two fence items
       x <- rbind(x, x.fence)
     }
     
@@ -425,19 +425,19 @@ est_score.est_irt <- function(x, method = "MLE", range = c(-4, 4), norm.prior = 
       for(i in 1:ncase) {
         
         # start a progress bar
-        pb <- utils::txtProgressBar(min=1, max=100, initial=0, style=3, label="0% done", width=50)
+        # pb <- utils::txtProgressBar(min=1, max=100, initial=0, style=3, label="0% done", width=50)
         
         # scoring
         est[[i]] <- f(i)
         
         # update the progress bar
-        info <- sprintf("%d%% done", round((i/ncase)*100))
-        utils::setTxtProgressBar(pb, i/ncase*100, label=info)
+        # info <- sprintf("%d%% done", round((i/ncase)*100))
+        # utils::setTxtProgressBar(pb, i/ncase*100, label=info)
         
       }
       
       # closing the progress bar
-      close(pb)
+      # close(pb)
       
       # assign estimated values
       est.theta <- purrr::map_dbl(est, "est.theta")
@@ -518,7 +518,7 @@ est_score_indiv <- function(meta, resp, D = 1, method = "MLE", range = c(-4, 4),
   if(any(is.na(resp))) {
     loc.miss <- which(is.na(resp)) # check the locations of missing data
     
-    # delete missing data from the item meta data
+    # delete missing data from the item metadata
     if(!is.null(meta$drm)) {
       meta$drm <- purrr::map(.x=meta$drm, .f=function(x) x[!meta$drm$loc %in% loc.miss])
     }

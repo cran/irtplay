@@ -8,7 +8,13 @@
 \title{Import Item and Ability Parameters from IRT Software}
 \usage{
 bring.flexmirt(file, type = c("par", "sco"), rePrm = TRUE,
-  n.factor = 1)
+  rePrm.gpc = TRUE, n.factor = 1)
+
+bring.bilog(file, type = c("par", "sco"))
+
+bring.parscale(file, type = c("par", "sco"))
+
+bring.mirt(x)
 
 bring.bilog(file, type = c("par", "sco"))
 
@@ -22,9 +28,12 @@ bring.mirt(x)
 \item{type}{A character string indicating a type of output file. Available types are "par" for a file
 containing item parameter estimates and "sco" for a file containing ability parameter estimates.}
 
-\item{rePrm}{A logical value. If TRUE, the item intercept and logit of item guessing parameters are
-reparameterized into the item difficulty and item guessing parameters, respectively. To estimate the IRT
-linking coefficients in this package, the item difficulty and item guessing parameters must be used.
+\item{rePrm}{A logical value. If TRUE and when the IRT dichotomous model (e.g., 3PLM) or GRM is fit to data, 
+the item intercept and logit of item guessing parameters are reparameterized into the item difficulty 
+and item guessing parameters, respectively. Default is TRUE.}
+
+\item{rePrm.gpc}{A logical value. If TRUE and when (G)PCM is fit to data, the nominal model
+parameters in the flexMIRT parameter output file are reparameterized into the (G)PCM slope/difficulty parameters. 
 Default is TRUE.}
 
 \item{n.factor}{A numeric value indicating the number of estimated factors. This argument should be specified
@@ -59,9 +68,9 @@ the item parameters of the graded response model and the (generalized) partial c
 }
 \note{
 Regarding the item parameter files for any IRT software, only the internal object "full_df" in the returned list is
-necessary for the IRT linking. The object "full_df" is a data.frame containing the item meta data
+necessary for the IRT linking. The object "full_df" is a data frame containing the item metadata
 in a test form (e.g., item parameters, number of categories, models). See \code{\link{test.info}}
-or \code{\link{simdat}} for more details about the item meta data.
+or \code{\link{simdat}} for more details about the item metadata.
 
 Also, when item parameters are estimated using the partial credit or the generalized partial credit model,
 item step parameters are returned in the object "full_df". Item step parameters are the overall item difficulty (or location)

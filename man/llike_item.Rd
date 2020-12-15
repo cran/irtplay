@@ -11,9 +11,9 @@ llike_item(x, data, score, D = 1, use.aprior = FALSE,
   missing = NA)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
-See \code{\link{irtfit}}, \code{\link{test.info}} or \code{\link{simdat}} for more details about the item meta data.
-This data.frame can be easily obtained using the function \code{\link{shape_df}}. If \code{prob = NULL}, this data.frame is
+\item{x}{A data frame containing the item metadata (e.g., item parameters, number of categories, models ...).
+See \code{\link{irtfit}}, \code{\link{test.info}} or \code{\link{simdat}} for more details about the item metadata.
+This data frame can be easily obtained using the function \code{\link{shape_df}}. If \code{prob = NULL}, this data frame is
 used in the recursion formula. See below for details.}
 
 \item{data}{A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate

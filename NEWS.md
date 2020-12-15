@@ -1,6 +1,23 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+# irtplay\_1.6.2 (2020-12-14)
+
+o Added ‘coef’, ‘logLik’ methods for ‘est\_item’ function, and added
+‘coef’, ‘logLik’, and ‘vcov’ methods for ‘est\_irt’ function.
+
+o Updated ‘est\_irt’ and ‘est\_item’ functions so that the argument of
+‘verbose’ can suppress all messages of the parameter estimation
+progress.
+
+o Updated ‘bring.flexmirt’ function by including a new argument of
+“rePrm.gpc”. In the previous version, the nominal model parameters in
+the flexMIRT parameter output file are reparameterized into the (G)PCM
+parameters when (G)PCM is fit to data by setting ‘rePrm = TRUE’. In the
+new version, however, the nominal model parameters are reparameterized
+into the (G)PCM slope/difficulty parameters only when ‘rePrm.gpc =
+TRUE’.
+
 # irtplay\_1.6.1 (2020-08-13)
 
 o Included a new function of ‘post\_den’ to compute updated prior

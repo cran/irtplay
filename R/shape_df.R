@@ -1,6 +1,6 @@
-#' Create a data.frame of Item Meta Data
+#' Create a data frame of item metadata
 #'
-#' @description This function creates a data.frame which includes item meta data (e.g., item parameter, categories, models ...) to be
+#' @description This function creates a data frame which includes item meta (e.g., item parameter, categories, models ...) to be
 #' used for the IRT model-data fit analysis as well as other analyses.
 #'
 #' @param par.dc A list containing three vectors of dichotomous item parameters. Namely, the item discrimination (a), item difficulty (b),
@@ -13,13 +13,13 @@
 #' @param model A character vector of IRT models corresponding to items. The available IRT models are "1PLM", "2PLM", "3PLM", and "DRM" for
 #' dichotomous items, and "GRM" and "GPCM" for polytomous items. Note that "DRM" covers all dichotomous IRT models (i.e, "1PLM", "2PLM", and
 #' "3PLM") and "GRM" and "GPCM" represent the graded response model and (generalized) partial credit model, respectively.
-#' @param empty.par A logical value to create an empty item meta data. If TRUE, the number of score categories and corresponding IRT models should be specified
-#' in the arguments of \code{cats} and \code{model}, respectively. In the empty item meta data, the item slope parameter has a fixed value of 1, the item difficulty
+#' @param empty.par A logical value to create an empty item meta. If TRUE, the number of score categories and corresponding IRT models should be specified
+#' in the arguments of \code{cats} and \code{model}, respectively. In the empty item meta, the item slope parameter has a fixed value of 1, the item difficulty
 #' (or threshold) parameter has a fixed value of 0, and the item guessing parameter has a fixed value of .2. Default is FALSE.
 #'
 #' @details For any item where "1PLM" or "2PLM" is specified in \code{model}, the item guessing parameter will be NA. If \code{model} is
 #' a vector of \eqn{length = 1}, the specified model is replicated across all items. As in the function \code{\link{simdat}}, it is important
-#' to clearly specify \code{cats} according to the order of items in the test form when a data.frame for a mixed-format test needs to be created.
+#' to clearly specify \code{cats} according to the order of items in the test form when a data frame for a mixed-format test needs to be created.
 #' See \code{\link{simdat}} for more details about how to specify \code{cats}.
 #'
 #' When specifying item parameters in \code{par.dc} and \code{par.dc}, keep the order of item parameter types. For example,
@@ -30,7 +30,7 @@
 #' are the overall item difficulty (or location) parameter subtracted by the difficulty (or threshold) parameter for each category. Thus, the number
 #' of step parameters for item with m categories is m-1 because a step parameter for the first category does not affect the category probabilities.
 #'
-#' @return This function returns a data.frame.
+#' @return This function returns a data frame.
 #'
 #' @author Hwanggyu Lim \email{hglim83@@gmail.com}
 #'
@@ -54,20 +54,20 @@
 #' # create a character vector of IRT models for the items
 #' model <- c("DRM", "GRM", "DRM", "DRM", "GPCM", "DRM", "DRM")
 #'
-#' # create an item meta data set
+#' # create an item meta set
 #' shape_df(par.dc=par.dc, par.py=par.py, cats=cats, model=model)
 #'
-#' ## an empty item meta data with five dichotomous and two polytomous items
+#' ## an empty item meta with five dichotomous and two polytomous items
 #' # create a numeric vector of score categories for the items
 #' cats <- c(2, 4, 3, 2, 5, 2, 2)
 #'
 #' # create a character vector of IRT models for the items
 #' model <- c("1PLM", "GRM", "GRM", "2PLM", "GPCM", "DRM", "3PLM")
 #'
-#' # create an empty item meta data set
+#' # create an empty item meta set
 #' shape_df(cats=cats, model=model, empty.par=TRUE)
 #'
-#' ## an item meta data for a single-item format test form with five dichotomous
+#' ## an item meta for a single-item format test form with five dichotomous
 #' shape_df(par.dc=par.dc, cats=rep(2, 5), model="DRM")
 #'
 #'
@@ -76,7 +76,7 @@ shape_df <- function(par.dc=list(a=NULL, b=NULL, g=NULL), par.py=list(a=NULL, d=
 
   model <- toupper(model)
 
-  # only to create an empty item meta data
+  # only to create an empty item meta
   if(empty.par) {
 
     if(missing(cats) | missing(model)) {
@@ -168,12 +168,12 @@ shape_df <- function(par.dc=list(a=NULL, b=NULL, g=NULL), par.py=list(a=NULL, d=
 }
 
 
-# This function creates an item meta data containing the starting values
+# This function creates an item meta containing the starting values
 startval_df <- function(cats, model) {
 
   model <- toupper(model)
 
-  # create an item meta data containing starting values
+  # create an item meta containing starting values
   any.dc <- any(cats == 2)
   any.py <- any(cats > 2)
 

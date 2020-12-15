@@ -76,3 +76,30 @@ divide_data <- function(data, cats, freq.cat) {
 
 }
 
+
+#' @export
+coef.est_irt <- function(object, ...) {
+  object$estimates
+}
+
+#' @export
+coef.est_item <- function(object, ...) {
+  object$estimates
+}
+
+#' @export
+logLik.est_irt <- function(object, ...) {
+  object$loglikelihood
+}
+
+#' @export
+logLik.est_item <- function(object, ...) {
+  object$loglikelihood
+}
+
+#' @export
+vcov.est_irt <- function(object, ...) {
+  object$covariance
+}
+
+

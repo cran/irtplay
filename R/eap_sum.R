@@ -4,8 +4,8 @@
 # for each examinee. The EAP summed score is the mean of the posterior density for the summed score (or observed score) given
 # the item parameter estimates.
 #
-# @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
-# See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data.
+# @param x A data.frame containing the item metadata (e.g., item parameters, number of categories, models ...).
+# See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item metadata.
 # This data.frame can be easily obtained using the function \code{\link{shape_df}}.
 # @param data A matrix containing examinees' response data for the test items. A row and column indicate examinees and items, respectively.
 # @param norm.prior A numeric vector of two components specifying a mean and standard deviation of the normal prior distribution.
@@ -51,7 +51,7 @@ eap_sum <- function(x, data, norm.prior = c(0, 1), nquad = 41, weights, D=1) {
     x <- data.frame(x, par.3=NA)
   }
 
-  # clear the item meta data set
+  # clear the item metadata set
   x <- back2df(metalist2(x))
 
   # select catogory variable

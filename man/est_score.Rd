@@ -21,9 +21,9 @@ est_score(x, ...)
   ncore = 1, ...)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...) or an object of
+\item{x}{A data frame containing the item metadata (e.g., item parameters, number of categories, models ...) or an object of
 class \code{\link{est_irt}} obtained from the function \code{\link{est_irt}}. See \code{\link{irtfit}}, \code{\link{test.info}},
-or \code{\link{simdat}} for more details about the item meta data. This data.frame can be easily obtained using the function \code{\link{shape_df}}.}
+or \code{\link{simdat}} for more details about the item metadata. This data frame can be easily obtained using the function \code{\link{shape_df}}.}
 
 \item{...}{additional arguments to pass to \code{parallel::makeCluster}.}
 
@@ -47,7 +47,7 @@ c(0,1). Ignored if \code{method} is "MLE", "MLEF", or "INV.TCC".}
 \item{nquad}{An integer value specifying the number of gaussian quadrature points from the normal prior distribution. Default is 41.
 Ignored if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".}
 
-\item{weights}{A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
+\item{weights}{A two-column matrix or data frame containing the quadrature points (in the first column) and the corresponding weights
 (in the second column) of the latent variable prior distribution. The weights and quadrature points can be easily obtained
 using the function \code{\link{gen.weight}}. If NULL and \code{method} is "EAP" or "EAP.SUM", default values are used (see the arguments
 of \code{norm.prior} and \code{nquad}). Ignored if \code{method} is "MLE", "MLEF", "MAP", or "INV.TCC".}
@@ -68,15 +68,15 @@ Note that under the 1PL and 2PL models, the observed item information function i
 
 \item{constant}{A numeric value used to adjust zero and perfect raw sum scores, or the raw sum score equal to the sum of item guessing parameters,
 if necessary, to find estimable solutions for those raw sum scores when \code{method = "INV.TCC"}. The zero raw score is forced to become the score of "zero raw score + constant"
-and the perfect raw score is forced to become the score of "perfect raw score - constant". If the 3PLM items are included in the item meta data,
+and the perfect raw score is forced to become the score of "perfect raw score - constant". If the 3PLM items are included in the item metadata,
 the raw sum score equal to the sum of item guessing parameters is forced to become the score of "the raw sum score + constant". Default is .1.}
 
 \item{constraint}{A logical value indicating whether the ability estimates will be restricted within a specific ability range
 specified in the argument \code{range.tcc} when \code{method = "INV.TCC"}. If \code{constraint = TRUE}, all ability estimates less than the first value in the vector specified in
 the argument \code{range.tcc} are transformed to the first value and all ability estimates greater than the second value in the vector specified in
 the argument \code{range.tcc} are transformed to the second value. Also, when \code{constraint = TRUE} and the 3PLM items are contained
-in the item meta data, linear interpolation method is used to find the ability estimates for the raw sum scores less than the sum of item guessing
-parameters. When \code{constraint = FALSE} and the 3PLM items are contained in the item meta data, linear extrapolation method is used to find
+in the item metadata, linear interpolation method is used to find the ability estimates for the raw sum scores less than the sum of item guessing
+parameters. When \code{constraint = FALSE} and the 3PLM items are contained in the item metadata, linear extrapolation method is used to find
 the ability estimates for the raw sum scores less than the sum of item guessing parameters. See below for details. Default is FALSE.}
 
 \item{range.tcc}{A numeric vector of two components to be used as the lower and upper bounds of ability estimates when \code{method = "INV.TCC"} and
@@ -110,8 +110,8 @@ imaginary items should have a very high item slope parameter (i.e., \emph{a}-par
 
 When \code{fence.b = NULL} in MLEF, the function automatically sets the lower and upper fences of item difficulty parameters using two steps. More specifically,
 in the first step, the lower fence of the item difficulty parameter is set to the greatest integer value less than the minimum of item difficulty parameters
-in the item meta data and the upper fence of the item difficulty parameter is set to the smallest integer value greater than the maximum of item difficulty
-parameters in the item meta data. Then, in the second step, if the lower fence set in the first step is greater than -3.5, the lower fence is constrained to -3.5
+in the item metadata and the upper fence of the item difficulty parameter is set to the smallest integer value greater than the maximum of item difficulty
+parameters in the item metadata. Then, in the second step, if the lower fence set in the first step is greater than -3.5, the lower fence is constrained to -3.5
 and if the upper fence set in the first step is less than 3.5, the upper fence is constrained to 3.5. Otherwise, the fence values of item difficulty parameters
 set in the first step are used.
 
@@ -133,7 +133,7 @@ Note that the standard errors of ability estimates are computed using observed i
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{default}: Default method to estimate examinees' latent ability parameters using a data.frame \code{x} containing the item meta data.
+\item \code{default}: Default method to estimate examinees' latent ability parameters using a data frame \code{x} containing the item metadata.
 
 \item \code{est_irt}: An object created by the function \code{\link{est_irt}}.
 }}
@@ -142,7 +142,7 @@ Note that the standard errors of ability estimates are computed using observed i
 ## the use of a "-prm.txt" file obtained from a flexMIRT
 flex_prm <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 
-# read item parameters and transform them to item meta data
+# read item parameters and transform them to item metadata
 x <- bring.flexmirt(file=flex_prm, "par")$Group1$full_df
 
 # generate examinees abilities
@@ -172,7 +172,7 @@ est_score(x, data, D=1, method="EAP", norm.prior=c(0, 1), nquad=30, se=TRUE, nco
 est_score(x, data, D=1, method="EAP.SUM", norm.prior=c(0, 1), nquad=30)
 
 # estimate the abilities using inverse TCC scoring
-est_score(x, data, D=1, method="INV.TCC", constant=0.1, constraint=FALSE, range.tcc=c(-7, 7))
+est_score(x, data, D=1, method="INV.TCC", constant=0.1, constraint=TRUE, range.tcc=c(-7, 7))
 
 }
 

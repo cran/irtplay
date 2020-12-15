@@ -2,9 +2,9 @@
 #'
 #' @description This function computes the loglikelihood of abilities for examinees given the item parameters and response data.
 #'
-#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
-#' See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data.
-#' This data.frame can be easily obtained using the function \code{\link{shape_df}}.
+#' @param x A data frame containing the item metadata (e.g., item parameters, number of categories, models ...).
+#' See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item metadata.
+#' This data frame can be easily obtained using the function \code{\link{shape_df}}.
 #' @param data A matrix or vector containing examinees' response data for the items in the argument \code{x}. When a matrix is used, a row and column indicate
 #' the examinees and items, respectively. When a vector is used, it should contains the item response data for an examinee.
 #' @param theta A numeric vector of abilities of which loglikelihood values are computed.
@@ -29,7 +29,7 @@
 #' specified in the argument \code{x}, then you should provide the item response data matrix with one row (or a vector of item response data) in the argument
 #' \code{data} and a vector of ability points where the loglikelihood values need to be computed in the argument \code{theta}.
 #'
-#' @return A data.frame of loglikelihood values. A row indicates the ability value where the loglikelihood is computed and
+#' @return A data frame of loglikelihood values. A row indicates the ability value where the loglikelihood is computed and
 #' a column represents a response pattern, respectively.
 #'
 #' @author Hwanggyu Lim \email{hglim83@@gmail.com}
@@ -38,7 +38,7 @@
 #' ## import the "-prm.txt" output file from flexMIRT
 #' flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 #'
-#' # read item parameters and transform them to item meta data
+#' # read item parameters and transform them to item metadata
 #' x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
 #'
 #' # generate examinees' abilities from N(0, 1)
@@ -84,13 +84,13 @@ llike_score <- function(x, data, theta, D = 1, method = "MLE", norm.prior = c(0,
     x <- data.frame(x, par.3=NA)
   }
 
-  # clear the item meta data set
+  # clear the item metadata set
   x <- back2df(metalist2(x))
 
   # add two more items and data responses when "MLE" with Fences method is used
   if(method == "MLEF") {
     if(is.null(fence.b)) {
-      # find the range of b-parameters in the item meta data
+      # find the range of b-parameters in the item metadata
       range.b <- range(x[, 4])
       range.b[1] <- floor(range.b[1] - 0.001)
       range.b[2] <- ceiling(range.b[2] + 0.001)
@@ -103,7 +103,7 @@ llike_score <- function(x, data, theta, D = 1, method = "MLE", norm.prior = c(0,
     # add two more response columns for the two fence items
     data <- data.frame(data, f.lower=rep(1, nstd), f.upper=rep(0, nstd))
 
-    # create a new item meta data for the two fence items
+    # create a new item metadata for the two fence items
     x.fence <- shape_df(par.dc=list(a=rep(fence.a, 2), b=fence.b, g=0),
                         item.id=c("fence.lower", "fence.upper"), cats=rep(2, 2), model="3PLM")
     if(ncol(x) > ncol(x.fence)) {
@@ -112,7 +112,7 @@ llike_score <- function(x, data, theta, D = 1, method = "MLE", norm.prior = c(0,
       colnames(x.fence) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x.fence) - 3)))
     }
 
-    # create the new item meta data by adding two fence items
+    # create the new item metadata by adding two fence items
     x <- rbind(x, x.fence)
   }
 
@@ -133,7 +133,7 @@ llike_score <- function(x, data, theta, D = 1, method = "MLE", norm.prior = c(0,
     if(any(is.na(resp))) {
       loc.miss <- which(is.na(resp)) # check the locations of missing data
 
-      # delete missing data from the item meta data
+      # delete missing data from the item metadata
       # delete equations for the polytomous IRT models if missing data exist
       if(!is.null(meta$drm)) {
         meta$drm <- purrr::map(.x=meta$drm, .f=function(x) x[!meta$drm$loc %in% loc.miss])

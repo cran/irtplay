@@ -37,7 +37,7 @@
 #' # import the "-prm.txt" output file from flexMIRT
 #' flex_prm <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 #'
-#' # read item parameters and transform them to item meta data
+#' # read item parameters and transform them to item metadata
 #' test_flex <- bring.flexmirt(file=flex_prm, "par")$Group1$full_df
 #'
 #' # set theta values

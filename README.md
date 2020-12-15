@@ -60,7 +60,7 @@ calibration of the pretest items to put the item parameters of the
 pretest items on the scale of the operational item parameters (Kim,
 2006). In `irtplay` package, FIPC is implemented with two main steps:
 
-1.  Prepare a response data set and the item meta data of the fixed (or
+1.  Prepare a response data set and the item metadata of the fixed (or
     operational) items.
 2.  Implement FIPC to estimate the item parameters of pretest items
     using the `est_irt()` function.
@@ -69,23 +69,22 @@ pretest items on the scale of the operational item parameters (Kim,
 
 To run the `est_irt()` function, it requires two data sets:
 
-1.  Item meta data set (i.e., model, score category, and item
-    parameters. see the desciption of the argument `x` in the function
-    `est_irt`).
+1.  Item metadata set (i.e., model, score category, and item parameters.
+    see the desciption of the argument `x` in the function `est_irt`).
 2.  Examinees’ response data set for the items. It should be a matrix
     format where a row and column indicate the examinees and the items,
     respectively. The order of the columns in the response data set must
-    be exactly the same as the order of rows of the item meta data.
+    be exactly the same as the order of rows of the item metadata.
 
 ### (2) Estimating the pretest item parameters
 
 When FIPC is implemented in `est_irt()` function, the pretest item
 parameters are estimated by fixing the operational item parameters. To
-estimate the item parameters, you need to provide the item meta data in
+estimate the item parameters, you need to provide the item metadata in
 the argument `x` and the response data in the argument `data`.
 
-It is worthwhile to explain about how to prepare the item meta data set
-in the argument `x`. A specific form of a data.frame should be used for
+It is worthwhile to explain about how to prepare the item metadata set
+in the argument `x`. A specific form of a data frame should be used for
 the argument `x`. The first column should have item IDs, the second
 column should contain the number of score categories of the items, and
 the third column should include IRT models. The available IRT models are
@@ -103,7 +102,7 @@ slope) parameters should be contained in the fourth column and the item
 threshold (or step) parameters should be included from the fifth to the
 last columns. When the number of categories differs between items, the
 empty cells of item parameters should be filled with NAs. See `est_irt`
-for more details about the item meta data.
+for more details about the item metadata.
 
 Also, you should specify in the argument `fipc = TRUE` and a specific
 FIPC method in the argument `fipc.method`. Finally, you should provide a
@@ -212,8 +211,8 @@ the discrepancy between the observed data and model-based predictions.
 Using `irtplay` package, the traditional approach of evaluating the IRT
 model-data fit on item-level can be implemented with three main steps:
 
-1.  Prepare a data set for the IRT item fit analysis (i.e., item meta
-    data, ability estimates, and response data).
+1.  Prepare a data set for the IRT item fit analysis (i.e., item
+    metadata, ability estimates, and response data).
 2.  Obtain the IRT fit statistics such as the X2, G2, infit, and outfit
     statistics using the `irtfit()` function.
 3.  Based on the results of IRT model fit analysis (i.e., an object of
@@ -226,17 +225,17 @@ model-data fit on item-level can be implemented with three main steps:
 Before conducting the IRT model fit analysis, it is necessary to prepare
 a data set. To run the `irtfit()` function, it requires three data sets:
 
-1.  Item meta data including the item ID, number of score categories,
-    IRT models, and item parameters. The item meta data should be in the
-    format of data.frame. You can prepare the data either by using the
-    `shape_df()` function or by creating a data.frame of the item meta
-    data by yourself. If you have output files of item parameter
+1.  Item metadata including the item ID, number of score categories, IRT
+    models, and item parameters. The item metadata should be in the
+    format of data frame. You can prepare the data either by using the
+    `shape_df()` function or by creating a data frame of the item
+    metadata by yourself. If you have output files of item parameter
     estimates obtained from one of the IRT software such as BILOG-MG 3,
-    PARSCALE 4, flexMIRT, and mirt (R package), the item meta data can
-    be easily obtained using the functions of `bring.bilog()`,
+    PARSCALE 4, flexMIRT, and mirt (R package), the item metadata can be
+    easily obtained using the functions of `bring.bilog()`,
     `bring.parscale()`, `bring.flexmirt()`, `bring.mirt()`. See the
     functions of `irtfit()`, `test.info()`, or `simdat()` for more
-    details about the item meta data format.
+    details about the item metadata format.
 2.  Examinees’ ability (or proficiency) estimates. It should be in the
     format of a numeric vector.
 3.  Examinees’ response data set for the items. It should be in the
@@ -244,7 +243,7 @@ a data set. To run the `irtfit()` function, it requires three data sets:
     the items, respectively. The order of the examinees in the response
     data set must be exactly the same as that of the examinees’ ability
     estimates. The order of the items in the response data set must be
-    exactly the same as that of the items in the item meta data.
+    exactly the same as that of the items in the item metadata.
 
 ### (2) Computing the IRT model-data fit statistics
 
@@ -261,7 +260,7 @@ at the average point of examinees’ ability estimates in each group and
 “middle” for computing the expected probability at the midpoint of
 each group.
 
-To use the `irtfit()` function, you need to insert the item meta data in
+To use the `irtfit()` function, you need to insert the item metadata in
 the argument `x`, the ability estimates in the argument `score`, and the
 response data in the argument `data`. If you want to divide the ability
 scale into other than ten groups, you need to specify the number of
@@ -310,7 +309,7 @@ library(irtplay)
 ## import the "-prm.txt" output file from flexMIRT
 flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 
-# select the item meta data
+# select the item metadata
 x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
 
 # generate 1,000 examinees' latent abilities from N(0.4, 1.3)
@@ -331,7 +330,7 @@ fix.loc <- c(1:5, 53:55)
 #> Estimating item parameters... 
 #>  
 #> Computing item parameter var-covariance matrix... 
-#> Estimation is finished in 4.42 seconds.
+#> Estimation is finished in 4.54 seconds.
 #> 
 #> Call:
 #> est_irt(x = x, data = sim.dat, D = 1, use.gprior = TRUE, gprior = list(dist = "beta", 
@@ -368,9 +367,9 @@ summary(mod.fix1)
 #>  Maximum parameter change: 0.0009203804
 #> 
 #> Processing time (in seconds) 
-#>  EM algorithm: 2.91
-#>  Standard error computation: 1.25
-#>  Total computation: 4.42
+#>  EM algorithm: 2.96
+#>  Standard error computation: 1.3
+#>  Total computation: 4.54
 #> 
 #> Convergence and Stability of Solution 
 #>  First-order test: Convergence criteria are satisfied.
@@ -574,10 +573,10 @@ plot(emphist$weight ~ emphist$theta, xlab="Theta", ylab="Density")
 # import the "-prm.txt" output file from flexMIRT
 flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 
-# select the item meta data
+# select the item metadata
 x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
 
-# modify the item meta data so that some items follow 1PLM, 2PLM and GPCM
+# modify the item metadata so that some items follow 1PLM, 2PLM and GPCM
 x[c(1:3, 5), 3] <- "1PLM"
 x[c(1:3, 5), 4] <- 1
 x[c(1:3, 5), 6] <- 0
@@ -680,7 +679,7 @@ summary(mod1)
 #> 55   AFR3  500
 #> 
 #> Processing time (in seconds) 
-#>  Total computation: 0.92
+#>  Total computation: 0.94
 #> 
 #> Convergence of Solution 
 #>  All item parameters were successfully converged.
@@ -892,7 +891,7 @@ summary(mod2)
 #> 55   AFR3  500
 #> 
 #> Processing time (in seconds) 
-#>  Total computation: 0.94
+#>  Total computation: 0.95
 #> 
 #> Convergence of Solution 
 #>  All item parameters were successfully converged.
@@ -1102,7 +1101,7 @@ summary(mod3)
 #> 55   AFR3  500
 #> 
 #> Processing time (in seconds) 
-#>  Total computation: 0.8
+#>  Total computation: 0.77
 #> 
 #> Convergence of Solution 
 #>  All item parameters were successfully converged.
@@ -1240,7 +1239,7 @@ summary(mod3)
 # find the location of items that have more than 1,000 item responses
 over1000 <- which(colSums(simCAT_MX$res.dat, na.rm=TRUE) > 1000)
 
-# (1) item meta data
+# (1) item metadata
 x <- simCAT_MX$item.prm[over1000, ]
 dim(x)
 #> [1] 113   7

@@ -8,9 +8,9 @@ llike_score(x, data, theta, D = 1, method = "MLE", norm.prior = c(0,
   1), fence.a = 3, fence.b = NULL, missing = NA)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...).
-See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item meta data.
-This data.frame can be easily obtained using the function \code{\link{shape_df}}.}
+\item{x}{A data frame containing the item metadata (e.g., item parameters, number of categories, models ...).
+See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}} for more details about the item metadata.
+This data frame can be easily obtained using the function \code{\link{shape_df}}.}
 
 \item{data}{A matrix or vector containing examinees' response data for the items in the argument \code{x}. When a matrix is used, a row and column indicate
 the examinees and items, respectively. When a vector is used, it should contains the item response data for an examinee.}
@@ -37,7 +37,7 @@ automatically set. See below for details. Default is NULL.}
 \item{missing}{A value indicating missing values in the response data set. Default is NA.}
 }
 \value{
-A data.frame of loglikelihood values. A row indicates the ability value where the loglikelihood is computed and
+A data frame of loglikelihood values. A row indicates the ability value where the loglikelihood is computed and
 a column represents a response pattern, respectively.
 }
 \description{
@@ -55,7 +55,7 @@ specified in the argument \code{x}, then you should provide the item response da
 ## import the "-prm.txt" output file from flexMIRT
 flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 
-# read item parameters and transform them to item meta data
+# read item parameters and transform them to item metadata
 x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
 
 # generate examinees' abilities from N(0, 1)

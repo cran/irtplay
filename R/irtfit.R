@@ -6,9 +6,9 @@
 #' outfit statistics for non-Rasch models. The saved object of this function, especially the object of contingency tables,
 #' is used in the function of \code{\link{plot.irtfit}} to draw a raw and standardized residual plots (Hambleton et al., 1991).
 #'
-#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...), an object of class \code{\link{est_item}}
+#' @param x A data frame containing the item metadata (e.g., item parameters, number of categories, models ...), an object of class \code{\link{est_item}}
 #' obtained from the function \code{\link{est_item}}, or an object of class \code{\link{est_irt}} obtained from the function \code{\link{est_irt}}.
-#' The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}. See below for details.
+#' The data frame of item metadata can be easily obtained using the function \code{\link{shape_df}}. See below for details.
 #' @param score A vector of examinees' ability estimates.
 #' @param data A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
 #' the examinees and items, respectively.
@@ -39,21 +39,21 @@
 #' Default is 1.
 #' @param ... Further arguments passed to or from other methods.
 #'
-#' @details A specific form of a data.frame should be used for the argument \code{x}. The first column should have item IDs,
-#' the second column should contain the number of score categories of the items, and the third column should include IRT models.
-#' The available IRT models are "1PLM", "2PLM", "3PLM", and "DRM" for dichotomous items, and "GRM" and "GPCM" for polytomous items.
+#' @details A specific form of a data frame should be used for the argument \code{x}. The first column should have item IDs,
+#' the second column should contain unique score category numbers of the items, and the third column should include IRT models being fit to the items.
+#' The available IRT models are "1PLM", "2PLM", "3PLM", and "DRM" for dichotomous item data, and "GRM" and "GPCM" for polytomous item data.
 #' Note that "DRM" covers all dichotomous IRT models (i.e, "1PLM", "2PLM", and "3PLM") and "GRM" and "GPCM" represent the graded
-#' response model and (generalized) partial credit model, respectively. From the fourth column, item parameters should be included.
+#' response model and (generalized) partial credit model, respectively. The next columns should include the item parameters of the fitted IRT models.
 #' For dichotomous items, the fourth, fifth, and sixth columns represent the item discrimination (or slope), item difficulty, and
-#' item guessing parameters, respectively. When "1PLM" or "2PLM" is specified for any items in the third column, NAs should be inserted
-#' for the item guessing parameters. For polytomous items, the item discrimination (or slope) parameters should be contained in the
-#' fourth column and the item threshold (or step) parameters should be included from the fifth to the last columns.
-#' When the number of categories differs between items, the empty cells of item parameters should be filled with NAs.
-#' In this package, item step parameters should be used for the (generalized) partial credit model. The item step parameter is the
-#' overall item difficulty (or location) parameter subtracted by the difficulty (or threshold) parameter for each category.
-#' Thus, the number of step parameters for an item with m categories is m-1 because a step parameter for the first category does not
-#' affect the category probabilities. For example, if an item has five categories under the (generalized) partial credit model,
-#' four step parameters should be specified. An example of a data.frame with a single-format test is as follows:
+#' item guessing parameters, respectively. When "1PLM" and "2PLM" are specified in the third column, NAs should be inserted in the sixth column
+#' for the item guessing parameters. For polytomous items, the item discrimination (or slope) parameters should be included in the
+#' fourth column and the item difficulty (or threshold) parameters of category boundaries should be contained from the fifth to the last columns.
+#' When the number of unique score categories differs between items, the empty cells of item parameters should be filled with NAs.
+#' In the \pkg{irtplay} package, the item difficulty (or threshold) parameters of category boundaries for GPCM are expressed as 
+#' the item location (or overall difficulty) parameter subtracted by the threshold parameter for unique score categories of the item. 
+#' Note that when an GPCM item has \emph{K} unique score categories, \emph{K-1} item difficulty parameters are necessary because 
+#' the item difficulty parameter for the first category boundary is always 0. For example, if an GPCM item has five score categories, 
+#' four item difficulty parameters should be specified. An example of a data frame with a single-format test is as follows:
 #' \tabular{lrlrrrrr}{
 #'   ITEM1  \tab 2 \tab 1PLM \tab 1.000 \tab  1.461 \tab         NA \cr
 #'   ITEM2  \tab 2 \tab 2PLM \tab 1.921 \tab -1.049 \tab         NA \cr
@@ -61,7 +61,7 @@
 #'   ITEM4  \tab 2 \tab 3PLM \tab 0.835 \tab -1.049 \tab  0.182 \cr
 #'   ITEM5  \tab 2 \tab DRM \tab 0.926 \tab  0.394 \tab  0.099
 #' }
-#' And an example of a data.frame for a mixed-format test is as follows:
+#' And an example of a data frame for a mixed-format test is as follows:
 #' \tabular{lrlrrrrr}{
 #'   ITEM1  \tab 2 \tab 1PLM \tab 1.000 \tab  1.461 \tab         NA \tab         NA \tab         NA\cr
 #'   ITEM2  \tab 2 \tab 2PLM \tab 1.921 \tab -1.049 \tab         NA \tab         NA \tab         NA\cr
@@ -72,9 +72,8 @@
 #'   ITEM7  \tab 4 \tab GPCM  \tab 1.137 \tab -0.374 \tab  0.215 \tab  0.848 \tab         NA \cr
 #'   ITEM8  \tab 5 \tab GPCM  \tab 1.233 \tab -2.078 \tab -1.347 \tab -0.705 \tab -0.116
 #' }
-#' For more details about the parameterization of the (generalized) partial credit model, see \code{IRT Models} section in
-#' the page of \code{\link{irtplay-package}} for more details about the IRT models. An easier way to create a data.frame for
-#' the argument \code{x} is by using the function \code{\link{shape_df}}.
+#' See \code{IRT Models} section in the page of \code{\link{irtplay-package}} for more details about the IRT models used in the \pkg{irtplay} package. 
+#' An easier way to create a data frame for the argument \code{x} is by using the function \code{\link{shape_df}}.
 #'
 #' To calculate the \eqn{\chi^{2}} and \eqn{G^{2}} fit statistics, two methods are used in the argument \code{group.method} to divide the ability scale
 #' into several groups. If \code{group.method = "equal.width"}, the examinees are grouped based on equal length of intervals.
@@ -91,12 +90,12 @@
 #' the number of groups less the number of the IRT model parameters (Ames et al., 2015) whereas the \eqn{G^{2}} is assumed to be distributed approximately
 #' as a chi-square with \emph{df} equal to the number of groups (Ames et al., 2015; Muraki & Bock, 2003)
 #'
-#' Note that if "DRM" is specified for an item in the item meta data set, the item is considered as "3PLM" to compute degrees of freedom of
+#' Note that if "DRM" is specified for an item in the item metadata set, the item is considered as "3PLM" to compute degrees of freedom of
 #' the \eqn{\chi^{2}} fit statistic.
 #'
 #' @return This function returns an object of class \code{\link{irtfit}}. Within this object, several internal objects are contained such as:
-#' \item{fit_stat}{A data.frame containing the results of three IRT fit statistics (i.e., \eqn{\chi^{2}} and \eqn{G^{2}}, infit, outfit statistics) across
-#' all evaluated items. In the data.frame, the columns indicate item's ID, \eqn{\chi^{2}} fit statistic, \eqn{G^{2}} fit statistic, degrees of freedom for the \eqn{\chi^{2}},
+#' \item{fit_stat}{A data frame containing the results of three IRT fit statistics (i.e., \eqn{\chi^{2}} and \eqn{G^{2}}, infit, outfit statistics) across
+#' all evaluated items. In the data frame, the columns indicate item's ID, \eqn{\chi^{2}} fit statistic, \eqn{G^{2}} fit statistic, degrees of freedom for the \eqn{\chi^{2}},
 #' degrees of freedom for the \eqn{G^{2}}, critical value for the \eqn{\chi^{2}}, critical value for the \eqn{G^{2}}, p-value for the \eqn{\chi^{2}},
 #' p-value for the \eqn{G^{2}}, outfit statistic, infit statistic, the number of examinees used to compute the five fit statistics, and the proportion of
 #' ability groups (or intervals), before collapsing the cells, that have standardized residuals greater than the specified criterion in the argument \code{overSR},
@@ -105,9 +104,9 @@
 #' Note that the collapsing cell strategy is implemented to these contingency tables.}
 #' \item{contingency.plot}{A list of contingency tables used to draw a raw and standardized residual plots (Hambleton et al., 1991) in the function of
 #' \code{\link{plot.irtfit}}. Note that the collapsing cell strategy is \emph{not} implemented to these contingency tables.}
-#' \item{individual.info}{A list of data.frames including individual residual and variance values. Those information are used to compute
+#' \item{individual.info}{A list of data frames including individual residual and variance values. Those information are used to compute
 #' infit and outfit statistics.}
-#' \item{item_df}{The item meta data specified in the argument \code{x}.}
+#' \item{item_df}{The item metadata specified in the argument \code{x}.}
 #' \item{ancillary}{A list of ancillary information used in the item fit analysis.}
 #'
 #' @author Hwanggyu Lim \email{hglim83@@gmail.com}
@@ -196,30 +195,30 @@
 #' @export
 irtfit <- function(x, ...) UseMethod("irtfit")
 
-#' @describeIn irtfit Default method to compute the traditional IRT item fit statistics for a data.frame \code{x} containing the item meta data.
+#' @describeIn irtfit Default method to compute the traditional IRT item fit statistics for a data frame \code{x} containing the item metadata.
 #'
 #' @export
 #'
 irtfit.default <- function(x, score, data, group.method=c("equal.width", "equal.freq"),
                            n.width=10, loc.theta="average", range.score=NULL, D=1, alpha=0.05,
                            missing=NA, overSR=2, min.collapse=1, ...) {
-
-
+  
+  
   # match.call
   cl <- match.call()
-
+  
   # give column names
   x <- data.frame(x)
   colnames(x) <- c("id", "cats", "model", paste0("par.", 1:(ncol(x) - 3)))
-
+  
   # add par.3 column when there is no par.3 column (just in case that all items are 2PLMs)
   if(ncol(x[, -c(1, 2, 3)]) == 2) {
     x <- data.frame(x, par.3=NA)
   }
-
-  # clear the item meta data set
+  
+  # clear the item metadata set
   x <- back2df(metalist2(x))
-
+  
   # consider DRM as 3PLM
   x$model <- as.character(x$model)
   # consider DRM as 3PLM
@@ -228,39 +227,39 @@ irtfit.default <- function(x, score, data, group.method=c("equal.width", "equal.
     memo <- "All 'DRM' items were considered as '3PLM' items in during the item parameter estimation."
     warning(memo, call.=TRUE)
   }
-
+  
   # transform scores to a vector form
   if(is.matrix(score) | is.data.frame(score)) {
     score <- as.numeric(data.matrix(score))
   }
-
+  
   # transform the response data to a matrix form
   data <- data.matrix(data)
-
+  
   # recode missing values
   if(!is.na(missing)) {
     data[data == missing] <- NA
   }
-
+  
   # check if there are items which have zero or one response frequency
   n.score <-  colSums(!is.na(data))
   if(all(n.score %in% c(0L, 1L))) {
     stop("Every item has frequency of zero or one for the item response data. Each item must have more than two item responses.", call.=TRUE)
   }
-
+  
   if(any(n.score %in% c(0L, 1L))) {
     del_item <- which(n.score %in% c(0L, 1L))
-
+    
     # delete the items which have no frequency of scores from the data set
     x <- x[-del_item, ]
     data <- data[, -del_item]
-
+    
     # warning message
     memo <- paste0(paste0("item ", del_item, collapse = ", "),
                    " is/are excluded in the analysis. Because the item(s) has/have frequency of zero or one for the item response data.")
     warning(memo, call.=TRUE)
   }
-
+  
   # restrict the range of scores if required
   if(!is.null(range.score)) {
     score <- ifelse(score < range.score[1], range.score[1], score)
@@ -269,13 +268,13 @@ irtfit.default <- function(x, score, data, group.method=c("equal.width", "equal.
     tmp.val <- max(ceiling(abs(range(score, na.rm=TRUE))))
     range.score <- c(-tmp.val, tmp.val)
   }
-
+  
   # compute item fit statistics and obtain contingency tables across all items
   fits <-
     purrr::map(1:nrow(x), .f=function(i)
       itemfit(item_meta=x[i, ], score=score, resp=data[, i], group.method=group.method,
               n.width=n.width, loc.theta=loc.theta, D=D, alpha=alpha, overSR=overSR, min.collapse=min.collapse))
-
+  
   # extract fit statistics
   fit_stat <-
     purrr::map(fits, .f=function(i) i$fit.stats) %>%

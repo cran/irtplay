@@ -2,7 +2,7 @@
 % Please edit documentation in R/shape_df.R
 \name{shape_df}
 \alias{shape_df}
-\title{Create a data.frame of Item Meta Data}
+\title{Create a data frame of item metadata}
 \usage{
 shape_df(par.dc = list(a = NULL, b = NULL, g = NULL), par.py = list(a =
   NULL, d = NULL), item.id = NULL, cats, model, empty.par = FALSE)
@@ -23,21 +23,21 @@ a list of threshold (or step) parameters. See below for more details.}
 dichotomous items, and "GRM" and "GPCM" for polytomous items. Note that "DRM" covers all dichotomous IRT models (i.e, "1PLM", "2PLM", and
 "3PLM") and "GRM" and "GPCM" represent the graded response model and (generalized) partial credit model, respectively.}
 
-\item{empty.par}{A logical value to create an empty item meta data. If TRUE, the number of score categories and corresponding IRT models should be specified
-in the arguments of \code{cats} and \code{model}, respectively. In the empty item meta data, the item slope parameter has a fixed value of 1, the item difficulty
+\item{empty.par}{A logical value to create an empty item meta. If TRUE, the number of score categories and corresponding IRT models should be specified
+in the arguments of \code{cats} and \code{model}, respectively. In the empty item meta, the item slope parameter has a fixed value of 1, the item difficulty
 (or threshold) parameter has a fixed value of 0, and the item guessing parameter has a fixed value of .2. Default is FALSE.}
 }
 \value{
-This function returns a data.frame.
+This function returns a data frame.
 }
 \description{
-This function creates a data.frame which includes item meta data (e.g., item parameter, categories, models ...) to be
+This function creates a data frame which includes item meta (e.g., item parameter, categories, models ...) to be
 used for the IRT model-data fit analysis as well as other analyses.
 }
 \details{
 For any item where "1PLM" or "2PLM" is specified in \code{model}, the item guessing parameter will be NA. If \code{model} is
 a vector of \eqn{length = 1}, the specified model is replicated across all items. As in the function \code{\link{simdat}}, it is important
-to clearly specify \code{cats} according to the order of items in the test form when a data.frame for a mixed-format test needs to be created.
+to clearly specify \code{cats} according to the order of items in the test form when a data frame for a mixed-format test needs to be created.
 See \code{\link{simdat}} for more details about how to specify \code{cats}.
 
 When specifying item parameters in \code{par.dc} and \code{par.dc}, keep the order of item parameter types. For example,
@@ -66,20 +66,20 @@ cats <- c(2, 4, 2, 2, 5, 2, 2)
 # create a character vector of IRT models for the items
 model <- c("DRM", "GRM", "DRM", "DRM", "GPCM", "DRM", "DRM")
 
-# create an item meta data set
+# create an item meta set
 shape_df(par.dc=par.dc, par.py=par.py, cats=cats, model=model)
 
-## an empty item meta data with five dichotomous and two polytomous items
+## an empty item meta with five dichotomous and two polytomous items
 # create a numeric vector of score categories for the items
 cats <- c(2, 4, 3, 2, 5, 2, 2)
 
 # create a character vector of IRT models for the items
 model <- c("1PLM", "GRM", "GRM", "2PLM", "GPCM", "DRM", "3PLM")
 
-# create an empty item meta data set
+# create an empty item meta set
 shape_df(cats=cats, model=model, empty.par=TRUE)
 
-## an item meta data for a single-item format test form with five dichotomous
+## an item meta for a single-item format test form with five dichotomous
 shape_df(par.dc=par.dc, cats=rep(2, 5), model="DRM")
 
 

@@ -1,5 +1,5 @@
 # a function "back2df"
-# This function is used to transfrom a list back to a data.frame of item meta data
+# This function is used to transfrom a list back to a data.frame of item metadata
 #' @import purrr
 #' @import dplyr
 #' @importFrom rlang .data

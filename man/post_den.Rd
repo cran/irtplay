@@ -8,9 +8,9 @@ post_den(x, data, D = 1, Quadrature = c(49, 6), weights = NULL,
   group.mean = 0, group.var = 1, missing = NA)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...). 
-See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}}  for more details about the item meta data.
-This data.frame can be easily obtained using the function \code{\link{shape_df}}.}
+\item{x}{A data frame containing the item metadata (e.g., item parameters, number of categories, models ...). 
+See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}}  for more details about the item metadata.
+This data frame can be easily obtained using the function \code{\link{shape_df}}.}
 
 \item{data}{A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
 the examinees and items, respectively.}
@@ -22,7 +22,7 @@ Default is 1.}
 the symmetric minimum and maximum values of these points (in the second component). For example, a vector of c(49, 6) indicates 49 rectangular
 quadrature points over -6 and 6. Default is c(49, 6).}
 
-\item{weights}{A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
+\item{weights}{A two-column matrix or data frame containing the quadrature points (in the first column) and the corresponding weights
 (in the second column) of the latent variable prior distribution. The weights and quadrature points can be easily obtained
 using the function \code{\link{gen.weight}}. If NULL, a normal prior density is used based on the information provided in the arguments
 of \code{Quadrature}, \code{group.mean}, and \code{group.var}). Default is NULL.}

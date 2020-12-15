@@ -2,10 +2,10 @@
 #'
 #' @description This function computes \eqn{S-X^{2}} (Orlando & Thissen, 2000, 2003) item fit statistic.
 #'
-#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...), an object
+#' @param x A data frame containing the item metadata (e.g., item parameters, number of categories, models ...), an object
 #' of class \code{\link{est_item}} obtained from the function \code{\link{est_item}}, or an object of class \code{\link{est_irt}}
 #' obtained from the function \code{\link{est_irt}}. See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}}
-#' for more details about the item meta data. The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}.
+#' for more details about the item metadata. The data frame of item metadata can be easily obtained using the function \code{\link{shape_df}}.
 #' @param data A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
 #' the examinees and items, respectively.
 #' @param D A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
@@ -16,7 +16,7 @@
 #' These two parameters are used to obtain the gaussian quadrature points and the corresponding weights from the normal distribution. Default is
 #' c(0,1).
 #' @param nquad An integer value specifying the number of gaussian quadrature points from the normal prior distribution. Default is 30.
-#' @param weights A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
+#' @param weights A two-column matrix or data frame containing the quadrature points (in the first column) and the corresponding weights
 #' (in the second column) of the latent variable prior distribution. The weights and quadrature points can be easily obtained
 #' using the function \code{\link{gen.weight}}. If missing, default values are used (see the arguments of \code{norm.prior} and \code{nquad}).
 #' @param ... Further arguments passed to or from other methods.
@@ -30,12 +30,12 @@
 #' in the function \code{\link{sx2_fit}}. If a minimum expected category frequency needs to be set to different number, you can specify
 #' the minimum value in the argument \code{min.collapse}.
 #'
-#' Note that if "DRM" is specified for an item in the item meta data set, the item is considered as "3PLM" to compute degree of freedom of
+#' Note that if "DRM" is specified for an item in the item metadata set, the item is considered as "3PLM" to compute degree of freedom of
 #' the \eqn{S-X^{2}} fit statistic.
 #'
 #' @return This function returns a list. Within a list, several internal objects are contained such as:
-#' \item{fit_stat}{A data.frame containing the results of \eqn{S-X^{2}} fit statistics for all items.}
-#' \item{item_df}{The item meta data specified in the argument \code{x}.}
+#' \item{fit_stat}{A data frame containing the results of \eqn{S-X^{2}} fit statistics for all items.}
+#' \item{item_df}{The item metadata specified in the argument \code{x}.}
 #' \item{exp_freq}{A list containing the collapsed expected frequency tables for all items.}
 #' \item{obs_freq}{A list containing the collapsed observed frequency tables for all items.}
 #' \item{exp_prob}{A list containing the collapsed expected probability tables for all items.}
@@ -81,7 +81,7 @@
 #' @export
 sx2_fit <- function(x, ...) UseMethod("sx2_fit")
 
-#' @describeIn sx2_fit Default method to compute \eqn{S-X^{2}} fit statistics for a data.frame \code{x} containing the item meta data.
+#' @describeIn sx2_fit Default method to compute \eqn{S-X^{2}} fit statistics for a data frame \code{x} containing the item metadata.
 #'
 #' @export
 sx2_fit.default <- function(x, data, D=1, alpha=0.05, min.collapse=1, norm.prior=c(0, 1), nquad=30, weights, ...) {
@@ -99,7 +99,7 @@ sx2_fit.default <- function(x, data, D=1, alpha=0.05, min.collapse=1, norm.prior
     x <- data.frame(x, par.3=NA)
   }
 
-  # clear the item meta data set
+  # clear the item metadata set
   x <- back2df(metalist2(x))
 
   # consider DRM as 3PLM
@@ -114,7 +114,7 @@ sx2_fit.default <- function(x, data, D=1, alpha=0.05, min.collapse=1, norm.prior
   ##------------------------------------------------------------------
   ## 1. data preparation
   ##------------------------------------------------------------------
-  # save item meta data to another objective
+  # save item metadata to another objective
   full_df <- x
 
   # compute raw sum scores for all examinees
@@ -334,7 +334,7 @@ sx2_fit.est_item <- function(x, alpha=0.05, min.collapse=1, norm.prior=c(0, 1), 
   ##------------------------------------------------------------------
   ## 1. data preparation
   ##------------------------------------------------------------------
-  # save item meta data to another objective
+  # save item metadata to another objective
   full_df <- x
 
   # compute raw sum scores for all examinees
@@ -553,7 +553,7 @@ sx2_fit.est_irt <- function(x, alpha=0.05, min.collapse=1, norm.prior=c(0, 1), n
   ##------------------------------------------------------------------
   ## 1. data preparation
   ##------------------------------------------------------------------
-  # save item meta data to another objective
+  # save item metadata to another objective
   full_df <- x
 
   # compute raw sum scores for all examinees

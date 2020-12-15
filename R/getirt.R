@@ -11,22 +11,22 @@
 #' Objects which can be extracted from the object of class \code{\link{est_irt}} include:
 #'
 #' \describe{
-#' \item{estimates}{A data.frame containing both the item parameter estimates and the corresponding standard errors of estimates.}
-#' \item{par.est}{A data.frame containing the item parameter estimates.}
-#' \item{se.est}{A data.frame containing the standard errors of the item parameter estimates. Note that the standard errors are estimated using
+#' \item{estimates}{A data frame containing both the item parameter estimates and the corresponding standard errors of estimates.}
+#' \item{par.est}{A data frame containing the item parameter estimates.}
+#' \item{se.est}{A data frame containing the standard errors of the item parameter estimates. Note that the standard errors are estimated using
 #' observed information functions. The standard errors are estimated using the cross-production approximation method (Meilijson, 1989).}
-#' \item{pos.par}{A data.frame containing the position number of item parameters being estimated. The position information is useful
+#' \item{pos.par}{A data frame containing the position number of item parameters being estimated. The position information is useful
 #' when interpreting the variance-covariance matrix of item parameter estimates.}
 #' \item{covariance}{A matrix of variance-covariance matrix of item parameter estimates.}
 #' \item{loglikelihood}{A sum of the log-likelihood values of the observed data set (marginal log-likelihood) across all estimated items.}
 #' \item{aic}{A model fit statistic of Akaike information criterion based on the loglikelihood.}
 #' \item{bic}{A model fit statistic of Bayesian information criterion based on the loglikelihood.}
-#' \item{group.par}{A data.frame containing the mean, variance, and standard deviation of latent variable prior distribution.}
-#' \item{weights}{A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
+#' \item{group.par}{A data frame containing the mean, variance, and standard deviation of latent variable prior distribution.}
+#' \item{weights}{A two-column matrix or data frame containing the quadrature points (in the first column) and the corresponding weights
 #' (in the second column) of the (updated) latent variable prior distribution.}
 #' \item{posterior.dist}{A matrix of normalized posterior densities for all the response patterns at each of the quadrature points.
 #' The row and column indicate the response pattern and the quadrature point, respectively.}
-#' \item{data}{A data.frame of the examinees' response data set.}
+#' \item{data}{A data frame of the examinees' response data set.}
 #' \item{scale.D}{A scaling factor in IRT models.}
 #' \item{ncase}{A total number of response patterns.}
 #' \item{nitem}{A total number of items included in the response data.}
@@ -53,12 +53,12 @@
 #' Objects which can be extracted from the object of class \code{\link{est_item}} include:
 #'
 #' \describe{
-#' \item{estimates}{A data.frame containing both the item parameter estimates and the corresponding standard errors of estimates.}
-#' \item{par.est}{A data.frame containing the item parameter estimates.}
-#' \item{se.est}{A data.frame containing the standard errors of the item parameter estimates. Note that the standard errors are estimated using
+#' \item{estimates}{A data frame containing both the item parameter estimates and the corresponding standard errors of estimates.}
+#' \item{par.est}{A data frame containing the item parameter estimates.}
+#' \item{se.est}{A data frame containing the standard errors of the item parameter estimates. Note that the standard errors are estimated using
 #' observed information functions.}
 #' \item{loglikelihood}{A sum of the log-likelihood values of the complete data set across all estimated items.}
-#' \item{data}{A data.frame of the examinees' response data set.}
+#' \item{data}{A data frame of the examinees' response data set.}
 #' \item{score}{A vector of the examinees' ability values used as the fixed effects.}
 #' \item{scale.D}{A scaling factor in IRT models.}
 #' \item{convergence}{A string indicating the convergence status of the item parameter estimation.}

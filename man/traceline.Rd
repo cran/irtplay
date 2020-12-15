@@ -16,10 +16,10 @@ traceline(x, ...)
 \method{traceline}{est_irt}(x, theta, ...)
 }
 \arguments{
-\item{x}{A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...), an object
+\item{x}{A data frame containing the item metadata (e.g., item parameters, number of categories, models ...), an object
 of class \code{\link{est_item}} obtained from the function \code{\link{est_item}}, or an object of class \code{\link{est_irt}}
 obtained from the function \code{\link{est_irt}}. See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}}
-for more details about the item meta data. The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}.}
+for more details about the item metadata. The data frame of item metadata can be easily obtained using the function \code{\link{shape_df}}.}
 
 \item{...}{Further arguments passed to or from other methods.}
 
@@ -40,7 +40,7 @@ to draw the item or test characteristic curve using the function \code{\link{plo
 \section{Methods (by class)}{
 \itemize{
 \item \code{default}: Default method to compute the item category probabilities, item characteristic function, and
-test characteristic function for a data.frame \code{x} containing the item meta data.
+test characteristic function for a data frame \code{x} containing the item metadata.
 
 \item \code{est_item}: An object created by the function \code{\link{est_item}}.
 
@@ -53,7 +53,7 @@ test characteristic function for a data.frame \code{x} containing the item meta 
 # import the "-prm.txt" output file from flexMIRT
 flex_prm <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 
-# read item parameters and transform them to item meta data
+# read item parameters and transform them to item metadata
 test_flex <- bring.flexmirt(file=flex_prm, "par")$Group1$full_df
 
 # set theta values

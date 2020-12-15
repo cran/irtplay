@@ -4,10 +4,10 @@
 #' test characteristic function given a set of theta values. The returned object of this function can be used
 #' to draw the item or test characteristic curve using the function \code{\link{plot.traceline}}.
 #'
-#' @param x A data.frame containing the item meta data (e.g., item parameters, number of categories, models ...), an object
+#' @param x A data frame containing the item metadata (e.g., item parameters, number of categories, models ...), an object
 #' of class \code{\link{est_item}} obtained from the function \code{\link{est_item}}, or an object of class \code{\link{est_irt}}
 #' obtained from the function \code{\link{est_irt}}. See \code{\link{irtfit}}, \code{\link{test.info}}, or \code{\link{simdat}}
-#' for more details about the item meta data. The data.frame of item meta data can be easily obtained using the function \code{\link{shape_df}}.
+#' for more details about the item metadata. The data frame of item metadata can be easily obtained using the function \code{\link{shape_df}}.
 #' @param theta A vector of theta values.
 #' @param D A scaling factor in IRT models to make the logistic function as close as possible to the normal ogive function (if set to 1.7).
 #'          Default is 1.
@@ -26,7 +26,7 @@
 #' # import the "-prm.txt" output file from flexMIRT
 #' flex_prm <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 #'
-#' # read item parameters and transform them to item meta data
+#' # read item parameters and transform them to item metadata
 #' test_flex <- bring.flexmirt(file=flex_prm, "par")$Group1$full_df
 #'
 #' # set theta values
@@ -40,7 +40,7 @@
 traceline <- function(x, ...) UseMethod("traceline")
 
 #' @describeIn traceline Default method to compute the item category probabilities, item characteristic function, and
-#' test characteristic function for a data.frame \code{x} containing the item meta data.
+#' test characteristic function for a data frame \code{x} containing the item metadata.
 #' @import purrr
 #' @import dplyr
 #' @export
@@ -48,7 +48,7 @@ traceline.default <- function(x, theta, D = 1, ...) {
 
   meta <- metalist2(x)
 
-  # make the empty list and data.frame to contain probabilities
+  # make the empty list and data frame to contain probabilities
   icc <- NULL
   prob.cat <- list()
 
@@ -135,7 +135,7 @@ traceline.est_item <- function(x, theta, ...) {
   D <- x$scale.D
   x <- x$par.est
 
-  # listrize the meta data
+  # listrize the metadata
   meta <- metalist2(x)
 
   # make the empty list and data.frame to contain probabilities
@@ -224,7 +224,7 @@ traceline.est_irt <- function(x, theta, ...) {
   D <- x$scale.D
   x <- x$par.est
 
-  # listrize the meta data
+  # listrize the metadata
   meta <- metalist2(x)
 
   # make the empty list and data.frame to contain probabilities

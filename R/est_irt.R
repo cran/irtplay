@@ -1,6 +1,6 @@
 #' Item parameter estimation using MMLE-EM algorithm
 #'
-#' @description This function fits unidimensional item response (IRT) models to mixture of dichotomous and polytomous data using
+#' @description This function fits unidimensional item response (IRT) models to a mixture of dichotomous and polytomous data using
 #' marginal maximum likelihood estimation with expectation-maximization (MMLE-EM) algorithm (Bock & Aitkin, 1981). This function also
 #' implements the fixed item parameter calibration (FIPC; Kim, 2006). As Method A (Stocking, 1988), FIPC is one of useful online item
 #' calibration methods for computerized adaptive testing (CAT) to put the parameter estimates of pretest items on the same scale of
@@ -8,12 +8,12 @@
 #' logistic models are available. For polytomous items, the graded response model (GRM) and the (generalized) partial credit model (GPCM)
 #' are available.
 #'
-#' @param x A data.frame containing the item meta data. This meta data is necessary to obtain the information of
+#' @param x A data frame containing the item metadata. This metadata is necessary to obtain the information of
 #' each item (i.e., number of score categories and IRT model) to be calibrated. You can easily create an empty
-#' item meta data using the function \code{\link{shape_df}}. When \code{use.startval = TRUE}, the item parameters
-#' specified in the item meta data are used as the starting values for the item parameter estimation.
+#' item metadata using the function \code{\link{shape_df}}. When \code{use.startval = TRUE}, the item parameters
+#' specified in the item metadata are used as the starting values for the item parameter estimation.
 #' If \code{x = NULL}, the arguments of \code{model} and \code{cats} must be specified. Note that when \code{fipc = TRUE}
-#' to implement the FIPC method, the item meta data of a test form must be provided in the argument \code{x}.
+#' to implement the FIPC method, the item metadata of a test form must be provided in the argument \code{x}.
 #' See below for details.
 #' @param data A matrix containing examinees' response data for the items in the argument \code{x}. A row and column indicate
 #' the examinees and items, respectively.
@@ -69,7 +69,7 @@
 #' @param Quadrature A numeric vector of two components specifying the number of quadrature points (in the first component) and
 #' the symmetric minimum and maximum values of these points (in the second component). For example, a vector of c(49, 6) indicates 49 rectangular
 #' quadrature points over -6 and 6. The quadrature points are used in the E step of the EM algorithm. Default is c(49, 6).
-#' @param weights A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
+#' @param weights A two-column matrix or data frame containing the quadrature points (in the first column) and the corresponding weights
 #' (in the second column) of the latent variable prior distribution. The weights and quadrature points can be easily obtained
 #' using the function \code{\link{gen.weight}}. If NULL, a normal prior density is used based on the information provided in the arguments
 #' of \code{Quadrature}, \code{group.mean}, and \code{group.var}). Default is NULL.
@@ -80,7 +80,7 @@
 #' @param EmpHist A logical value. If TRUE, the empirical histogram of the latent variable prior distribution is simultaneously estimated with
 #' the item parameters using Woods's (2007) approach. The item parameters are calibrated against the estimated empirical histogram prior distribution.
 #' See below for details.
-#' @param use.startval A logical value. If TRUE, the item parameters provided in the item meta data (i.e., the argument \code{x}) are used as
+#' @param use.startval A logical value. If TRUE, the item parameters provided in the item metadata (i.e., the argument \code{x}) are used as
 #' the starting values for the item parameter estimation. Otherwise, internal starting values of this function are used. Default is FALSE.
 #' @param Etol A positive numeric value. This value sets the convergence criterion for E steps of the EM algorithm. Default is 1e-4.
 #' @param MaxE A positive integer value. This value determines the maximum number of the E steps in the EM algorithm. Default is 500.
@@ -93,26 +93,27 @@
 #' (NWU-OEM; Wainer & Mislevy, 1990)" and "MEM" for "Multiple Prior Weights Updating and Multiple EM Cycles (MWU-MEM; Kim, 2006)."
 #' When \code{fipc.method = "OEM"}, the maximum number of the E steps of the EM algorithm is set to 1 no matter what number is specified
 #' in the argument \code{MaxE}.
-#' @param fix.loc A vector of positive integer values specifying the location of the items to be fixed in the item meta data (i.e., \code{x})
-#' when the FIPC is implemented. For example, suppose that five items located in the 1st, 2nd, 4th, 7th, and 9th rows of the item meta data \code{x}
+#' @param fix.loc A vector of positive integer values specifying the location of the items to be fixed in the item metadata (i.e., \code{x})
+#' when the FIPC is implemented. For example, suppose that five items located in the 1st, 2nd, 4th, 7th, and 9th rows of the item metadata \code{x}
 #' should be fixed. Then \code{fix.loc = c(1, 2, 4, 7, 9)}.
-#' @param verbose A logical value. If TRUE, the function prints the observed data log-likelihood after each EM cycle. Defalut is TRUE. 
-#'
-#' @details A specific form of a data.frame should be used for the argument \code{x}. The first column should have item IDs,
-#' the second column should contain the number of score categories of the items, and the third column should include IRT models.
-#' The available IRT models are "1PLM", "2PLM", "3PLM", and "DRM" for dichotomous items, and "GRM" and "GPCM" for polytomous items.
+#' @param verbose A logical value. If FALSE, all progress messages including the process information on the EM algorithm are suppressed.
+#' Default is TRUE.
+#'  
+#' @details A specific form of a data frame should be used for the argument \code{x}. The first column should have item IDs,
+#' the second column should contain unique score category numbers of the items, and the third column should include IRT models being fit to the items.
+#' The available IRT models are "1PLM", "2PLM", "3PLM", and "DRM" for dichotomous item data, and "GRM" and "GPCM" for polytomous item data.
 #' Note that "DRM" covers all dichotomous IRT models (i.e, "1PLM", "2PLM", and "3PLM") and "GRM" and "GPCM" represent the graded
-#' response model and (generalized) partial credit model, respectively. From the fourth column, item parameters should be included.
+#' response model and (generalized) partial credit model, respectively. The next columns should include the item parameters of the fitted IRT models.
 #' For dichotomous items, the fourth, fifth, and sixth columns represent the item discrimination (or slope), item difficulty, and
-#' item guessing parameters, respectively. When "1PLM" or "2PLM" is specified for any items in the third column, NAs should be inserted
-#' for the item guessing parameters. For polytomous items, the item discrimination (or slope) parameters should be contained in the
-#' fourth column and the item threshold (or step) parameters should be included from the fifth to the last columns.
-#' When the number of categories differs between items, the empty cells of item parameters should be filled with NAs.
-#' In this package, item step parameters should be used for the (generalized) partial credit model. The item step parameter is the
-#' overall item difficulty (or location) parameter subtracted by the difficulty (or threshold) parameter for each category.
-#' Thus, the number of step parameters for an item with m categories is m-1 because a step parameter for the first category does not
-#' affect the category probabilities. For example, if an item has five categories under the (generalized) partial credit model,
-#' four step parameters should be specified. An example of a data.frame with a single-format test is as follows:
+#' item guessing parameters, respectively. When "1PLM" and "2PLM" are specified in the third column, NAs should be inserted in the sixth column
+#' for the item guessing parameters. For polytomous items, the item discrimination (or slope) parameters should be included in the
+#' fourth column and the item difficulty (or threshold) parameters of category boundaries should be contained from the fifth to the last columns.
+#' When the number of unique score categories differs between items, the empty cells of item parameters should be filled with NAs.
+#' In the \pkg{irtplay} package, the item difficulty (or threshold) parameters of category boundaries for GPCM are expressed as 
+#' the item location (or overall difficulty) parameter subtracted by the threshold parameter for unique score categories of the item. 
+#' Note that when an GPCM item has \emph{K} unique score categories, \emph{K-1} item difficulty parameters are necessary because 
+#' the item difficulty parameter for the first category boundary is always 0. For example, if an GPCM item has five score categories, 
+#' four item difficulty parameters should be specified. An example of a data frame with a single-format test is as follows:
 #' \tabular{lrlrrrrr}{
 #'   ITEM1  \tab 2 \tab 1PLM \tab 1.000 \tab  1.461 \tab         NA \cr
 #'   ITEM2  \tab 2 \tab 2PLM \tab 1.921 \tab -1.049 \tab         NA \cr
@@ -120,7 +121,7 @@
 #'   ITEM4  \tab 2 \tab 3PLM \tab 0.835 \tab -1.049 \tab  0.182 \cr
 #'   ITEM5  \tab 2 \tab DRM \tab 0.926 \tab  0.394 \tab  0.099
 #' }
-#' And an example of a data.frame for a mixed-format test is as follows:
+#' And an example of a data frame for a mixed-format test is as follows:
 #' \tabular{lrlrrrrr}{
 #'   ITEM1  \tab 2 \tab 1PLM \tab 1.000 \tab  1.461 \tab         NA \tab         NA \tab         NA\cr
 #'   ITEM2  \tab 2 \tab 2PLM \tab 1.921 \tab -1.049 \tab         NA \tab         NA \tab         NA\cr
@@ -131,18 +132,17 @@
 #'   ITEM7  \tab 4 \tab GPCM  \tab 1.137 \tab -0.374 \tab  0.215 \tab  0.848 \tab         NA \cr
 #'   ITEM8  \tab 5 \tab GPCM  \tab 1.233 \tab -2.078 \tab -1.347 \tab -0.705 \tab -0.116
 #' }
-#' For more details about the parameterization of the (generalized) partial credit model, see \code{IRT Models} section in
-#' the page of \code{\link{irtplay-package}} for more details about the IRT models. An easier way to create a data.frame for
-#' the argument \code{x} is by using the function \code{\link{shape_df}}.
+#' See \code{IRT Models} section in the page of \code{\link{irtplay-package}} for more details about the IRT models used in the \pkg{irtplay} package. 
+#' An easier way to create a data frame for the argument \code{x} is by using the function \code{\link{shape_df}}.
 #'
 #' To fit the IRT models to data, the IRT model and the number of score category information for the estimated items must be provided as well as
-#' the item response data. There are two way to provide the IRT model and score category information. The first way is to provide the item meta data
-#' to the argument \code{x}. As explained above, the item meta data can be easily created by the function \code{\link{shape_df}}. The second way is
+#' the item response data. There are two way to provide the IRT model and score category information. The first way is to provide the item metadata
+#' to the argument \code{x}. As explained above, the item metadata can be easily created by the function \code{\link{shape_df}}. The second way is
 #' specify the IRT models and the score category information into the arguments of \code{model} and \code{cats}. Thus, if \code{x=NULL}, the specified
 #' information in \code{model} and \code{cats} are used.
 #'
-#' To implement FIPC, however, the item meta data must be provided in the argument \code{x}. This is because the item parameters of the fixed items
-#' in the item meta data are used to estimate the characteristic of the underlying latent variable prior distribution when calibrating the rest of freely estimated items.
+#' To implement FIPC, however, the item metadata must be provided in the argument \code{x}. This is because the item parameters of the fixed items
+#' in the item metadata are used to estimate the characteristic of the underlying latent variable prior distribution when calibrating the rest of freely estimated items.
 #' More specifically, the underlying latent variable prior distribution of the fixed items is estimated during the calibration of the freely estimated items
 #' to put the item parameters of the freely estimated items on the scale of the fixed item parameters (Kim, 2006).
 #'
@@ -150,8 +150,9 @@
 #' function \code{\link{est_irt}}. The first method is "NWU-OEM" where uses just one E step in the EM algorithm, involving data from only the fixed items, and
 #' just one M step, involving data from only non-fixed items. This method is suggested by Wainer and Mislevy (1990) in the context of online calibration. This method
 #' can be implemented by setting \code{fipc.method = "OEM"}. The second method is "MWU-MEM" which iteratively updates the latent variable prior distribution and
-#' finds the parameter estimates of the non-fixed items. In this method, the first EM cycle is conducted in the same way as in the NWU-OEM method. From the second
-#' EM cycle, both the parameters of all items (fixed and non-fixed) and the weights of the prior distribution are concurrently updated. See Kim (2006) for more details.
+#' finds the parameter estimates of the non-fixed items. In this method, the same procedure of NWU-OEM method is applied to the first EM cycle. From the second
+#' EM cycle, both the parameters of non-fixed items and the weights of the prior distribution are concurrently updated. This method can be implemented by 
+#' setting \code{fipc.method = "MEM"}. See Kim (2006) for more details.
 #'
 #' When \code{EmpHist = TRUE}, the emprical histogram of latent variable prior distribution is simultaneously estimated with the item parameters. If \code{fipc = TRUE}
 #' given \code{EmpHist = TRUE}, the scale parameters (e.g., mean and variance) of the empirical prior distribution are estimated as well. If \code{fipc = FALSE} given
@@ -161,18 +162,18 @@
 #' the scale parameters of the normal prior distribution are fixed to the values specified in the arguments of \code{group.mean} and \code{group.var}.
 #'
 #' @return This function returns an object of class \code{\link{est_irt}}. Within this object, several internal objects are contained such as:
-#' \item{estimates}{A data.frame containing both the item parameter estimates and the corresponding standard errors of estimates.}
-#' \item{par.est}{A data.frame containing the item parameter estimates.}
-#' \item{se.est}{A data.frame containing the standard errors of the item parameter estimates. Note that the standard errors are estimated using
+#' \item{estimates}{A data frame containing both the item parameter estimates and the corresponding standard errors of estimates.}
+#' \item{par.est}{A data frame containing the item parameter estimates.}
+#' \item{se.est}{A data frame containing the standard errors of the item parameter estimates. Note that the standard errors are estimated using
 #' observed information functions. The standard errors are estimated using the cross-production approximation method (Meilijson, 1989).}
-#' \item{pos.par}{A data.frame containing the position number of item parameters being estimated. The position information is useful
+#' \item{pos.par}{A data frame containing the position number of item parameters being estimated. The position information is useful
 #' when interpreting the variance-covariance matrix of item parameter estimates.}
 #' \item{covariance}{A matrix of variance-covariance matrix of item parameter estimates.}
 #' \item{loglikelihood}{A sum of the log-likelihood values of the observed data set (marginal log-likelihood) across all estimated items.}
 #' \item{aic}{A model fit statistic of Akaike information criterion based on the loglikelihood.}
 #' \item{bic}{A model fit statistic of Bayesian information criterion based on the loglikelihood.}
-#' \item{group.par}{A data.frame containing the mean, variance, and standard deviation of latent variable prior distribution.}
-#' \item{weights}{A two-column matrix or data.frame containing the quadrature points (in the first column) and the corresponding weights
+#' \item{group.par}{A data frame containing the mean, variance, and standard deviation of latent variable prior distribution.}
+#' \item{weights}{A two-column matrix or data frame containing the quadrature points (in the first column) and the corresponding weights
 #' (in the second column) of the (updated) latent variable prior distribution.}
 #' \item{posterior.dist}{A matrix of normalized posterior densities for all the response patterns at each of the quadrature points.
 #' The row and column indicate the response pattern and the quadrature point, respectively.}
@@ -233,7 +234,7 @@
 #' ##------------------------------------------------------------------------------
 #' # fit the 1PL model to LSAT6 data and constrain the slope parameters to be equal
 #' (mod.1pl.c <- est_irt(data=LSAT6, D=1, model="1PLM", cats=2, fix.a.1pl=FALSE))
-#'
+#' 
 #' # summary of the estimation
 #' summary(mod.1pl.c)
 #'
@@ -306,10 +307,10 @@
 #' ## import the "-prm.txt" output file from flexMIRT
 #' flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 #'
-#' # select the item meta data
+#' # select the item metadata
 #' x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
 #'
-#' # modify the item meta data so that the 39th and 40th items follow GPCM
+#' # modify the item metadata so that the 39th and 40th items follow GPCM
 #' x[39:40, 3] <- "GPCM"
 #'
 #' # generate 1,000 examinees' latent abilities from N(0, 1)
@@ -319,11 +320,11 @@
 #' # simulate the response data
 #' sim.dat1 <- simdat(x=x, theta=score1, D=1)
 #'
-#' # fit the 3PL model to all dichotmous items, fit the GPCM model to 39th and 40th items,
+#' # fit the 3PL model to all dichotomous items, fit the GPCM model to 39th and 40th items,
 #' # and fit the GRM model to the 53th, 54th, 55th items.
 #' # use the beta prior distribution for the guessing parameters, use the log-normal
 #' # prior distribution for the slope parameters, and use the normal prior distribution
-#' # for the difficulty (or thereshold) parameters.
+#' # for the difficulty (or threshold) parameters.
 #' # also, specify the argument 'x' to provide the IRT model and score category information
 #' # for items
 #' item.meta <- shape_df(item.id=x$id, cats=x$cats, model=x$model, empty.par=TRUE)
@@ -351,7 +352,7 @@
 #' plot(x=fit.mix1, item.loc=55, type = "both", ci.method = "wald",
 #'      show.table=FALSE, ylim.sr.adjust=TRUE)
 #'
-#' # fit the 2PL model to all dichotmous items, fit the GPCM model to 39th and 40th items,
+#' # fit the 2PL model to all dichotomous items, fit the GPCM model to 39th and 40th items,
 #' # and fit the GRM model to the 53th, 54th, 55th items.
 #' # also, specify the arguments of 'model' and 'cats' to provide the IRT model and
 #' # score category information for items
@@ -362,7 +363,7 @@
 #' # summary of the estimation
 #' summary(mod.mix2)
 #'
-#' # fit the 2PL model to all dichotmous items, fit the GPCM model to 39th and 40th items,
+#' # fit the 2PL model to all dichotomous items, fit the GPCM model to 39th and 40th items,
 #' # fit the GRM model to the 53th, 54th, 55th items, and estimate the empirical histogram
 #' # of latent variable prior distribution.
 #' # also, specify the arguments of 'model' and 'cats' to provide the IRT model and
@@ -373,7 +374,7 @@
 #' (emphist <- getirt(mod.mix3, what="weights"))
 #' plot(emphist$weight ~ emphist$theta)
 #'
-#' # fit the 2PL model to all dichotmous items,
+#' # fit the 2PL model to all dichotomous items,
 #' # fit the PCM model to 39th and 40th items by fixing the slope parameters to 1,
 #' # and fit the GRM model to the 53th, 54th, 55th items.
 #' # also, specify the arguments of 'model' and 'cats' to provide the IRT model and
@@ -393,7 +394,7 @@
 #' ## import the "-prm.txt" output file from flexMIRT
 #' flex_sam <- system.file("extdata", "flexmirt_sample-prm.txt", package = "irtplay")
 #'
-#' # select the item meta data
+#' # select the item metadata
 #' x <- bring.flexmirt(file=flex_sam, "par")$Group1$full_df
 #'
 #' # generate 1,000 examinees' latent abilities from N(0.4, 1.3)
@@ -403,7 +404,7 @@
 #' # simulate the response data
 #' sim.dat2 <- simdat(x=x, theta=score2, D=1)
 #'
-#' # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
+#' # fit the 3PL model to all dichotomous items, fit the GRM model to all polytomous data,
 #' # fix the five 3PL items (1st - 5th items) and three GRM items (53rd to 55th items)
 #' # also, estimate the empirical histogram of latent variable
 #' # use the MEM method.
@@ -418,7 +419,7 @@
 #' # summary of the estimation
 #' summary(mod.fix1)
 #'
-#' # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
+#' # fit the 3PL model to all dichotomous items, fit the GRM model to all polytomous data,
 #' # fix the five 3PL items (1st - 5th items) and three GRM items (53rd to 55th items)
 #' # at this moment, do estimate the empirical histogram of latent variable.
 #' # instead, estimate the scale of normal prior distribution of latent variable
@@ -431,7 +432,7 @@
 #' (emphist <- getirt(mod.fix2, what="weights"))
 #' plot(emphist$weight ~ emphist$theta)
 #'
-#' # fit the 3PL model to all dichotmous items, fit the GRM model to all polytomous data,
+#' # fit the 3PL model to all dichotomous items, fit the GRM model to all polytomous data,
 #' # at this moment fix only the five 3PL items (1st - 5th items)
 #' # and estimate the empirical histogram of latent variable.
 #' # use the OEM method. Thus, only 1 EM cycle is used.
@@ -507,11 +508,13 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   ##---------------------------------------------------------------------
   # check if the starting values are available
   if(use.startval & is.null(x)) {
-    stop("To use starting values for item parameter estimation, the item meta data must be specified in the argument 'x'.", call.=FALSE)
+    stop("To use starting values for item parameter estimation, the item metadata must be specified in the argument 'x'.", call.=FALSE)
   }
   
-  # extract information about the number of score cetegories and models
-  cat("Parsing input...", '\n')
+  # extract information about the number of score categories and models
+  if(verbose) {
+    cat("Parsing input...", '\n')    
+  }
   if(!is.null(x)) {
     # give column names
     x <- data.frame(x)
@@ -522,7 +525,7 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
       x <- data.frame(x, par.3=NA)
     }
     
-    # clear the item meta data set
+    # clear the item metadata set
     x <- back2df(metalist2(x))
     id <- x[, 1]
     cats <- x[, 2]
@@ -641,8 +644,10 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   rm(datlist, envir=environment(), inherits = FALSE)
   
   # estimation
-  cat("Estimating item parameters...", '\n')
-  
+  if(verbose) {
+    cat("Estimating item parameters...", '\n')  
+  }
+
   # implement EM algorithm
   time1 <- Sys.time()
   par.history <- list()
@@ -694,7 +699,9 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
     }
     
   }
-  cat("", "\n")
+  if(verbose) {
+    cat("", "\n")
+  }
   time2 <- Sys.time()
   
   # record the item parameter estimation time
@@ -724,15 +731,17 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
   # extract the finalized posterior density
   post_dist <- estep$post_dist
   
-  # compute the infomation matrix of item parameter estimates using the cross-product method
-  cat("Computing item parameter var-covariance matrix...", '\n')
+  # compute the information matrix of item parameter estimates using the cross-product method
+  if(verbose) {
+    cat("Computing item parameter var-covariance matrix...", '\n')
+  }
   time1 <- Sys.time()
   info.data <- info_xpd(meta=meta, freq.cat=freq.cat, post_dist=post_dist, cats=cats, model=model, quadpt=quadpt,
                         D=D, loc_1p_const=loc_1p_const, loc_else=loc_else, nstd=nstd,
                         fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl,
                         a.val.gpcm=a.val.gpcm, g.val=g.val, reloc.par=param_loc$reloc.par)
   
-  # compute the infomation matrix of item parameter priors
+  # compute the information matrix of item parameter priors
   info.prior <- info_prior(meta=meta, cats=cats, model=model, D=D, loc_1p_const=loc_1p_const,
                            loc_else=loc_else, nstd=nstd, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g,
                            a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, aprior=aprior, bprior=bprior,
@@ -845,7 +854,9 @@ est_irt_em <- function(x=NULL, data, D=1, model=NULL, cats=NULL, fix.a.1pl=FALSE
               EMtime=est_time1, SEtime=est_time2, TotalTime=est_time3, test.1=memo3, test.2=memo4, var.note=memo5, fipc=FALSE,
               fipc.method=NULL, fix.loc=NULL)
   
-  cat("Estimation is finished in", est_time3, "seconds.",'\n')
+  if(verbose) {
+    cat("Estimation is finished in", est_time3, "seconds.",'\n')
+  }
   return(rst)
   
 }
@@ -865,13 +876,15 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   ##---------------------------------------------------------------------
   # prepare the item parameter estimation
   ##---------------------------------------------------------------------
-  # check if item meta data argument of 'x' is provided
+  # check if item metadata argument of 'x' is provided
   if(is.null(x)) {
-    stop("To implement the fixed item parameter calibration, the item meta data must be specified in the argument 'x'.", call.=FALSE)
+    stop("To implement the fixed item parameter calibration, the item metadata must be specified in the argument 'x'.", call.=FALSE)
   }
   
-  # extract information about the number of score cetegories and models
-  cat("Parsing input...", '\n')
+  # extract information about the number of score categories and models
+  if(verbose) {
+    cat("Parsing input...", '\n')
+  }
   
   # give column names
   x <- data.frame(x)
@@ -882,7 +895,7 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
     x <- data.frame(x, par.3=NA)
   }
   
-  # clear the item meta data set
+  # clear the item metadata set
   x <- back2df(metalist2(x))
   
   # transform the model variables into character type
@@ -903,11 +916,11 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   # check the location of items whose item parameters are estimated
   nofix.loc <- c(1:nitem)[!c(1:nitem) %in% fix.loc]
   
-  # divide the meta data.frame into two groups: fixed (x_fix) and non-fixed (x_new)
+  # divide the metadata.frame into two groups: fixed (x_fix) and non-fixed (x_new)
   x_fix <- x[fix.loc, ]
   x_new <- x[nofix.loc, ]
   
-  # clear the two item meta data sets
+  # clear the two item metadata sets
   x_fix <- back2df(metalist2(x_fix))
   x_new <- back2df(metalist2(x_new))
   
@@ -916,13 +929,13 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   cats <- x_new$cats
   model <- x_new$model
   
-  # generate the empty meta data with starting values
+  # generate the empty metadata with starting values
   if(!use.startval) {
     x_new <- startval_df(cats=cats, model=model)
     x_new$id <- id
   }
   
-  # create the total item meta data to be used in the further estimation process
+  # create the total item metadata to be used in the further estimation process
   x_all <- startval_df(cats=x$cats, model=x$model)
   x_all[fix.loc, 1:ncol(x_fix)] <- x_fix
   x_all[nofix.loc, 1:ncol(x_new)] <- x_new
@@ -1024,7 +1037,9 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   datlist_all <- divide_data(data=data_all, cats=x_all$cats, freq.cat=freq_all.cat)
   
   # estimation
-  cat("Estimating item parameters...", '\n')
+  if(verbose) {
+    cat("Estimating item parameters...", '\n')
+  } 
   
   # set the number of EM iteration to one when OEM (Wainer & Mislevy, 1990) method is used
   if(fipc.method=="OEM") MaxE <- 1
@@ -1093,7 +1108,9 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
     }
     
   }
-  cat("", "\n")
+  if(verbose) {
+    cat("", "\n")
+  }
   time2 <- Sys.time()
   
   # record the item parameter estimation time
@@ -1129,15 +1146,17 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
   # extract the finalized posterior density
   post_dist <- estep$post_dist
   
-  # compute the infomation matrix of item parameter estimates using the cross-product method
-  cat("Computing item parameter var-covariance matrix...", '\n')
+  # compute the information matrix of item parameter estimates using the cross-product method
+  if(verbose) {
+    cat("Computing item parameter var-covariance matrix...", '\n')
+  }
   time1 <- Sys.time()
   info.data <- info_xpd(meta=meta, freq.cat=freq_new.cat, post_dist=post_dist, cats=cats, model=model, quadpt=quadpt,
                         D=D, loc_1p_const=loc_1p_const, loc_else=loc_else, nstd=nstd,
                         fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g, a.val.1pl=a.val.1pl,
                         a.val.gpcm=a.val.gpcm, g.val=g.val, reloc.par=param_loc$reloc.par)
   
-  # compute the infomation matrix of item parameter priors
+  # compute the information matrix of item parameter priors
   info.prior <- info_prior(meta=meta, cats=cats, model=model, D=D, loc_1p_const=loc_1p_const,
                            loc_else=loc_else, nstd=nstd, fix.a.1pl=fix.a.1pl, fix.a.gpcm=fix.a.gpcm, fix.g=fix.g,
                            a.val.1pl=a.val.1pl, a.val.gpcm=a.val.gpcm, g.val=g.val, aprior=aprior, bprior=bprior,
@@ -1270,7 +1289,9 @@ est_irt_fipc <- function(x=NULL, data, D=1, fix.a.1pl=FALSE, fix.a.gpcm=FALSE, f
               niter=r, maxpar.diff=max.diff, EMtime=est_time1, SEtime=est_time2, TotalTime=est_time3, test.1=memo3, test.2=memo4, 
               var.note=memo5, fipc=TRUE, fipc.method=fipc.method, fix.loc=fix.loc)
   
-  cat("Estimation is finished in", est_time3, "seconds.",'\n')
+  if(verbose) {
+    cat("Estimation is finished in", est_time3, "seconds.",'\n')
+  }
   return(rst)
   
 }
